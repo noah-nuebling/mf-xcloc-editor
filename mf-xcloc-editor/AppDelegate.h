@@ -8,14 +8,21 @@
 #import <Cocoa/Cocoa.h>
 #import "TableView.h"
 #import "SourceList.h"
+#import "MainWindowController.h"
 
 #define appdel ((AppDelegate *)NSApp.delegate) /// Use this to access global state around the app
 
-@interface AppDelegate : NSObject <NSApplicationDelegate>
+typedef struct {
 
-    @property (strong) IBOutlet NSWindow *window;                         /// [Jun 2025] weak or strong? Internet says always use strong unless you need to have reference cycle: https://stackoverflow.com/a/31395938/10601702. But Xcode defaults to weak?
-    @property (strong) IBOutlet SourceList *sourceList;
-    @property (strong) IBOutlet TableView *tableView;
+} GlobalOutlets; /// Objects that we want to be available everywhere in the app
+
+@interface AppDelegate : NSObject <NSApplicationDelegate>
+    {
+        @public
+        MainWindowController *mainController;
+        SourceList *sourceList;
+        TableView *tableView;
+    }
 
 @end
 

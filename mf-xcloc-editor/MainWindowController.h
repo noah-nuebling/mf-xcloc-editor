@@ -1,0 +1,21 @@
+//
+//  MainWindowController.h
+//  mf-xcloc-editor
+//
+//  Created by Noah Nübling on 9/4/25.
+//
+
+#import <Foundation/Foundation.h>
+#import "SourceList.h"
+#import "TableView.h"
+
+@interface MainWindowController : NSObject
+
+    typedef struct {
+        SourceList *sourceList;
+        TableView *tableView;
+    } Outlets;
+    
+    - (Outlets) makeMainWindow;
+
+@end

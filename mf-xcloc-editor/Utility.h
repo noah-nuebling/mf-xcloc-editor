@@ -13,6 +13,7 @@
 #define Log(msg...)                    NSLog(@ __FILE_NAME__ ": " msg)
 #define fail(goto_label, reason...)    ({ Log(reason); goto goto_label; })
 #define isclass(obj, classname)        ({ [[(obj) class] isSubclassOfClass: [classname class]]; })
+#define stringf(format, args...)        [NSString stringWithFormat: (format), ## args]
 
 #define safeidx(arr, count, idx, fallback) ({                   \
     auto _arr = (arr);                                          \

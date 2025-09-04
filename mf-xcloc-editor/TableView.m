@@ -13,19 +13,43 @@
 #import "TableView.h"
 #import "Utility.h"
 
-@implementation TableView {
-}
+@implementation TableView
+    {
+        
+    }
 
     #pragma mark - Lifecycle
 
-    - (nullable instancetype) initWithCoder: (NSCoder *)coder
-    {
-        self = [super initWithCoder:coder];
+    - (instancetype) initWithFrame: (NSRect)frame {
+        
+        self = [super initWithFrame: frame];
         if (!self) return nil;
-        ({
-            self.delegate   = self; /// [Jun 2025] Will this lead to retain cycles or other problems?
-            self.dataSource = self;
-        });
+        
+        self.delegate   = self; /// [Jun 2025] Will this lead to retain cycles or other problems?
+        self.dataSource = self;
+        
+        /// Configure style
+        self.gridStyleMask = NSTableViewSolidVerticalGridLineMask | NSTableViewSolidHorizontalGridLineMask;
+        self.style = NSTableViewStyleFullWidth;
+        self.usesAutomaticRowHeights = YES;
+        
+        /// Register ReusableViews
+        [self registerNib: [[NSNib alloc] initWithNibNamed: @"ReusableViews" bundle: nil]  forIdentifier: @"theReusableCell_Table"];
+        
+        /// Add columns
+        {
+            auto mfui_tablecol = ^NSTableColumn *(NSString *identifier, NSString *title) {
+                auto v = [[NSTableColumn alloc] initWithIdentifier: identifier];
+                v.title = title;
+                return v;
+            };
+            [self addTableColumn: mfui_tablecol(@"id",     @"ID")];
+            [self addTableColumn: mfui_tablecol(@"source", @"Source")];
+            [self addTableColumn: mfui_tablecol(@"target", @"Target")];
+            [self addTableColumn: mfui_tablecol(@"state",  @"State")];
+            [self addTableColumn: mfui_tablecol(@"note",   @"Note")];
+        }
+        
         return self;
     }
 
@@ -75,8 +99,10 @@
         attrs = xml_attrdict((NSXMLElement *)tool);
         assert([attrs[@"tool-id"]       isEqual: @"com.apple.dt.xcode"] );
         assert([attrs[@"tool-name"]     isEqual: @"Xcode"]              );
-        assert([attrs[@"tool-version"]  isEqual: @"16.1"]               );
-        assert([attrs[@"build-num"]     isEqual: @"16B5001e"]           );
+        if ((0)) { /// We hope our code can support other versions, too?
+            assert([attrs[@"tool-version"]  isEqual: @"16.1"]               );
+            assert([attrs[@"build-num"]     isEqual: @"16B5001e"]           );
+        }
         
         /// Store data
         _data = data;
@@ -84,12 +110,12 @@
 
     #pragma mark - NSTableView
 
-
     #pragma mark - NSTableViewDataSource
 
     - (NSInteger)numberOfRowsInTableView:(NSTableView *)tableView {
         NSXMLElement *body = (id)[self.data childAtIndex: 1]; /// This makes assumptions based on the tests we do in `setData:`
-        return [body childCount];
+        auto result = [body childCount];
+        return result;
     }
     
     - (NSView *)tableView:(NSTableView *)tableView viewForTableColumn:(NSTableColumn *)tableColumn row:(NSInteger)row {
@@ -129,7 +155,7 @@
         }
         col("state")  {
             NSXMLNode *target = xml_childnamed(transUnit, @"target");  if (!target) ret(@""); assert(isclass(target, NSXMLElement));
-            id val =  xml_attr((NSXMLElement *)target, "state");       assert(isclass(val, NSString));
+            id val =  xml_attr((NSXMLElement *)target, "state");       assert(!val || isclass(val, NSString));
             ret(val);
         }
         col("note")   {
@@ -145,7 +171,7 @@
         
         end:
         
-        [cell.textField setStringValue:result];
+        [cell.textField setStringValue: result ?: @""];
         
         return cell;
     }
