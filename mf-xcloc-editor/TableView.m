@@ -38,16 +38,16 @@
         
         /// Add columns
         {
-            auto mfui_tablecol = ^NSTableColumn *(NSString *identifier, NSString *title) {
+            auto mftablecol = ^NSTableColumn *(NSString *identifier, NSString *title) {
                 auto v = [[NSTableColumn alloc] initWithIdentifier: identifier];
                 v.title = title;
                 return v;
             };
-            [self addTableColumn: mfui_tablecol(@"id",     @"ID")];
-            [self addTableColumn: mfui_tablecol(@"source", @"Source")];
-            [self addTableColumn: mfui_tablecol(@"target", @"Target")];
-            [self addTableColumn: mfui_tablecol(@"state",  @"State")];
-            [self addTableColumn: mfui_tablecol(@"note",   @"Note")];
+            [self addTableColumn: mftablecol(@"id",     @"ID")];
+            [self addTableColumn: mftablecol(@"source", @"Source")];
+            [self addTableColumn: mftablecol(@"target", @"Target")];
+            [self addTableColumn: mftablecol(@"state",  @"State")];
+            [self addTableColumn: mftablecol(@"note",   @"Note")];
         }
         
         return self;
