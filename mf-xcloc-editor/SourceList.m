@@ -33,7 +33,6 @@
         self.headerView = nil;
         self.allowsEmptySelection = NO;
         self.rowSizeStyle = NSTableViewRowSizeStyleDefault;
-        self.backgroundColor = NSColor.clearColor;
         
         /// Configure columns
         [self addTableColumn: ({

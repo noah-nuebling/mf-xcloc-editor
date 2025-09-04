@@ -10,7 +10,6 @@
 		4FAD64792E69D1DD00643726 /* MainWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4FAD64782E69D1DD00643726 /* MainWindowController.m */; };
 		4FC6FA632E6A0BA700459F13 /* ReusableViews.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4FC6FA622E6A0BA700459F13 /* ReusableViews.xib */; };
 		4FC6FA652E6A365E00459F13 /* MFUI.m in Sources */ = {isa = PBXBuildFile; fileRef = 4FC6FA642E6A365E00459F13 /* MFUI.m */; };
-		4FC6FA692E6A47E600459F13 /* NibLessViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4FC6FA682E6A47E600459F13 /* NibLessViewController.m */; };
 		4FF436D22DF63AB3008F2D74 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4FF428632DF63AB2008F2D74 /* Assets.xcassets */; };
 		4FF436D32DF63AB3008F2D74 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4FF428662DF63AB2008F2D74 /* MainMenu.xib */; };
 		4FF4373C2DF63AB8008F2D74 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 4FF428622DF63AB2008F2D74 /* AppDelegate.m */; };
@@ -39,8 +38,6 @@
 		4FC6FA622E6A0BA700459F13 /* ReusableViews.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ReusableViews.xib; sourceTree = "<group>"; };
 		4FC6FA642E6A365E00459F13 /* MFUI.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MFUI.m; sourceTree = "<group>"; };
 		4FC6FA662E6A367400459F13 /* MFUI.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MFUI.h; sourceTree = "<group>"; };
-		4FC6FA672E6A47E600459F13 /* NibLessViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NibLessViewController.h; sourceTree = "<group>"; };
-		4FC6FA682E6A47E600459F13 /* NibLessViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NibLessViewController.m; sourceTree = "<group>"; };
 		4FF428612DF63AB2008F2D74 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		4FF428622DF63AB2008F2D74 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		4FF428632DF63AB2008F2D74 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -90,8 +87,6 @@
 				4FC6FA622E6A0BA700459F13 /* ReusableViews.xib */,
 				4FAD64772E69D1DD00643726 /* MainWindowController.h */,
 				4FAD64782E69D1DD00643726 /* MainWindowController.m */,
-				4FC6FA672E6A47E600459F13 /* NibLessViewController.h */,
-				4FC6FA682E6A47E600459F13 /* NibLessViewController.m */,
 				4FF447A82DF701EE008F2D74 /* SourceList.h */,
 				4FF447A92DF701EE008F2D74 /* SourceList.m */,
 				4FF447A42DF6BC6E008F2D74 /* TableView.h */,
@@ -205,7 +200,6 @@
 				4FF4373D2DF63AB8008F2D74 /* main.m in Sources */,
 				4FF447A62DF6BC6F008F2D74 /* TableView.m in Sources */,
 				4FC6FA652E6A365E00459F13 /* MFUI.m in Sources */,
-				4FC6FA692E6A47E600459F13 /* NibLessViewController.m in Sources */,
 				4FF447AA2DF701EE008F2D74 /* SourceList.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
