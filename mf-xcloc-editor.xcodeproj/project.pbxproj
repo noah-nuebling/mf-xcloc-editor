@@ -1,0 +1,404 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		4FF436D22DF63AB3008F2D74 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4FF428632DF63AB2008F2D74 /* Assets.xcassets */; };
+		4FF436D32DF63AB3008F2D74 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4FF428662DF63AB2008F2D74 /* MainMenu.xib */; };
+		4FF4373C2DF63AB8008F2D74 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 4FF428622DF63AB2008F2D74 /* AppDelegate.m */; };
+		4FF4373D2DF63AB8008F2D74 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 4FF428642DF63AB2008F2D74 /* main.m */; };
+		4FF447A32DF6467E008F2D74 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 4FF447A22DF6467E008F2D74 /* README.md */; };
+		4FF447A62DF6BC6F008F2D74 /* TableView.m in Sources */ = {isa = PBXBuildFile; fileRef = 4FF447A52DF6BC6E008F2D74 /* TableView.m */; };
+		4FF447AA2DF701EE008F2D74 /* SourceList.m in Sources */ = {isa = PBXBuildFile; fileRef = 4FF447A92DF701EE008F2D74 /* SourceList.m */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		4FF4475E2DF64447008F2D74 /* Embed Libraries */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+			);
+			name = "Embed Libraries";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		4FF428612DF63AB2008F2D74 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		4FF428622DF63AB2008F2D74 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		4FF428632DF63AB2008F2D74 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		4FF428642DF63AB2008F2D74 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		4FF428652DF63AB2008F2D74 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
+		4FF428672DF63AB2008F2D74 /* mf_xcloc_editor.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = mf_xcloc_editor.entitlements; sourceTree = "<group>"; };
+		4FF447A22DF6467E008F2D74 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		4FF447A42DF6BC6E008F2D74 /* TableView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TableView.h; sourceTree = "<group>"; };
+		4FF447A52DF6BC6E008F2D74 /* TableView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TableView.m; sourceTree = "<group>"; };
+		4FF447A72DF6CB3A008F2D74 /* Utility.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Utility.h; sourceTree = "<group>"; };
+		4FF447A82DF701EE008F2D74 /* SourceList.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SourceList.h; sourceTree = "<group>"; };
+		4FF447A92DF701EE008F2D74 /* SourceList.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SourceList.m; sourceTree = "<group>"; };
+		4FF4FA1D2DF6270F008F2D74 /* mf-xcloc-editor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "mf-xcloc-editor.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		4FF4FA1A2DF6270F008F2D74 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		4F4D45F12DF732F300FE4CE7 /* Other */ = {
+			isa = PBXGroup;
+			children = (
+				4FF447A22DF6467E008F2D74 /* README.md */,
+				4FF428672DF63AB2008F2D74 /* mf_xcloc_editor.entitlements */,
+				4FF428632DF63AB2008F2D74 /* Assets.xcassets */,
+				4FF428642DF63AB2008F2D74 /* main.m */,
+			);
+			path = Other;
+			sourceTree = "<group>";
+		};
+		4FF4286A2DF63AB2008F2D74 /* mf-xcloc-editor */ = {
+			isa = PBXGroup;
+			children = (
+				4FF428612DF63AB2008F2D74 /* AppDelegate.h */,
+				4FF428622DF63AB2008F2D74 /* AppDelegate.m */,
+				4FF447A72DF6CB3A008F2D74 /* Utility.h */,
+				4FF428662DF63AB2008F2D74 /* MainMenu.xib */,
+				4FF447A82DF701EE008F2D74 /* SourceList.h */,
+				4FF447A92DF701EE008F2D74 /* SourceList.m */,
+				4FF447A42DF6BC6E008F2D74 /* TableView.h */,
+				4FF447A52DF6BC6E008F2D74 /* TableView.m */,
+				4F4D45F12DF732F300FE4CE7 /* Other */,
+			);
+			path = "mf-xcloc-editor";
+			sourceTree = "<group>";
+		};
+		4FF4474D2DF64197008F2D74 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		4FF4FA142DF6270F008F2D74 = {
+			isa = PBXGroup;
+			children = (
+				4FF4286A2DF63AB2008F2D74 /* mf-xcloc-editor */,
+				4FF4474D2DF64197008F2D74 /* Frameworks */,
+				4FF4FA1E2DF6270F008F2D74 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		4FF4FA1E2DF6270F008F2D74 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4FF4FA1D2DF6270F008F2D74 /* mf-xcloc-editor.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		4FF4FA1C2DF6270F008F2D74 /* mf-xcloc-editor */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4FF4FA2D2DF62711008F2D74 /* Build configuration list for PBXNativeTarget "mf-xcloc-editor" */;
+			buildPhases = (
+				4FF4FA192DF6270F008F2D74 /* Sources */,
+				4FF4FA1A2DF6270F008F2D74 /* Frameworks */,
+				4FF4FA1B2DF6270F008F2D74 /* Resources */,
+				4FF4475E2DF64447008F2D74 /* Embed Libraries */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "mf-xcloc-editor";
+			packageProductDependencies = (
+			);
+			productName = "mf-xcloc-editor";
+			productReference = 4FF4FA1D2DF6270F008F2D74 /* mf-xcloc-editor.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		4FF4FA152DF6270F008F2D74 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastUpgradeCheck = 1620;
+				TargetAttributes = {
+					4FF4FA1C2DF6270F008F2D74 = {
+						CreatedOnToolsVersion = 16.2;
+					};
+				};
+			};
+			buildConfigurationList = 4FF4FA182DF6270F008F2D74 /* Build configuration list for PBXProject "mf-xcloc-editor" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 4FF4FA142DF6270F008F2D74;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 4FF4FA1E2DF6270F008F2D74 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				4FF4FA1C2DF6270F008F2D74 /* mf-xcloc-editor */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		4FF4FA1B2DF6270F008F2D74 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4FF447A32DF6467E008F2D74 /* README.md in Resources */,
+				4FF436D22DF63AB3008F2D74 /* Assets.xcassets in Resources */,
+				4FF436D32DF63AB3008F2D74 /* MainMenu.xib in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		4FF4FA192DF6270F008F2D74 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4FF4373C2DF63AB8008F2D74 /* AppDelegate.m in Sources */,
+				4FF4373D2DF63AB8008F2D74 /* main.m in Sources */,
+				4FF447A62DF6BC6F008F2D74 /* TableView.m in Sources */,
+				4FF447AA2DF701EE008F2D74 /* SourceList.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		4FF428662DF63AB2008F2D74 /* MainMenu.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				4FF428652DF63AB2008F2D74 /* Base */,
+			);
+			name = MainMenu.xib;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		4FF4FA2B2DF62711008F2D74 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.2;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		4FF4FA2C2DF62711008F2D74 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.2;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		4FF4FA2E2DF62711008F2D74 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "mf-xcloc-editor/Other/mf_xcloc_editor.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = LM5Z78756B;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSMainNibFile = MainMenu;
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/mf-xcloc-editor/libxml2-build/lib",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.nuebling.mf-xcloc-editor";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+			};
+			name = Debug;
+		};
+		4FF4FA2F2DF62711008F2D74 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "mf-xcloc-editor/Other/mf_xcloc_editor.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = LM5Z78756B;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSMainNibFile = MainMenu;
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/mf-xcloc-editor/libxml2-build/lib",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.nuebling.mf-xcloc-editor";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		4FF4FA182DF6270F008F2D74 /* Build configuration list for PBXProject "mf-xcloc-editor" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4FF4FA2B2DF62711008F2D74 /* Debug */,
+				4FF4FA2C2DF62711008F2D74 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		4FF4FA2D2DF62711008F2D74 /* Build configuration list for PBXNativeTarget "mf-xcloc-editor" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4FF4FA2E2DF62711008F2D74 /* Debug */,
+				4FF4FA2F2DF62711008F2D74 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 4FF4FA152DF6270F008F2D74 /* Project object */;
+}
