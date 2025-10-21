@@ -29,9 +29,9 @@ void mfinsert(NSView *big, NSEdgeInsets insets, NSView *little) {
     
     [big addSubview: little];
     
-    [big.topAnchor      constraintEqualToAnchor: little.topAnchor    constant: insets.top].active = YES;
+    [big.topAnchor      constraintEqualToAnchor: little.topAnchor    constant: -insets.top].active = YES;
     [big.bottomAnchor   constraintEqualToAnchor: little.bottomAnchor constant: insets.bottom].active = YES;
-    [big.leftAnchor     constraintEqualToAnchor: little.leftAnchor   constant: insets.left].active = YES;
+    [big.leftAnchor     constraintEqualToAnchor: little.leftAnchor   constant: -insets.left].active = YES;
     [big.rightAnchor    constraintEqualToAnchor: little.rightAnchor  constant: insets.right].active = YES;
 }
 NSView *mfwrap(NSEdgeInsets insets, NSView *v) {

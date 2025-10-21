@@ -11,6 +11,13 @@
 #import "MFUI.h"
 
 #import "TableView.h"
+#import "AppDelegate.h"
+
+
+@interface TitlbarAccessoryViewController : NSTitlebarAccessoryViewController @end
+@implementation TitlbarAccessoryViewController { @public NSView *_theView; }
+    - (void)loadView { self.view = _theView; }
+@end
 
 @implementation MainWindowController
     
@@ -47,6 +54,9 @@
             window.title = @"Xcloc Editor";
             
             window.delegate = self;
+            
+            if ((0)) window.toolbar = [NSToolbar new]; /// Adding to change titlebar height
+            
         });
         
         /// Define view hierarchy & get outlets
@@ -55,6 +65,39 @@
             mfscrollview(mfoutlet(&result.sourceList, [SourceList new])),
             mfscrollview(mfoutlet(&result.tableView,  [TableView new]))
         ])));
+        
+        /// Outlets
+        NSTextField *out_filterField = nil;
+        
+        /// Add accessory view
+        [window addTitlebarAccessoryViewController: ({
+            
+            auto viewController = [TitlbarAccessoryViewController new];
+            viewController->_theView = ({
+                auto w = mfwrap(mfmargin(5, 5, 5, 5), mfoutlet(&out_filterField, ({
+                    auto v = mfview(NSTextField);
+                    v.editable = YES;
+                    v.placeholderString = @"Filter Translations";
+                    if ((0)) {
+                        v.drawsBackground = YES;
+                        v.backgroundColor = [NSColor systemOrangeColor];
+                    }
+                    if ((0)) { /// Adjusting  autolayout doesn't seem to do anything. But frame works. Not sure why [Oct 2025]
+                        [v.widthAnchor  constraintGreaterThanOrEqualToConstant: 500].active = YES;
+                        [v.heightAnchor constraintGreaterThanOrEqualToConstant: 100].active = YES;
+                    }
+                    
+                    v.frame = (NSRect){{0, 0}, {500, 0}}; /// Height doens't do anything, but width does. [Oct 2025] || Update: not that we added a wrapper we gotta add the frame there.
+                    v;
+                })));
+                w.frame = (NSRect){{0, 0}, {300, 0}};
+                w;
+            });
+            if ((1)) viewController.layoutAttribute = NSLayoutAttributeTrailing;
+            else     viewController.layoutAttribute = NSLayoutAttributeBottom;
+            
+            viewController;
+        })];
         
         /// Configure views
         {
@@ -69,6 +112,12 @@
             /// Also give TableView a minWidth
             [result.tableView.enclosingScrollView.widthAnchor constraintGreaterThanOrEqualToConstant: 200].active = YES;
         }
+        
+        /// Set up `out_filterField`
+        [[NSNotificationCenter defaultCenter] addObserverForName: NSControlTextDidChangeNotification object: out_filterField queue: nil usingBlock: ^(NSNotification * _Nonnull notification) {
+            mflog(@"filter fiellddd: %@", out_filterField.stringValue);
+            [appdel->tableView updateFilter: out_filterField.stringValue];
+        }];
         
         /// Set window size/position
         { /// Default size/position

@@ -103,63 +103,92 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
     
     #pragma mark - Sorting
     
-    static NSMutableArray *_rowToSortedRow = nil;
-    
     - (void) tableView: (NSTableView *)tableView sortDescriptorsDidChange: (NSArray<NSSortDescriptor *> *)oldDescriptors { /// This is called when the user clicks the column headers to sort them.
-        [self update_rowToSortedRow];
+        [self update_rowModelSorting];
         [self reloadData];
     }
+
+    #pragma mark - Filtering
     
-    - (void) update_rowToSortedRow {
-        
-        mflog(@"Updating _rowToSortedRow with sortDescriptors: (only using the first one): %@", self.sortDescriptors);
-        
-        NSSortDescriptor *desc = self.sortDescriptors.firstObject;
-        if (!desc) { _rowToSortedRow = nil; return; }
-        
-        _rowToSortedRow = [NSMutableArray new];
-        {
-            NSInteger rowCount = [self numberOfRowsInTableView: self]; /// -[numberOfRows] gives wrong results while swtiching files not sure what's going on [Oct 2025]
-            
-            for (NSInteger i = 0; i < rowCount; i++)
-                [_rowToSortedRow addObject: @(i)];
-            
-            [_rowToSortedRow sortUsingComparator: ^NSComparisonResult(NSNumber *i, NSNumber *j) {
-                NSComparisonResult comp;
-                if ([desc.key isEqual: @"state"]) {
-                    comp = (
-                        [_stateOrder indexOfObject: rowModel_getCellModel([self rowModel_Unsorted: [i integerValue]], @"state")] -
-                        [_stateOrder indexOfObject: rowModel_getCellModel([self rowModel_Unsorted: [j integerValue]], @"state")]
-                    );
-                }
-                else {
-                    comp = [
-                        rowModel_getCellModel([self rowModel_Unsorted: [i integerValue]], desc.key)
-                        compare:
-                        rowModel_getCellModel([self rowModel_Unsorted: [j integerValue]], desc.key)
-                    ];
-                }
-                return desc.ascending ? comp : -comp;
-            }];
-        }
+    static NSString *_filterString = nil;
+    - (void) updateFilter: (NSString *)filterString {
+        _filterString = filterString;
+        [self update_rowModels];
+        [self reloadData];
     }
 
     #pragma mark - Data
 
-    - (NSXMLElement *) rowModel_Unsorted: (NSInteger)row {
-        NSXMLElement *body = (id)[self.data childAtIndex: 1]; /// This makes assumptions based on the tests we do in `reloadWithNewData:`
-        NSXMLNode *transUnit = [body childAtIndex: row];
-        {
-            assert(isclass(transUnit, NSXMLElement));
-            assert([transUnit.name isEqual: @"trans-unit"]);
-        }
-        return (NSXMLElement *)transUnit;
-    }
+
+
+    static NSMutableArray<NSXMLElement *> *_transUnits = nil; /// Main dataModel displayed by this table.
     
     - (NSXMLElement *) rowModel: (NSInteger)row {
-        if (!_rowToSortedRow) return [self rowModel_Unsorted: row];
-        assert(row < _rowToSortedRow.count);
-        return [self rowModel_Unsorted: [_rowToSortedRow[row] integerValue]];
+        return _transUnits[row];
+    }
+
+    - (void) update_rowModels {
+        
+        /// Filter
+        NSXMLElement *body = (id)[self.data childAtIndex: 1]; /// This makes assumptions based on the tests we do in `reloadWithNewData:`
+        if (![_filterString length]) _transUnits = [[body children] mutableCopy];
+        else {
+            _transUnits = [NSMutableArray new];
+            for (NSXMLElement *transUnit in body.children) {
+                {
+                    assert(isclass(transUnit, NSXMLElement));
+                    assert([transUnit.name isEqual: @"trans-unit"]);
+                }
+                auto combinedRowString = stringf(@"%@\n%@\n%@\n%@\n%@",
+                    rowModel_getCellModel(transUnit, @"id"),
+                    rowModel_getCellModel(transUnit, @"source"),
+                    rowModel_getCellModel(transUnit, @"target"),
+                    rowModel_getCellModel(transUnit, @"note"),
+                    rowModel_getCellModel(transUnit, @"state")
+                );
+                if (
+                    [combinedRowString /// Fixme: search actual UIStrings instead of cellModel strings.
+                        rangeOfString: _filterString
+                        options: (/*NSRegularExpressionSearch |*/ NSCaseInsensitiveSearch)
+                    ]
+                    .location != NSNotFound
+                ) {
+                    [(NSMutableArray *)_transUnits addObject: transUnit];
+                }
+            }
+        }
+        
+        /// Sort
+        [self update_rowModelSorting];
+    }
+    
+    - (void) update_rowModelSorting {
+    
+        mflog(@"Updating _rowToSortedRow with sortDescriptors: (only using the first one): %@", self.sortDescriptors);
+        
+        NSSortDescriptor *desc = self.sortDescriptors.firstObject;
+        if (!desc) { return; }
+        
+        if ((0)) {
+            NSInteger rowCount = [self numberOfRowsInTableView: self]; /// -[numberOfRows] gives wrong results while swtiching files not sure what's going on [Oct 2025]
+        }
+        
+        [_transUnits sortUsingComparator: ^NSComparisonResult(NSXMLElement *i, NSXMLElement *j) {
+            NSComparisonResult comp;
+            if ([desc.key isEqual: @"state"]) {
+                comp = (
+                    [_stateOrder indexOfObject: rowModel_getCellModel(i, @"state")] -
+                    [_stateOrder indexOfObject: rowModel_getCellModel(j, @"state")]
+                );
+            }
+            else {
+                comp = [
+                    rowModel_getCellModel(i, desc.key) compare:
+                    rowModel_getCellModel(j, desc.key)
+                ];
+            }
+            return desc.ascending ? comp : -comp;
+        }];
     }
 
      NSString *rowModel_getCellModel(NSXMLElement *transUnit, NSString *columnID) {
@@ -244,8 +273,8 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
         /// Store data
         self->_data = data;
         
-        /// Sort
-        [self update_rowToSortedRow];
+        /// Transform to datamodel
+        [self update_rowModels];
         
         /// Reload
         [self reloadData];
@@ -319,9 +348,7 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
     #pragma mark - NSTableViewDataSource
 
     - (NSInteger) numberOfRowsInTableView: (NSTableView *)tableView {
-        NSXMLElement *body = (id)[self.data childAtIndex: 1]; /// This makes assumptions based on the tests we do in `reloadWithNewData:`
-        auto result = [body childCount];
-        return result;
+        return [_transUnits count];
     }
     
     - (NSView *) tableView: (NSTableView *)tableView viewForTableColumn: (NSTableColumn *)tableColumn row: (NSInteger)row {
@@ -423,6 +450,7 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
                 if (iscol(@"target")) {
                     editingCallback = ^void (NSString *newString) {
                         mflog(@"<target> edited: %@", newString);
+                        rowModel_setCellModel(transUnit, @"target", newString);
                         [appdel writeTranslationDataToFile];
                         
                     };
