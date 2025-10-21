@@ -149,7 +149,10 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
     - (NSXMLElement *) rowModel_Unsorted: (NSInteger)row {
         NSXMLElement *body = (id)[self.data childAtIndex: 1]; /// This makes assumptions based on the tests we do in `reloadWithNewData:`
         NSXMLNode *transUnit = [body childAtIndex: row];
-        assert(isclass(transUnit, NSXMLElement));
+        {
+            assert(isclass(transUnit, NSXMLElement));
+            assert([transUnit.name isEqual: @"trans-unit"]);
+        }
         return (NSXMLElement *)transUnit;
     }
     
@@ -326,9 +329,6 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
         #define iscol(colid) [[tableColumn identifier] isEqual: (colid)]
         
         NSXMLElement *transUnit = [self rowModel: row];
-        
-        assert(isclass(transUnit, NSXMLElement));
-        assert([transUnit.name isEqual: @"trans-unit"]);
         
         /// Get model value
         NSString *uiString = rowModel_getCellModel(transUnit, [tableColumn identifier]);
