@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4F7E02D12EA7758800C2F693 /* NSObject+Additions.m in Sources */ = {isa = PBXBuildFile; fileRef = 4F7E02D02EA7758700C2F693 /* NSObject+Additions.m */; };
 		4FAD64792E69D1DD00643726 /* MainWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4FAD64782E69D1DD00643726 /* MainWindowController.m */; };
 		4FC6FA632E6A0BA700459F13 /* ReusableViews.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4FC6FA622E6A0BA700459F13 /* ReusableViews.xib */; };
 		4FC6FA652E6A365E00459F13 /* MFUI.m in Sources */ = {isa = PBXBuildFile; fileRef = 4FC6FA642E6A365E00459F13 /* MFUI.m */; };
@@ -33,6 +34,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		4F7E02CF2EA7758700C2F693 /* NSObject+Additions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSObject+Additions.h"; sourceTree = "<group>"; };
+		4F7E02D02EA7758700C2F693 /* NSObject+Additions.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSObject+Additions.m"; sourceTree = "<group>"; };
 		4FAD64772E69D1DD00643726 /* MainWindowController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MainWindowController.h; sourceTree = "<group>"; };
 		4FAD64782E69D1DD00643726 /* MainWindowController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MainWindowController.m; sourceTree = "<group>"; };
 		4FC6FA622E6A0BA700459F13 /* ReusableViews.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ReusableViews.xib; sourceTree = "<group>"; };
@@ -82,6 +85,8 @@
 				4FF428622DF63AB2008F2D74 /* AppDelegate.m */,
 				4FF447A72DF6CB3A008F2D74 /* Utility.h */,
 				4FC6FA662E6A367400459F13 /* MFUI.h */,
+				4F7E02CF2EA7758700C2F693 /* NSObject+Additions.h */,
+				4F7E02D02EA7758700C2F693 /* NSObject+Additions.m */,
 				4FC6FA642E6A365E00459F13 /* MFUI.m */,
 				4FF428662DF63AB2008F2D74 /* MainMenu.xib */,
 				4FC6FA622E6A0BA700459F13 /* ReusableViews.xib */,
@@ -201,6 +206,7 @@
 				4FF447A62DF6BC6F008F2D74 /* TableView.m in Sources */,
 				4FC6FA652E6A365E00459F13 /* MFUI.m in Sources */,
 				4FF447AA2DF701EE008F2D74 /* SourceList.m in Sources */,
+				4F7E02D12EA7758800C2F693 /* NSObject+Additions.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

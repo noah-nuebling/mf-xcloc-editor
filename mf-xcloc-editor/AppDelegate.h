@@ -23,6 +23,8 @@ typedef struct {
         SourceList *sourceList;
         TableView *tableView;
     }
+    
+    - (void) writeTranslationDataToFile; /// Little weird for this to be on AppDelegate [Oct 2025]
 
 @end
 

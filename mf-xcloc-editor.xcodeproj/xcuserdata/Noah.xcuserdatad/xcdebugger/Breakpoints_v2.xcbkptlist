@@ -56,8 +56,8 @@
             filePath = "mf-xcloc-editor/TableView.m"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "122"
-            endingLineNumber = "122"
+            startingLineNumber = "124"
+            endingLineNumber = "124"
             landmarkName = "-tableView:viewForTableColumn:row:"
             landmarkType = "7">
          </BreakpointContent>
@@ -72,8 +72,8 @@
             filePath = "mf-xcloc-editor/TableView.m"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "174"
-            endingLineNumber = "174"
+            startingLineNumber = "181"
+            endingLineNumber = "181"
             landmarkName = "-tableView:viewForTableColumn:row:"
             landmarkType = "7">
          </BreakpointContent>
@@ -88,8 +88,8 @@
             filePath = "mf-xcloc-editor/TableView.m"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "107"
-            endingLineNumber = "107"
+            startingLineNumber = "109"
+            endingLineNumber = "109"
             landmarkName = "-setData:"
             landmarkType = "7">
          </BreakpointContent>
@@ -104,8 +104,8 @@
             filePath = "mf-xcloc-editor/TableView.m"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "148"
-            endingLineNumber = "148"
+            startingLineNumber = "151"
+            endingLineNumber = "151"
             landmarkName = "-tableView:viewForTableColumn:row:"
             landmarkType = "7">
          </BreakpointContent>
@@ -120,8 +120,8 @@
             filePath = "mf-xcloc-editor/TableView.m"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "143"
-            endingLineNumber = "143"
+            startingLineNumber = "147"
+            endingLineNumber = "147"
             landmarkName = "-tableView:viewForTableColumn:row:"
             landmarkType = "7">
          </BreakpointContent>
@@ -152,8 +152,8 @@
             filePath = "mf-xcloc-editor/AppDelegate.m"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "31"
-            endingLineNumber = "31"
+            startingLineNumber = "34"
+            endingLineNumber = "34"
             landmarkName = "-applicationDidFinishLaunching:"
             landmarkType = "7">
          </BreakpointContent>
@@ -302,8 +302,8 @@
             filePath = "mf-xcloc-editor/TableView.m"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "59"
-            endingLineNumber = "59"
+            startingLineNumber = "61"
+            endingLineNumber = "61"
             landmarkName = "-setData:"
             landmarkType = "7">
          </BreakpointContent>
@@ -318,8 +318,8 @@
             filePath = "mf-xcloc-editor/TableView.m"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "182"
-            endingLineNumber = "182"
+            startingLineNumber = "193"
+            endingLineNumber = "193"
             landmarkName = "-tableView:didClickTableColumn:"
             landmarkType = "7">
          </BreakpointContent>
@@ -334,8 +334,8 @@
             filePath = "mf-xcloc-editor/TableView.m"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "118"
-            endingLineNumber = "118"
+            startingLineNumber = "120"
+            endingLineNumber = "120"
             landmarkName = "-numberOfRowsInTableView:"
             landmarkType = "7">
          </BreakpointContent>
@@ -350,8 +350,8 @@
             filePath = "mf-xcloc-editor/TableView.m"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "123"
-            endingLineNumber = "123"
+            startingLineNumber = "125"
+            endingLineNumber = "125"
             landmarkName = "-tableView:viewForTableColumn:row:"
             landmarkType = "7">
          </BreakpointContent>
@@ -378,15 +378,6 @@
             continueAfterRunningActions = "No"
             symbolName = "*0x19a332aac">
             <Locations>
-               <Location
-                  uuid = "6BA90549-71B6-4B9B-9A9E-D30CABA5E028 - 47929a19da4a2f5c"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "-[NSSplitView _splitViewUseConstraintBasedLayout]"
-                  moduleName = "AppKit"
-                  usesParentBreakpointCondition = "Yes">
-               </Location>
             </Locations>
          </BreakpointContent>
       </BreakpointProxy>
@@ -399,15 +390,6 @@
             continueAfterRunningActions = "No"
             symbolName = "*0x19a332ac4">
             <Locations>
-               <Location
-                  uuid = "C261CE9F-1BC7-4D84-A86C-4A35FD1ABA07 - 47929a19da4a2f5c"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "-[NSSplitView _splitViewUseConstraintBasedLayout]"
-                  moduleName = "AppKit"
-                  usesParentBreakpointCondition = "Yes">
-               </Location>
             </Locations>
          </BreakpointContent>
       </BreakpointProxy>
@@ -420,15 +402,6 @@
             continueAfterRunningActions = "No"
             symbolName = "*0x19a332b04">
             <Locations>
-               <Location
-                  uuid = "201CEAC4-A5B3-4384-A0E9-2839D9AFEE1D - 47929a19da4a2f5c"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "-[NSSplitView _splitViewUseConstraintBasedLayout]"
-                  moduleName = "AppKit"
-                  usesParentBreakpointCondition = "Yes">
-               </Location>
             </Locations>
          </BreakpointContent>
       </BreakpointProxy>
@@ -441,15 +414,6 @@
             continueAfterRunningActions = "No"
             symbolName = "*0x19a332b08">
             <Locations>
-               <Location
-                  uuid = "2B0FD5AD-3124-4DCA-B821-C1C26C382A11 - 47929a19da4a2f5c"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "-[NSSplitView _splitViewUseConstraintBasedLayout]"
-                  moduleName = "AppKit"
-                  usesParentBreakpointCondition = "Yes">
-               </Location>
             </Locations>
          </BreakpointContent>
       </BreakpointProxy>
@@ -462,15 +426,6 @@
             continueAfterRunningActions = "No"
             symbolName = "*0x19a332b7c">
             <Locations>
-               <Location
-                  uuid = "36529BDF-FE27-4CD2-9237-8DB031DA917C - 47929a19da4a2f5c"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "-[NSSplitView _splitViewUseConstraintBasedLayout]"
-                  moduleName = "AppKit"
-                  usesParentBreakpointCondition = "Yes">
-               </Location>
             </Locations>
          </BreakpointContent>
       </BreakpointProxy>
@@ -484,9 +439,25 @@
             filePath = "mf-xcloc-editor/MainWindowController.m"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "54"
-            endingLineNumber = "54"
+            startingLineNumber = "61"
+            endingLineNumber = "61"
             landmarkName = "-makeMainWindow"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "EB3B8460-5741-4ACB-8D6C-655CBA200E25"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "mf-xcloc-editor/AppDelegate.m"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "68"
+            endingLineNumber = "68"
+            landmarkName = "-applicationShouldTerminate:"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

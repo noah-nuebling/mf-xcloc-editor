@@ -12,6 +12,8 @@
 
 #import "TableView.h"
 #import "Utility.h"
+#import "NSObject+Additions.h"
+#import "AppDelegate.h"
 
 @implementation TableView
     {
@@ -87,7 +89,7 @@
         assert(attrs[@"target-language"]    );
         assert(attrs[@"datatype"]           );
         
-        Log("Attributes: %@", attrs);
+        mflog("Attributes: %@", attrs);
         
         /// Validate <header>
         
@@ -118,69 +120,86 @@
         return result;
     }
     
-    - (NSView *)tableView:(NSTableView *)tableView viewForTableColumn:(NSTableColumn *)tableColumn row:(NSInteger)row {
+    - (NSView *) tableView: (NSTableView *)tableView viewForTableColumn: (NSTableColumn *)tableColumn row: (NSInteger)row {
     
-        NSTableCellView *cell = [tableView makeViewWithIdentifier:@"theReusableCell_Table" owner:self]; /// [Jun 2025] What to pass as owner here? Will this lead to retain cycle?
+        NSTableCellView *cell = [tableView makeViewWithIdentifier:@"theReusableCell_Table" owner: self]; /// [Jun 2025] What to pass as owner here? Will this lead to retain cycle?
+        cell.textField.delegate = self; /// Optimization: Could prolly set this once in IB [Oct 2025]
         
         NSXMLElement *body = (id)[self.data childAtIndex: 1]; /// This makes assumptions based on the tests we do in `setData:`
         NSXMLNode *transUnit = [body childAtIndex: row];
         
-        assert( isclass(transUnit, NSXMLElement) );
-        assert( [transUnit.name isEqual: @"trans-unit"] );
+        assert(isclass(transUnit, NSXMLElement));
+        assert([transUnit.name isEqual: @"trans-unit"]);
         
-        NSDictionary *attrs = xml_attrdict((NSXMLElement *)transUnit);
-        NSArray <NSXMLNode *> * childs = [transUnit children];
+        NSDictionary<NSString *, id> *attrs = xml_attrdict((NSXMLElement *)transUnit);
         
-        #define col(colid) \
-            else if ([[tableColumn identifier] isEqual: (@colid)])
+        #define iscol(colid) \
+            [[tableColumn identifier] isEqual: (@"" colid)]
         
-        #define ret(val) ({ result = (val); goto end; })
+        #define ret(val) ({ uiString = (val); goto end; })
         
-        NSString *result = @"<Error in code>";
+        NSString *uiString = @"<Error in code>";
+        
+        void (^editingCallback)(NSString *newString) = nil;
         
         if ((0)) {}
-        col("id")     {
-            id val = attrs[@"id"];                                      assert(isclass(val, NSString));
-            ret(val);
-        }
-        col("source") {
-            NSXMLNode *source =  xml_childnamed(transUnit, @"source");
-            id val = source.objectValue;                                assert(isclass(val, NSString));
-            ret(val);
-        }
-        col("target") {
-            NSXMLNode *target = xml_childnamed(transUnit, @"target");  if (!target) ret(@"");                      /// <target> sometimes doesnt' exist.
-            id val = target.objectValue;                               assert(isclass(val, NSString));
-            ret(val);
-        }
-        col("state")  {
-            NSXMLNode *target = xml_childnamed(transUnit, @"target");  if (!target) ret(@""); assert(isclass(target, NSXMLElement));
-            id val =  xml_attr((NSXMLElement *)target, "state");       assert(!val || isclass(val, NSString));
-            ret(val);
-        }
-        col("note")   {
-            NSXMLNode *note = xml_childnamed(transUnit, @"note");
-            id val = note.objectValue;                                  assert(isclass(val, NSString));
-            ret(val);
-        
-        }
+            else if (iscol("id")) {
+                uiString = attrs[@"id"];
+            }
+            else if (iscol("source")) {
+                NSXMLNode *ch =  xml_childnamed(transUnit, @"source");
+                uiString = ch.objectValue;
+            }
+            else if (iscol("target")) {
+                NSXMLNode *ch = xml_childnamed(transUnit, @"target");
+                uiString = ch.objectValue ?: @""; /// ?: cause `<target>` sometimes doesnt' exist. [Oct 2025]
+                editingCallback = ^void (NSString *newString) {
+                    ch.objectValue = newString;
+                    mflog(@"<target> edited: %@", newString);
+                    [appdel writeTranslationDataToFile];
+                    
+                };
+            }
+            else if (iscol("state")) {
+                NSXMLNode *ch = xml_childnamed(transUnit, @"target");
+                uiString =  xml_attr((NSXMLElement *)ch, "state") ?: @""; /// ?: cause `<target>` sometimes doesnt' exist [Oct 2025]
+            }
+            else if (iscol("note")) {
+                NSXMLNode *ch = xml_childnamed(transUnit, @"note");
+                uiString = ch.objectValue;
+            
+            }
         else assert(false);
-        
         #undef col
         #undef ret
         
-        end:
+        /// Validate uiString
+        if (iscol("state")) assert(!uiString || isclass(uiString, NSString));
+        else                assert(isclass(uiString, NSString));
         
-        [cell.textField setStringValue: result ?: @""];
+        /// Configure cell
+        [cell.textField setStringValue: uiString ?: @""];
+        [cell.textField setEditable: iscol(@"target")];
+        [cell.textField mf_setAssociatedObject: editingCallback forKey: @"editingCallback"];
         
+        /// Return
         return cell;
+        #undef iscol
     }
 
     #pragma mark - NSTableViewDelegate
 
     - (void) tableView:(NSTableView *) tableView didClickTableColumn:(NSTableColumn *) tableColumn {
-        Log(@"Table column '%@' clicked!", tableColumn.title);
+        mflog(@"Table column '%@' clicked!", tableColumn.title);
     }
+    
+    #pragma mark - NSControlTextEditingDelegate (Callbacks for the NSTextField)
+    
+    - (void) controlTextDidEndEditing: (NSNotification *)notification {
+        NSTextField *textField = notification.object;
+        ((void (^)(NSString *))[textField mf_associatedObjectForKey: @"editingCallback"])(textField.stringValue);
+    }
+    
 
 
 @end

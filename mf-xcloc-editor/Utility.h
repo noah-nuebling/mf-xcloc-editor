@@ -10,10 +10,13 @@
 ///
 
 #define auto __auto_type                /// `auto` keyword is unused in C, so overriding with CPP-style `__auto_type` should be fine.
-#define Log(msg...)                    NSLog(@ __FILE_NAME__ ": " msg)
-#define fail(goto_label, reason...)    ({ Log(reason); goto goto_label; })
+#define mflog(msg...)                   NSLog(@ __FILE_NAME__ ": " msg)
+#define fail(goto_label, reason...)    ({ mflog(reason); goto goto_label; })
 #define isclass(obj, classname)        ({ [[(obj) class] isSubclassOfClass: [classname class]]; })
 #define stringf(format, args...)        [NSString stringWithFormat: (format), ## args]
+
+#define mfonce dispatch_once
+#define mfoncet ({ static dispatch_once_t onceToken; &onceToken; })
 
 #define safeidx(arr, count, idx, fallback) ({                   \
     auto _arr = (arr);                                          \
@@ -56,10 +59,10 @@
 
 #define xml_attr(xmlElement, key) ({                                        \
     auto _xmlElement = (xmlElement);                                        \
-    [[_xmlElement attributeForName:(@key)] objectValue];                    \
+    [[_xmlElement attributeForName: (@key)] objectValue];                   \
 })
 
-#define xml_attrdict(xmlElement) ({                                         \
+#define xml_attrdict(xmlElement) (NSMutableDictionary<NSString *, id> *) ({ \
     NSMutableDictionary *_result = [NSMutableDictionary dictionary];        \
     auto _xmlElement = (xmlElement);                                        \
     for (NSXMLNode *_el in [_xmlElement attributes]) {                      \

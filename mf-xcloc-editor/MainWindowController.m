@@ -34,13 +34,20 @@
         Outlets result = {0};
         
         /// Set up window
-        auto window = [NSWindow new];
-        window.styleMask = 0
-            | NSWindowStyleMaskClosable
-            | NSWindowStyleMaskResizable
-            | NSWindowStyleMaskTitled
-        ;
-        window.title = @"Xcloc Editor";
+        
+        static NSWindow *window; /// Without making static, this started crashing somewhere in AppKit on Tahoe  after adding `windowShouldClose:` [Oct 2025]
+        mfonce(mfoncet, ^{
+            
+            window = [NSWindow new];
+            window.styleMask = 0
+                | NSWindowStyleMaskClosable
+                | NSWindowStyleMaskResizable
+                | NSWindowStyleMaskTitled
+            ;
+            window.title = @"Xcloc Editor";
+            
+            window.delegate = self;
+        });
         
         /// Define view hierarchy & get outlets
         NSSplitView *out_splitView = nil;
@@ -63,11 +70,24 @@
             [result.tableView.enclosingScrollView.widthAnchor constraintGreaterThanOrEqualToConstant: 200].active = YES;
         }
         
+        /// Set window size/position
+        { /// Default size/position
+            [window setContentSize: NSMakeSize(800, 600)];
+            [window center];
+        }
+        [window setFrameUsingName: @"TheeeEditor"]; /// Override with last saved size / position
+        
         /// Open window
         [window makeKeyAndOrderFront: nil];
         
         /// Return
         return result;
+    }
+    
+    
+    - (void) windowWillClose: (NSNotification *)notification { /// TODO: This is not called when the window is closed due to application termination [Oct 2025]
+        
+        [notification.object saveFrameUsingName: @"TheeeEditor"];
     }
 
 @end

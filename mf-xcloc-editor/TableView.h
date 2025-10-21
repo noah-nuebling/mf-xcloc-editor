@@ -8,6 +8,6 @@
 #import <Foundation/Foundation.h>
 #import <AppKit/AppKit.h>
 
-@interface TableView : NSTableView <NSTableViewDataSource, NSTableViewDelegate>
+@interface TableView : NSTableView <NSTableViewDataSource, NSTableViewDelegate, NSControlTextEditingDelegate>
     @property(strong, nonatomic) NSXMLElement *data; /// Section of an XLIFF file that this table displays [Jun 2025]
 @end

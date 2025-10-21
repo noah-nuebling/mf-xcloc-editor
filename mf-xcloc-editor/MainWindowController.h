@@ -9,7 +9,7 @@
 #import "SourceList.h"
 #import "TableView.h"
 
-@interface MainWindowController : NSObject
+@interface MainWindowController : NSObject <NSWindowDelegate>
 
     typedef struct {
         SourceList *sourceList;
