@@ -15,6 +15,17 @@
 #import "NSObject+Additions.h"
 #import "AppDelegate.h"
 
+#define kTransUnitState_Translated      @"translated"
+#define kTransUnitState_DontTranslate   @"mf_dont_translate"
+#define kTransUnitState_New             @"new"
+#define kTransUnitState_NeedsReview     @"needs-review-l10n"
+static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct 2025]
+    kTransUnitState_New,
+    kTransUnitState_NeedsReview,
+    kTransUnitState_Translated,
+    kTransUnitState_DontTranslate
+];
+
 @implementation TableView
     {
         
@@ -48,9 +59,9 @@
                 return v;
             };
             [self addTableColumn: mfui_tablecol(@"id",     @"ID")];
+            [self addTableColumn: mfui_tablecol(@"state",  @"State")];
             [self addTableColumn: mfui_tablecol(@"source", @"Source")];
             [self addTableColumn: mfui_tablecol(@"target", @"Target")];
-            [self addTableColumn: mfui_tablecol(@"state",  @"State")];
             [self addTableColumn: mfui_tablecol(@"note",   @"Note")];
         }
         
@@ -85,7 +96,7 @@
     #pragma mark - Sorting
     
     static NSMutableArray *_rowToSortedRow = nil;
-    - (void)tableView: (NSTableView *)tableView sortDescriptorsDidChange: (NSArray<NSSortDescriptor *> *)oldDescriptors {
+    - (void) tableView: (NSTableView *)tableView sortDescriptorsDidChange: (NSArray<NSSortDescriptor *> *)oldDescriptors {
         
         _rowToSortedRow = [NSMutableArray new];
         NSSortDescriptor *desc = tableView.sortDescriptors.firstObject;
@@ -96,11 +107,20 @@
             [_rowToSortedRow addObject: @(i)];
         
         [_rowToSortedRow sortUsingComparator: ^NSComparisonResult(NSNumber *i, NSNumber *j) {
-            auto comp = [
-                nodeForCol([self rowModel_Unsorted: [i integerValue]], desc.key)
-                compare:
-                nodeForCol([self rowModel_Unsorted: [j integerValue]], desc.key)
-            ];
+            NSComparisonResult comp;
+            if ([desc.key isEqual: @"state"]) {
+                comp = (
+                    [_stateOrder indexOfObject: rowModel_getCellModel([self rowModel_Unsorted: [i integerValue]], @"state")] -
+                    [_stateOrder indexOfObject: rowModel_getCellModel([self rowModel_Unsorted: [j integerValue]], @"state")]
+                );
+            }
+            else {
+                comp = [
+                    rowModel_getCellModel([self rowModel_Unsorted: [i integerValue]], desc.key)
+                    compare:
+                    rowModel_getCellModel([self rowModel_Unsorted: [j integerValue]], desc.key)
+                ];
+            }
             return desc.ascending ? comp : -comp;
         }];
         
@@ -122,29 +142,29 @@
         return [self rowModel_Unsorted: [_rowToSortedRow[row] integerValue]];
     }
 
-     NSString *nodeForCol(NSXMLElement */*rowModel*/transUnit, NSString *colid) {
+     NSString *rowModel_getCellModel(NSXMLElement *transUnit, NSString *columnID) {
         if ((0)) {}
-            else if ([colid isEqual: @"id"])        return xml_attr(transUnit, @"id")           .objectValue;
-            else if ([colid isEqual: @"source"])    return xml_childnamed(transUnit, @"source") .objectValue;
-            else if ([colid isEqual: @"target"])    return xml_childnamed(transUnit, @"target") .objectValue ?: @""; /// ?: cause `<target>` sometimes doesnt' exist. [Oct 2025]
-            else if ([colid isEqual: @"note"])      return xml_childnamed(transUnit, @"note")   .objectValue;
-            else if ([colid isEqual: @"state"]) {
+            else if ([columnID isEqual: @"id"])        return xml_attr(transUnit, @"id")           .objectValue;
+            else if ([columnID isEqual: @"source"])    return xml_childnamed(transUnit, @"source") .objectValue;
+            else if ([columnID isEqual: @"target"])    return xml_childnamed(transUnit, @"target") .objectValue ?: @""; /// ?: cause `<target>` sometimes doesnt' exist. [Oct 2025]
+            else if ([columnID isEqual: @"note"])      return xml_childnamed(transUnit, @"note")   .objectValue;
+            else if ([columnID isEqual: @"state"]) {
                 if ([xml_attr(transUnit, @"translate").objectValue isEqual: @"no"])
-                    return @"mf_dont_translate";
+                    return kTransUnitState_DontTranslate;
                 else
                     return xml_attr((NSXMLElement *)xml_childnamed(transUnit, @"target"), @"state").objectValue ?: @""; /// ?: cause `<target>` sometimes doesnt' exist. [Oct 2025]
             }
         else assert(false);
         return nil;
     }
-     void setNodeForCol(NSXMLElement */*rowModel*/transUnit, NSString *colid, NSString *newValue) {
+     void rowModel_setCellModel(NSXMLElement *transUnit, NSString *columnID, NSString *newValue) {
         if ((0)) {}
-            else if ([colid isEqual: @"id"])        xml_attr(transUnit, @"id")          .objectValue = newValue;
-            else if ([colid isEqual: @"source"])    xml_childnamed(transUnit, @"source").objectValue = newValue;
-            else if ([colid isEqual: @"target"])    xml_childnamed(transUnit, @"target").objectValue = newValue;
-            else if ([colid isEqual: @"note"])      xml_childnamed(transUnit, @"note")  .objectValue = newValue;
-            else if ([colid isEqual: @"state"]) {
-                if ([newValue isEqual: @"mf_dont_translate"])
+            else if ([columnID isEqual: @"id"])        xml_attr(transUnit, @"id")          .objectValue = newValue;
+            else if ([columnID isEqual: @"source"])    xml_childnamed(transUnit, @"source").objectValue = newValue;
+            else if ([columnID isEqual: @"target"])    xml_childnamed(transUnit, @"target").objectValue = newValue;
+            else if ([columnID isEqual: @"note"])      xml_childnamed(transUnit, @"note")  .objectValue = newValue;
+            else if ([columnID isEqual: @"state"]) {
+                if ([newValue isEqual: kTransUnitState_DontTranslate])
                     xml_attr(transUnit, @"translate").objectValue = @"no";
                 else
                     xml_attr((NSXMLElement *)xml_childnamed(transUnit, @"target"), @"state").objectValue = newValue;
@@ -208,7 +228,13 @@
         ///     (This feels error-prone – are we catching all the places where `_rowToSortedRow` needs to be reset? [Oct 2025])
         _rowToSortedRow = nil;
     }
-
+    
+    #pragma mark - Selection
+    
+    - (NSTableViewSelectionHighlightStyle)selectionHighlightStyle {
+        return NSTableViewSelectionHighlightStyleNone;
+    }
+    
     #pragma mark - Menu Items
     
     - (NSInteger) indexOfColumnWithIdentifier: (NSUserInterfaceItemIdentifier)identifier {
@@ -228,10 +254,10 @@
         
         if ((0)) {}
             else if ([menuItem.identifier isEqual: @"mark_as_translated"]) {
-                setNodeForCol(transUnit, @"state", @"translated");
+                rowModel_setCellModel(transUnit, @"state", kTransUnitState_Translated);
             }
             else if ([menuItem.identifier isEqual: @"mark_for_review"]) {
-                setNodeForCol(transUnit, @"state", @"needs-review-l10n");
+                rowModel_setCellModel(transUnit, @"state", kTransUnitState_NeedsReview);
             }
         else assert(false);
         
@@ -246,15 +272,15 @@
         
         auto transUnit = [self rowModel: self.clickedRow];
         
-        if ([nodeForCol(transUnit, @"translate") isEqual: @"no"]) return NO;
+        if ([rowModel_getCellModel(transUnit, @"state") isEqual: @"mf_dont_translate"]) return NO;
         if (
-            [nodeForCol(transUnit, @"state") isEqual: @"translated"] &&
+            [rowModel_getCellModel(transUnit, @"state") isEqual: kTransUnitState_Translated] &&
             [menuItem.identifier isEqual: @"mark_as_translated"]
         ) {
             return NO;
         }
         if (
-            [nodeForCol(transUnit, @"state") isEqual: @"needs-review-l10n"] &&
+            [rowModel_getCellModel(transUnit, @"state") isEqual: kTransUnitState_NeedsReview] &&
             [menuItem.identifier isEqual: @"mark_for_review"]
         ) {
             return NO;
@@ -283,13 +309,13 @@
         assert([transUnit.name isEqual: @"trans-unit"]);
         
         /// Get uiString
-        NSString *uiString = nodeForCol(transUnit, [tableColumn identifier]);
+        NSString *uiString = rowModel_getCellModel(transUnit, [tableColumn identifier]);
         
         /// Special stuff for target column
         void (^editingCallback)(NSString *newString) = nil;
+        bool targetCellShouldBeEditable = true;
         
         /// Validate uiString
-        bool targetCellShouldBeEditable = true;
         if (iscol(@"state"))    assert(!uiString || isclass(uiString, NSString));
         else                    assert(isclass(uiString, NSString));
         
@@ -327,7 +353,7 @@
         NSColor *stateCellBackgroundColor = nil;
         if (iscol(@"state")) {
             if ((0)) {}
-                else if ([uiString isEqual: @"translated"]) {
+                else if ([uiString isEqual: kTransUnitState_Translated]) {
                     auto image = [NSImage imageWithSystemSymbolName: @"checkmark.circle" accessibilityDescription: uiString]; /// Fixme: This disappears when you double-click it.
                     auto textAttachment = [NSTextAttachment new]; {
                         [textAttachment setImage: image];
@@ -336,15 +362,15 @@
                         NSForegroundColorAttributeName: [NSColor systemGreenColor]
                     }];
                 }
-                else if ([uiString isEqual: @"mf_dont_translate"]) {
+                else if ([uiString isEqual: kTransUnitState_DontTranslate]) {
                     uiStringAttributed = attributed(@"DON'T TRANSLATE");
                     stateCellBackgroundColor = [NSColor systemGrayColor];
                 }
-                else if ([uiString isEqual: @"new"]) {
+                else if ([uiString isEqual: kTransUnitState_New]) {
                     uiStringAttributed = attributed(@"NEW");
                     stateCellBackgroundColor = [NSColor systemBlueColor];
                 }
-                else if ([uiString isEqual: @"needs-review-l10n"]) {
+                else if ([uiString isEqual: kTransUnitState_NeedsReview]) {
                     uiStringAttributed = attributed(@"NEEDS REVIEW");
                     stateCellBackgroundColor = [NSColor systemOrangeColor];
                 }
@@ -355,7 +381,7 @@
         }
         
         /// Turn off editing for `mf_dont_translate`
-        if (iscol(@"target") && [nodeForCol(transUnit, @"state") isEqual: @"mf_dont_translate"])
+        if (iscol(@"target") && [rowModel_getCellModel(transUnit, @"state") isEqual: @"mf_dont_translate"])
             targetCellShouldBeEditable = false;
         
         /// Configure cell
