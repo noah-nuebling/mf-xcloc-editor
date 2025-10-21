@@ -150,7 +150,7 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
             [self->files addObject: File_Make(transUnits, xml_attr(file, @"original").objectValue)];
             [allTransUnits addObjectsFromArray: transUnits];
         }
-        [self->files insertObject: File_Make(allTransUnits, @"All Files") atIndex: 0];
+        [self->files insertObject: File_Make(allTransUnits, @"All Documents") atIndex: 0];
         
         /// Store xliff doc
         self->_xliffDoc = xliffDoc;
@@ -173,12 +173,30 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
     }
 
     #pragma mark - NSOutlineViewDelegate
-
+    
+    - (NSString *) uiStringForFile: (File *)file {
+        
+        NSMutableArray *allUIStrings = [NSMutableArray new];
+        for (File *f in self->files) {
+            NSString *uiString = [[f->path lastPathComponent] stringByDeletingPathExtension];
+            for (int i = 1;; i++) {
+                NSString *appendix = (i == 1) ? @"" : stringf(@" (%d)", i);
+                NSString *uiStringgg = stringf(@"%@%@", uiString, appendix);
+                if (![allUIStrings containsObject: uiStringgg]) {
+                    [allUIStrings addObject: uiStringgg];
+                    break;
+                }
+            }
+        }
+    
+        return allUIStrings[[self->files indexOfObject: file]];
+    }
+    
     - (NSView *) outlineView: (NSOutlineView *)outlineView viewForTableColumn: (NSTableColumn *)tableColumn item: (File *)file {
         
         /// There's only one column so we can ignore it.
         NSTableCellView *cell = [self makeViewWithIdentifier: @"theReusableCell_Outline" owner: self]; /// Not sure if owner=self is right. Also see TableView.m
-        cell.textField.stringValue = [file->path  lastPathComponent];
+        cell.textField.stringValue = [self uiStringForFile: file];
         return cell;
     }
 
