@@ -14,7 +14,9 @@
 #pragma mark - Lifecycle
 
 NSString *getXliffPath(void) {
-    NSString *xclocPath = @"/Users/noah/mmf-stuff/xcode-localization-screenshot-fix/CustomImplForLocalizationScreenshotTest/Notes/Examples/example-da.xcloc";
+    NSString *xclocPath;
+        if ((0)) xclocPath = @"/Users/noah/mmf-stuff/xcode-localization-screenshot-fix/CustomImplForLocalizationScreenshotTest/Notes/Examples/example-da.xcloc";
+        else     xclocPath = @"/Users/noah/mmf-stuff/mf-xcloc-editor/mf-xcloc-editor/example-docs/da.xcloc";
     NSString *xliffPath = [xclocPath stringByAppendingPathComponent: @"Localized Contents/da.xliff"];
     return xliffPath;
 }

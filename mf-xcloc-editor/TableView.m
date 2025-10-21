@@ -122,8 +122,10 @@
     
     - (NSView *) tableView: (NSTableView *)tableView viewForTableColumn: (NSTableColumn *)tableColumn row: (NSInteger)row {
     
+        #define iscol(colid) [[tableColumn identifier] isEqual: (@"" colid)]
+    
         NSTableCellView *cell = [tableView makeViewWithIdentifier:@"theReusableCell_Table" owner: self]; /// [Jun 2025] What to pass as owner here? Will this lead to retain cycle?
-        cell.textField.delegate = self; /// Optimization: Could prolly set this once in IB [Oct 2025]
+        cell.textField.delegate = (id)self; /// Optimization: Could prolly set this once in IB [Oct 2025]
         
         NSXMLElement *body = (id)[self.data childAtIndex: 1]; /// This makes assumptions based on the tests we do in `setData:`
         NSXMLNode *transUnit = [body childAtIndex: row];
@@ -132,11 +134,6 @@
         assert([transUnit.name isEqual: @"trans-unit"]);
         
         NSDictionary<NSString *, id> *attrs = xml_attrdict((NSXMLElement *)transUnit);
-        
-        #define iscol(colid) \
-            [[tableColumn identifier] isEqual: (@"" colid)]
-        
-        #define ret(val) ({ uiString = (val); goto end; })
         
         NSString *uiString = @"<Error in code>";
         
@@ -170,8 +167,6 @@
             
             }
         else assert(false);
-        #undef col
-        #undef ret
         
         /// Validate uiString
         if (iscol("state")) assert(!uiString || isclass(uiString, NSString));
@@ -196,6 +191,8 @@
     #pragma mark - NSControlTextEditingDelegate (Callbacks for the NSTextField)
     
     - (void) controlTextDidEndEditing: (NSNotification *)notification {
+        
+        /// Call the editing callback with the new stringValue
         NSTextField *textField = notification.object;
         ((void (^)(NSString *))[textField mf_associatedObjectForKey: @"editingCallback"])(textField.stringValue);
     }
