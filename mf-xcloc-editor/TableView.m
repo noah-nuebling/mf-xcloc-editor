@@ -26,6 +26,14 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
     kTransUnitState_DontTranslate
 ];
 
+/// Column-ids
+///     ... Actually feels fine just using the strings directly [Oct 2025]
+#define kColID_ID       @"id"
+#define kColID_State    @"state"
+#define kColID_Source   @"source"
+#define kColID_Target   @"target"
+#define kColID_Note     @"note"
+
 @implementation TableView
     {
         
@@ -42,7 +50,7 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
         self.dataSource = self;
         
         /// Configure style
-        self.gridStyleMask = NSTableViewSolidVerticalGridLineMask | NSTableViewSolidHorizontalGridLineMask;
+        self.gridStyleMask = /*NSTableViewSolidVerticalGridLineMask |*/ NSTableViewSolidHorizontalGridLineMask;
         self.style = NSTableViewStyleFullWidth;
         self.usesAutomaticRowHeights = YES;
         
@@ -96,41 +104,50 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
     #pragma mark - Sorting
     
     static NSMutableArray *_rowToSortedRow = nil;
-    - (void) tableView: (NSTableView *)tableView sortDescriptorsDidChange: (NSArray<NSSortDescriptor *> *)oldDescriptors {
+    
+    - (void) tableView: (NSTableView *)tableView sortDescriptorsDidChange: (NSArray<NSSortDescriptor *> *)oldDescriptors { /// This is called when the user clicks the column headers to sort them.
+        [self update_rowToSortedRow];
+        [self reloadData];
+    }
+    
+    - (void) update_rowToSortedRow {
+        
+        mflog(@"Updating _rowToSortedRow with sortDescriptors: (only using the first one): %@", self.sortDescriptors);
+        
+        NSSortDescriptor *desc = self.sortDescriptors.firstObject;
+        if (!desc) { _rowToSortedRow = nil; return; }
         
         _rowToSortedRow = [NSMutableArray new];
-        NSSortDescriptor *desc = tableView.sortDescriptors.firstObject;
-        
-        NSInteger rowCount = [self numberOfRows];
-        
-        for (NSInteger i = 0; i < rowCount; i++)
-            [_rowToSortedRow addObject: @(i)];
-        
-        [_rowToSortedRow sortUsingComparator: ^NSComparisonResult(NSNumber *i, NSNumber *j) {
-            NSComparisonResult comp;
-            if ([desc.key isEqual: @"state"]) {
-                comp = (
-                    [_stateOrder indexOfObject: rowModel_getCellModel([self rowModel_Unsorted: [i integerValue]], @"state")] -
-                    [_stateOrder indexOfObject: rowModel_getCellModel([self rowModel_Unsorted: [j integerValue]], @"state")]
-                );
-            }
-            else {
-                comp = [
-                    rowModel_getCellModel([self rowModel_Unsorted: [i integerValue]], desc.key)
-                    compare:
-                    rowModel_getCellModel([self rowModel_Unsorted: [j integerValue]], desc.key)
-                ];
-            }
-            return desc.ascending ? comp : -comp;
-        }];
-        
-        [self reloadData];
+        {
+            NSInteger rowCount = [self numberOfRowsInTableView: self]; /// -[numberOfRows] gives wrong results while swtiching files not sure what's going on [Oct 2025]
+            
+            for (NSInteger i = 0; i < rowCount; i++)
+                [_rowToSortedRow addObject: @(i)];
+            
+            [_rowToSortedRow sortUsingComparator: ^NSComparisonResult(NSNumber *i, NSNumber *j) {
+                NSComparisonResult comp;
+                if ([desc.key isEqual: @"state"]) {
+                    comp = (
+                        [_stateOrder indexOfObject: rowModel_getCellModel([self rowModel_Unsorted: [i integerValue]], @"state")] -
+                        [_stateOrder indexOfObject: rowModel_getCellModel([self rowModel_Unsorted: [j integerValue]], @"state")]
+                    );
+                }
+                else {
+                    comp = [
+                        rowModel_getCellModel([self rowModel_Unsorted: [i integerValue]], desc.key)
+                        compare:
+                        rowModel_getCellModel([self rowModel_Unsorted: [j integerValue]], desc.key)
+                    ];
+                }
+                return desc.ascending ? comp : -comp;
+            }];
+        }
     }
 
     #pragma mark - Data
 
     - (NSXMLElement *) rowModel_Unsorted: (NSInteger)row {
-        NSXMLElement *body = (id)[self.data childAtIndex: 1]; /// This makes assumptions based on the tests we do in `setData:`
+        NSXMLElement *body = (id)[self.data childAtIndex: 1]; /// This makes assumptions based on the tests we do in `reloadWithNewData:`
         NSXMLNode *transUnit = [body childAtIndex: row];
         assert(isclass(transUnit, NSXMLElement));
         return (NSXMLElement *)transUnit;
@@ -172,7 +189,7 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
         else assert(false);
     };
 
-    - (void)setData:(NSXMLElement *)data {
+    - (void) reloadWithNewData: (NSXMLElement *)data {
         
         /** Validate data
             Should look like this:
@@ -222,18 +239,22 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
         }
         
         /// Store data
-        _data = data;
+        self->_data = data;
         
-        /// Reset sorted rows
-        ///     (This feels error-prone – are we catching all the places where `_rowToSortedRow` needs to be reset? [Oct 2025])
-        _rowToSortedRow = nil;
+        /// Sort
+        [self update_rowToSortedRow];
+        
+        /// Reload
+        [self reloadData];
     }
     
     #pragma mark - Selection
     
-    - (NSTableViewSelectionHighlightStyle)selectionHighlightStyle {
-        return NSTableViewSelectionHighlightStyleNone;
-    }
+    #if 0
+        - (NSTableViewSelectionHighlightStyle)selectionHighlightStyle {
+            return NSTableViewSelectionHighlightStyleNone;
+        }
+    #endif
     
     #pragma mark - Menu Items
     
@@ -261,10 +282,10 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
             }
         else assert(false);
         
-        [self
+        [self /// Specifying rows and colums  to updatefor speedup, but I think the delay is just built in to NSMenu  (macOS Tahoe, [Oct 2025])
             reloadDataForRowIndexes:    [NSIndexSet indexSetWithIndex: self.clickedRow]
             columnIndexes:              [NSIndexSet indexSetWithIndex: [self indexOfColumnWithIdentifier: @"state"]]
-        ]; /// Specifying rows and colums for speedup, but I think the delay is just built in to NSMenu  (macOS Tahoe, [Oct 2025])
+        ];
         [appdel writeTranslationDataToFile];
     }
     
@@ -272,7 +293,8 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
         
         auto transUnit = [self rowModel: self.clickedRow];
         
-        if ([rowModel_getCellModel(transUnit, @"state") isEqual: @"mf_dont_translate"]) return NO;
+        if ([rowModel_getCellModel(transUnit, @"state") isEqual: @"mf_dont_translate"])
+            return NO;
         if (
             [rowModel_getCellModel(transUnit, @"state") isEqual: kTransUnitState_Translated] &&
             [menuItem.identifier isEqual: @"mark_as_translated"]
@@ -294,7 +316,7 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
     #pragma mark - NSTableViewDataSource
 
     - (NSInteger) numberOfRowsInTableView: (NSTableView *)tableView {
-        NSXMLElement *body = (id)[self.data childAtIndex: 1]; /// This makes assumptions based on the tests we do in `setData:`
+        NSXMLElement *body = (id)[self.data childAtIndex: 1]; /// This makes assumptions based on the tests we do in `reloadWithNewData:`
         auto result = [body childCount];
         return result;
     }
@@ -308,16 +330,12 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
         assert(isclass(transUnit, NSXMLElement));
         assert([transUnit.name isEqual: @"trans-unit"]);
         
-        /// Get uiString
+        /// Get model value
         NSString *uiString = rowModel_getCellModel(transUnit, [tableColumn identifier]);
         
-        /// Special stuff for target column
+        /// Special stuff for `<target>` column
         void (^editingCallback)(NSString *newString) = nil;
         bool targetCellShouldBeEditable = true;
-        
-        /// Validate uiString
-        if (iscol(@"state"))    assert(!uiString || isclass(uiString, NSString));
-        else                    assert(isclass(uiString, NSString));
         
         /// Handle pluralizable strings
         {
@@ -347,9 +365,7 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
         /// Override raw state string with colorful symbols / badges
         
         NSAttributedString *uiStringAttributed  = [[NSAttributedString alloc] initWithString: (uiString ?: @"")];
-        
         #define attributed(str) [[NSAttributedString alloc] initWithString: (str)]
-        
         NSColor *stateCellBackgroundColor = nil;
         if (iscol(@"state")) {
             if ((0)) {}
@@ -384,7 +400,7 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
         if (iscol(@"target") && [rowModel_getCellModel(transUnit, @"state") isEqual: @"mf_dont_translate"])
             targetCellShouldBeEditable = false;
         
-        /// Configure cell
+        /// Create cell
         NSTableCellView *cell;
         {
             if (stateCellBackgroundColor) {

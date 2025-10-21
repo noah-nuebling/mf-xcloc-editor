@@ -110,9 +110,7 @@
     - (void) outlineViewSelectionDidChange: (NSNotification *)notification {
         
         NSXMLElement *file = self->files[self.selectedRow];
-        
-        [appdel->tableView setData: file];
-        [appdel->tableView reloadData];
+        [appdel->tableView reloadWithNewData: file];
     }
 
 @end

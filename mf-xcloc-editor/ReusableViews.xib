@@ -28,12 +28,12 @@
             <point key="canvasLocation" x="-257" y="21"/>
         </tableCellView>
         <tableCellView identifier="theReusableCell_Table" verticalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="Fin-0A-5dD" userLabel="Table Cell">
-            <rect key="frame" x="0.0" y="0.0" width="115" height="32"/>
+            <rect key="frame" x="0.0" y="0.0" width="115" height="31"/>
             <subviews>
                 <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" verticalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="ATs-3R-nuV">
-                    <rect key="frame" x="0.0" y="8" width="115" height="16"/>
+                    <rect key="frame" x="0.0" y="8" width="115" height="15"/>
                     <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="Table View Cell" id="XR4-JF-5QN">
-                        <font key="font" usesAppearanceFont="YES"/>
+                        <font key="font" metaFont="system" size="12"/>
                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                         <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                     </textFieldCell>
