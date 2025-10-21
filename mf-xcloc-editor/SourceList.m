@@ -65,10 +65,10 @@
         assert( isclass(xliff, NSXMLElement) );
         auto attrs = xml_attrdict((NSXMLElement *)xliff);
         
-        if ((0)) assert( [attrs[@"xmlns"] isEqual: @"urn:oasis:names:tc:xliff:document:1.2"] );         /// Present in the xml text but not here
-        if ((0)) assert( [attrs[@"xmlns:xsi"] isEqual: @"http://www.w3.org/2001/XMLSchema-instance"] ); /// Present in the xml text but not here
-        assert( [attrs[@"version"] isEqual: @"1.2" ] );
-        assert( [attrs[@"xsi:schemaLocation"] isEqual: @"urn:oasis:names:tc:xliff:document:1.2 http://docs.oasis-open.org/xliff/v1.2/os/xliff-core-1.2-strict.xsd"] );
+        if ((0)) assert( [attrs[@"xmlns"].objectValue     isEqual: @"urn:oasis:names:tc:xliff:document:1.2"] );         /// Present in the xml text but not here
+        if ((0)) assert( [attrs[@"xmlns:xsi"].objectValue isEqual: @"http://www.w3.org/2001/XMLSchema-instance"] ); /// Present in the xml text but not here
+        assert( [attrs[@"version"].objectValue            isEqual: @"1.2" ] );
+        assert( [attrs[@"xsi:schemaLocation"].objectValue isEqual: @"urn:oasis:names:tc:xliff:document:1.2 http://docs.oasis-open.org/xliff/v1.2/os/xliff-core-1.2-strict.xsd"] );
         
         /// Validate & store xliff node children (files)
         assert( allsatisfy(xliff.children, xliff.childCount, x, isclass(x, NSXMLElement)) );
@@ -102,7 +102,7 @@
         
         /// There's only one column so we can ignore it.
         NSTableCellView *cell = [self makeViewWithIdentifier: @"theReusableCell_Outline" owner: self]; /// Not sure if owner=self is right. Also see TableView.m
-        NSString *path = xml_attr(fileEl, "original");
+        NSString *path = xml_attr(fileEl, @"original").objectValue;
         cell.textField.stringValue = [path lastPathComponent];
         return cell;
     }

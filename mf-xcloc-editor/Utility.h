@@ -57,16 +57,12 @@
     firstmatch(_node.children, _node.children.count, nil, x, [x.name isEqual: (name_)]);  \
 })
 
-#define xml_attr(xmlElement, key) ({                                        \
-    auto _xmlElement = (xmlElement);                                        \
-    [[_xmlElement attributeForName: (@key)] objectValue];                   \
-})
+static NSXMLNode *xml_attr(NSXMLElement *xmlElement, NSString *name) {
+    return [xmlElement attributeForName: name];
+}
 
-#define xml_attrdict(xmlElement) (NSMutableDictionary<NSString *, id> *) ({ \
-    NSMutableDictionary *_result = [NSMutableDictionary dictionary];        \
-    auto _xmlElement = (xmlElement);                                        \
-    for (NSXMLNode *_el in [_xmlElement attributes]) {                      \
-        _result[_el.name] = _el.objectValue;                                \
-    }                                                                       \
-    _result;                                                                \
-})
+static NSMutableDictionary<NSString *, NSXMLNode *> *xml_attrdict(NSXMLElement *_xmlElement) {
+    NSMutableDictionary *result = [NSMutableDictionary dictionary];
+    for (NSXMLNode *el in [_xmlElement attributes]) result[el.name] = el;
+    return result;
+}
