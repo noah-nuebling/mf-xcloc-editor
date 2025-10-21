@@ -121,20 +121,19 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
 
 
 
-    static NSMutableArray<NSXMLElement *> *_transUnits = nil; /// Main dataModel displayed by this table.
+    static NSMutableArray<NSXMLElement *> *_displayedTransUnits = nil; /// Main dataModel displayed by this table.
     
     - (NSXMLElement *) rowModel: (NSInteger)row {
-        return _transUnits[row];
+        return _displayedTransUnits[row];
     }
 
     - (void) update_rowModels {
         
         /// Filter
-        NSXMLElement *body = (id)[self.data childAtIndex: 1]; /// This makes assumptions based on the tests we do in `reloadWithNewData:`
-        if (![_filterString length]) _transUnits = [[body children] mutableCopy];
+        if (![_filterString length]) _displayedTransUnits = [self.transUnits mutableCopy];
         else {
-            _transUnits = [NSMutableArray new];
-            for (NSXMLElement *transUnit in body.children) {
+            _displayedTransUnits = [NSMutableArray new];
+            for (NSXMLElement *transUnit in self.transUnits) {
                 {
                     assert(isclass(transUnit, NSXMLElement));
                     assert([transUnit.name isEqual: @"trans-unit"]);
@@ -153,7 +152,7 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
                     ]
                     .location != NSNotFound
                 ) {
-                    [(NSMutableArray *)_transUnits addObject: transUnit];
+                    [(NSMutableArray *)_displayedTransUnits addObject: transUnit];
                 }
             }
         }
@@ -173,7 +172,7 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
             NSInteger rowCount = [self numberOfRowsInTableView: self]; /// -[numberOfRows] gives wrong results while swtiching files not sure what's going on [Oct 2025]
         }
         
-        [_transUnits sortUsingComparator: ^NSComparisonResult(NSXMLElement *i, NSXMLElement *j) {
+        [_displayedTransUnits sortUsingComparator: ^NSComparisonResult(NSXMLElement *i, NSXMLElement *j) {
             NSComparisonResult comp;
             if ([desc.key isEqual: @"state"]) {
                 comp = (
@@ -221,62 +220,10 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
         else assert(false);
     };
 
-    - (void) reloadWithNewData: (NSXMLElement *)data {
+    - (void) reloadWithNewData: (NSArray <NSXMLElement *> *)transUnits {
         
-        /** Validate data
-            Should look like this:
-            ```
-            <file original="App/UI/Main/Base.lproj/Main.storyboard" source-language="en" target-language="de" datatype="plaintext">
-                <header>
-                  <tool tool-id="com.apple.dt.xcode" tool-name="Xcode" tool-version="16.1" build-num="16B5001e"/>
-                </header>
-                <body>...
-            ```
-        */
-        
-        NSDictionary<NSString *, NSXMLNode *> *attrs;
-        
-        /// Validate `<file>`
-        
-        assert(data != nil);
-        assert([data.name isEqual: @"file"]);
-        assert(data.childCount == 2);
-        assert([[data childAtIndex: 0].name isEqual: @"header"]);
-        assert([[data childAtIndex: 1].name isEqual: @"body"]);
-        assert(isclass([data childAtIndex: 0], NSXMLElement));
-        assert(isclass([data childAtIndex: 1], NSXMLElement));
-        
-        
-        attrs = xml_attrdict(data);
-        assert(attrs[@"original"].objectValue           );
-        assert(attrs[@"source-language"].objectValue    );
-        assert(attrs[@"target-language"].objectValue    );
-        assert(attrs[@"datatype"].objectValue           );
-        
-        mflog("Attributes: %@", attrs);
-        
-        /// Validate `<header>`
-        
-        NSXMLNode *header = [data childAtIndex:0];
-        assert(header.childCount == 1);
-        NSXMLNode *tool = [header childAtIndex:0];
-        assert([tool.name isEqual: @"tool"]);
-        assert( isclass(tool, NSXMLElement) );
-        attrs = xml_attrdict((NSXMLElement *)tool);
-        assert([attrs[@"tool-id"].objectValue       isEqual: @"com.apple.dt.xcode"] );
-        assert([attrs[@"tool-name"].objectValue     isEqual: @"Xcode"]              );
-        if ((0)) { /// We hope our code can support other versions, too?
-            assert([attrs[@"tool-version"].objectValue  isEqual: @"16.1"]               );
-            assert([attrs[@"build-num"].objectValue     isEqual: @"16B5001e"]           );
-        }
-        
-        /// Store data
-        self->_data = data;
-        
-        /// Transform to datamodel
+        self->_transUnits = transUnits;
         [self update_rowModels];
-        
-        /// Reload
         [self reloadData];
     }
     
@@ -348,7 +295,7 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
     #pragma mark - NSTableViewDataSource
 
     - (NSInteger) numberOfRowsInTableView: (NSTableView *)tableView {
-        return [_transUnits count];
+        return [_displayedTransUnits count];
     }
     
     - (NSView *) tableView: (NSTableView *)tableView viewForTableColumn: (NSTableColumn *)tableColumn row: (NSInteger)row {

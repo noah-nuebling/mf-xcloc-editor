@@ -9,7 +9,7 @@
 #import <AppKit/AppKit.h>
 
 @interface TableView : NSTableView <NSTableViewDataSource, NSTableViewDelegate, NSControlTextEditingDelegate, NSMenuItemValidation>
-    @property(strong, nonatomic) NSXMLElement *data; /// Section of an XLIFF file that this table displays [Jun 2025]
-    - (void) reloadWithNewData: (NSXMLElement *)data;
+    @property(strong, nonatomic) NSArray <NSXMLElement *> *transUnits; /// Section of an XLIFF file that this table displays [Jun 2025]
+    - (void) reloadWithNewData: (NSArray <NSXMLElement *> *)transUnits;
     - (void) updateFilter: (NSString *)newFilterString;
 @end

@@ -12,9 +12,27 @@
 #import "Utility.h"
 #import "AppDelegate.h"
 
+@interface File : NSObject
+    {
+        @public
+        NSArray<NSXMLElement *> *transUnits;
+        NSString *path;
+    }
+@end
+@implementation File @end
+File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
+    auto f = [File new];
+    f->transUnits = transUnits;
+    f->path = path;
+    return f;
+}
+
+
 @implementation SourceList
     {
-        NSArray <NSXMLElement *> *files;
+    
+
+        NSMutableArray <File *> *files;
     }
 
     #pragma mark - Lifecycle
@@ -73,8 +91,66 @@
         /// Validate & store xliff node children (files)
         assert( allsatisfy(xliff.children, xliff.childCount, x, isclass(x, NSXMLElement)) );
         assert( allsatisfy(xliff.children, xliff.childCount, x, [x.name isEqual: @"file"]) );
-
-        self->files = (NSArray<NSXMLElement *> *) xliff.children;
+    
+        /// Unwrap the transUnits
+        auto allTransUnits = [NSMutableArray new];
+        self->files = [NSMutableArray new];
+        for (NSXMLElement *file in xliff.children) {
+        
+            /** Validate data
+                Should look like this:
+                ```
+                <file original="App/UI/Main/Base.lproj/Main.storyboard" source-language="en" target-language="de" datatype="plaintext">
+                    <header>
+                      <tool tool-id="com.apple.dt.xcode" tool-name="Xcode" tool-version="16.1" build-num="16B5001e"/>
+                    </header>
+                    <body>...
+                ```
+            */
+            {
+                NSDictionary<NSString *, NSXMLNode *> *attrs;
+                
+                /// Validate `<file>`
+                
+                assert(file != nil);
+                assert([file.name isEqual: @"file"]);
+                assert(file.childCount == 2);
+                assert([[file childAtIndex: 0].name isEqual: @"header"]);
+                assert([[file childAtIndex: 1].name isEqual: @"body"]);
+                assert(isclass([file childAtIndex: 0], NSXMLElement));
+                assert(isclass([file childAtIndex: 1], NSXMLElement));
+                
+                
+                attrs = xml_attrdict(file);
+                assert(attrs[@"original"].objectValue           );
+                assert(attrs[@"source-language"].objectValue    );
+                assert(attrs[@"target-language"].objectValue    );
+                assert(attrs[@"datatype"].objectValue           );
+                
+                mflog("Attributes: %@", attrs);
+                
+                /// Validate `<header>`
+                
+                NSXMLNode *header = [file childAtIndex:0];
+                assert(header.childCount == 1);
+                NSXMLNode *tool = [header childAtIndex:0];
+                assert([tool.name isEqual: @"tool"]);
+                assert( isclass(tool, NSXMLElement) );
+                attrs = xml_attrdict((NSXMLElement *)tool);
+                assert([attrs[@"tool-id"].objectValue       isEqual: @"com.apple.dt.xcode"] );
+                assert([attrs[@"tool-name"].objectValue     isEqual: @"Xcode"]              );
+                if ((0)) { /// We hope our code can support other versions, too?
+                    assert([attrs[@"tool-version"].objectValue  isEqual: @"16.1"]               );
+                    assert([attrs[@"build-num"].objectValue     isEqual: @"16B5001e"]           );
+                }
+            }
+            
+            NSArray<NSXMLElement *> *transUnits = (id)[xml_childnamed(file, @"body") children];
+            
+            [self->files addObject: File_Make(transUnits, xml_attr(file, @"original").objectValue)];
+            [allTransUnits addObjectsFromArray: transUnits];
+        }
+        [self->files insertObject: File_Make(allTransUnits, @"All Files") atIndex: 0];
         
         /// Store xliff doc
         self->_xliffDoc = xliffDoc;
@@ -98,19 +174,17 @@
 
     #pragma mark - NSOutlineViewDelegate
 
-    - (NSView *) outlineView: (NSOutlineView *)outlineView viewForTableColumn: (NSTableColumn *)tableColumn item: (NSXMLElement *)fileEl {
+    - (NSView *) outlineView: (NSOutlineView *)outlineView viewForTableColumn: (NSTableColumn *)tableColumn item: (File *)file {
         
         /// There's only one column so we can ignore it.
         NSTableCellView *cell = [self makeViewWithIdentifier: @"theReusableCell_Outline" owner: self]; /// Not sure if owner=self is right. Also see TableView.m
-        NSString *path = xml_attr(fileEl, @"original").objectValue;
-        cell.textField.stringValue = [path lastPathComponent];
+        cell.textField.stringValue = [file->path  lastPathComponent];
         return cell;
     }
 
     - (void) outlineViewSelectionDidChange: (NSNotification *)notification {
-        
-        NSXMLElement *file = self->files[self.selectedRow];
-        [appdel->tableView reloadWithNewData: file];
+        File *file = self->files[self.selectedRow];
+        [appdel->tableView reloadWithNewData: file->transUnits];
     }
 
 @end
