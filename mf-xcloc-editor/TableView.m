@@ -43,6 +43,7 @@
         {
             auto mfui_tablecol = ^NSTableColumn *(NSString *identifier, NSString *title) {
                 auto v = [[NSTableColumn alloc] initWithIdentifier: identifier];
+                [v setSortDescriptorPrototype: [NSSortDescriptor sortDescriptorWithKey: v.identifier ascending: YES]];
                 v.title = title;
                 return v;
             };
@@ -53,7 +54,7 @@
             [self addTableColumn: mfui_tablecol(@"note",   @"Note")];
         }
         
-        /// Add menu
+        /// Add right-click menu
         {
             auto mfui_menu = ^NSMenu * (NSArray<NSMenuItem *> *items) {
                 auto v = [NSMenu new];
@@ -76,11 +77,138 @@
             ]);
         }
         
+        
         /// Return
         return self;
     }
     
+    #pragma mark - Sorting
     
+    static NSMutableArray *_rowToSortedRow = nil;
+    - (void)tableView: (NSTableView *)tableView sortDescriptorsDidChange: (NSArray<NSSortDescriptor *> *)oldDescriptors {
+        
+        _rowToSortedRow = [NSMutableArray new];
+        NSSortDescriptor *desc = tableView.sortDescriptors.firstObject;
+        
+        NSInteger rowCount = [self numberOfRows];
+        
+        for (NSInteger i = 0; i < rowCount; i++)
+            [_rowToSortedRow addObject: @(i)];
+        
+        [_rowToSortedRow sortUsingComparator: ^NSComparisonResult(NSNumber *i, NSNumber *j) {
+            auto comp = [
+                nodeForCol([self rowModel_Unsorted: [i integerValue]], desc.key)
+                compare:
+                nodeForCol([self rowModel_Unsorted: [j integerValue]], desc.key)
+            ];
+            return desc.ascending ? comp : -comp;
+        }];
+        
+        [self reloadData];
+    }
+
+    #pragma mark - Data
+
+    - (NSXMLElement *) rowModel_Unsorted: (NSInteger)row {
+        NSXMLElement *body = (id)[self.data childAtIndex: 1]; /// This makes assumptions based on the tests we do in `setData:`
+        NSXMLNode *transUnit = [body childAtIndex: row];
+        assert(isclass(transUnit, NSXMLElement));
+        return (NSXMLElement *)transUnit;
+    }
+    
+    - (NSXMLElement *) rowModel: (NSInteger)row {
+        if (!_rowToSortedRow) return [self rowModel_Unsorted: row];
+        assert(row < _rowToSortedRow.count);
+        return [self rowModel_Unsorted: [_rowToSortedRow[row] integerValue]];
+    }
+
+     NSString *nodeForCol(NSXMLElement */*rowModel*/transUnit, NSString *colid) {
+        if ((0)) {}
+            else if ([colid isEqual: @"id"])        return xml_attr(transUnit, @"id")           .objectValue;
+            else if ([colid isEqual: @"source"])    return xml_childnamed(transUnit, @"source") .objectValue;
+            else if ([colid isEqual: @"target"])    return xml_childnamed(transUnit, @"target") .objectValue ?: @""; /// ?: cause `<target>` sometimes doesnt' exist. [Oct 2025]
+            else if ([colid isEqual: @"note"])      return xml_childnamed(transUnit, @"note")   .objectValue;
+            else if ([colid isEqual: @"state"]) {
+                if ([xml_attr(transUnit, @"translate").objectValue isEqual: @"no"])
+                    return @"mf_dont_translate";
+                else
+                    return xml_attr((NSXMLElement *)xml_childnamed(transUnit, @"target"), @"state").objectValue ?: @""; /// ?: cause `<target>` sometimes doesnt' exist. [Oct 2025]
+            }
+        else assert(false);
+        return nil;
+    }
+     void setNodeForCol(NSXMLElement */*rowModel*/transUnit, NSString *colid, NSString *newValue) {
+        if ((0)) {}
+            else if ([colid isEqual: @"id"])        xml_attr(transUnit, @"id")          .objectValue = newValue;
+            else if ([colid isEqual: @"source"])    xml_childnamed(transUnit, @"source").objectValue = newValue;
+            else if ([colid isEqual: @"target"])    xml_childnamed(transUnit, @"target").objectValue = newValue;
+            else if ([colid isEqual: @"note"])      xml_childnamed(transUnit, @"note")  .objectValue = newValue;
+            else if ([colid isEqual: @"state"]) {
+                if ([newValue isEqual: @"mf_dont_translate"])
+                    xml_attr(transUnit, @"translate").objectValue = @"no";
+                else
+                    xml_attr((NSXMLElement *)xml_childnamed(transUnit, @"target"), @"state").objectValue = newValue;
+            }
+        else assert(false);
+    };
+
+    - (void)setData:(NSXMLElement *)data {
+        
+        /** Validate data
+            Should look like this:
+            ```
+            <file original="App/UI/Main/Base.lproj/Main.storyboard" source-language="en" target-language="de" datatype="plaintext">
+                <header>
+                  <tool tool-id="com.apple.dt.xcode" tool-name="Xcode" tool-version="16.1" build-num="16B5001e"/>
+                </header>
+                <body>...
+            ```
+        */
+        
+        NSDictionary<NSString *, NSXMLNode *> *attrs;
+        
+        /// Validate `<file>`
+        
+        assert(data != nil);
+        assert([data.name isEqual: @"file"]);
+        assert(data.childCount == 2);
+        assert([[data childAtIndex: 0].name isEqual: @"header"]);
+        assert([[data childAtIndex: 1].name isEqual: @"body"]);
+        assert(isclass([data childAtIndex: 0], NSXMLElement));
+        assert(isclass([data childAtIndex: 1], NSXMLElement));
+        
+        
+        attrs = xml_attrdict(data);
+        assert(attrs[@"original"].objectValue           );
+        assert(attrs[@"source-language"].objectValue    );
+        assert(attrs[@"target-language"].objectValue    );
+        assert(attrs[@"datatype"].objectValue           );
+        
+        mflog("Attributes: %@", attrs);
+        
+        /// Validate `<header>`
+        
+        NSXMLNode *header = [data childAtIndex:0];
+        assert(header.childCount == 1);
+        NSXMLNode *tool = [header childAtIndex:0];
+        assert([tool.name isEqual: @"tool"]);
+        assert( isclass(tool, NSXMLElement) );
+        attrs = xml_attrdict((NSXMLElement *)tool);
+        assert([attrs[@"tool-id"].objectValue       isEqual: @"com.apple.dt.xcode"] );
+        assert([attrs[@"tool-name"].objectValue     isEqual: @"Xcode"]              );
+        if ((0)) { /// We hope our code can support other versions, too?
+            assert([attrs[@"tool-version"].objectValue  isEqual: @"16.1"]               );
+            assert([attrs[@"build-num"].objectValue     isEqual: @"16B5001e"]           );
+        }
+        
+        /// Store data
+        _data = data;
+        
+        /// Reset sorted rows
+        ///     (This feels error-prone – are we catching all the places where `_rowToSortedRow` needs to be reset? [Oct 2025])
+        _rowToSortedRow = nil;
+    }
+
     #pragma mark - Menu Items
     
     - (NSInteger) indexOfColumnWithIdentifier: (NSUserInterfaceItemIdentifier)identifier {
@@ -100,10 +228,10 @@
         
         if ((0)) {}
             else if ([menuItem.identifier isEqual: @"mark_as_translated"]) {
-                getNode(transUnit, @"state").objectValue = @"translated";
+                setNodeForCol(transUnit, @"state", @"translated");
             }
             else if ([menuItem.identifier isEqual: @"mark_for_review"]) {
-                getNode(transUnit, @"state").objectValue = @"needs-review-l10n";
+                setNodeForCol(transUnit, @"state", @"needs-review-l10n");
             }
         else assert(false);
         
@@ -118,15 +246,15 @@
         
         auto transUnit = [self rowModel: self.clickedRow];
         
-        if ([getNode(transUnit, @"translate").objectValue isEqual: @"no"]) return NO;
+        if ([nodeForCol(transUnit, @"translate") isEqual: @"no"]) return NO;
         if (
-            [getNode(transUnit, @"state").objectValue isEqual: @"translated"] &&
+            [nodeForCol(transUnit, @"state") isEqual: @"translated"] &&
             [menuItem.identifier isEqual: @"mark_as_translated"]
         ) {
             return NO;
         }
         if (
-            [getNode(transUnit, @"state").objectValue isEqual: @"needs-review-l10n"] &&
+            [nodeForCol(transUnit, @"state") isEqual: @"needs-review-l10n"] &&
             [menuItem.identifier isEqual: @"mark_for_review"]
         ) {
             return NO;
@@ -135,85 +263,11 @@
         return YES;
     }
 
-    #pragma mark - Data
-
-
-     NSXMLNode *getNode(NSXMLElement */*rowModel*/transUnit, NSString *nodeid) {
-            if ((0)) {}
-                else if ([nodeid isEqual: @"id"])        return xml_attr(transUnit, @"id");
-                else if ([nodeid isEqual: @"source"])    return xml_childnamed(transUnit, @"source");
-                else if ([nodeid isEqual: @"target"])    return xml_childnamed(transUnit, @"target");
-                else if ([nodeid isEqual: @"state"])     return xml_attr((NSXMLElement *)xml_childnamed(transUnit, @"target"), @"state");
-                else if ([nodeid isEqual: @"translate"]) return xml_attr(transUnit, @"translate");
-                else if ([nodeid isEqual: @"note"])      return xml_childnamed(transUnit, @"note");
-            else assert(false);
-        };
-
-    - (NSXMLElement *) rowModel: (NSInteger)row {
-        NSXMLElement *body = (id)[self.data childAtIndex: 1]; /// This makes assumptions based on the tests we do in `setData:`
-        NSXMLNode *transUnit = [body childAtIndex: row];
-        assert(isclass(transUnit, NSXMLElement));
-        return (NSXMLElement *)transUnit;
-    }
-
-    - (void)setData:(NSXMLElement *)data {
-        
-        /** Validate data
-            Should look like this:
-            ```
-            <file original="App/UI/Main/Base.lproj/Main.storyboard" source-language="en" target-language="de" datatype="plaintext">
-                <header>
-                  <tool tool-id="com.apple.dt.xcode" tool-name="Xcode" tool-version="16.1" build-num="16B5001e"/>
-                </header>
-                <body>...
-            ```
-        */
-        
-        NSDictionary<NSString *, NSXMLNode *> *attrs;
-        
-        /// Validate <file>
-        
-        assert(data != nil);
-        assert([data.name isEqual: @"file"]);
-        assert(data.childCount == 2);
-        assert([[data childAtIndex: 0].name isEqual: @"header"]);
-        assert([[data childAtIndex: 1].name isEqual: @"body"]);
-        assert(isclass([data childAtIndex: 0], NSXMLElement));
-        assert(isclass([data childAtIndex: 1], NSXMLElement));
-        
-        
-        attrs = xml_attrdict(data);
-        assert(attrs[@"original"].objectValue           );
-        assert(attrs[@"source-language"].objectValue    );
-        assert(attrs[@"target-language"].objectValue    );
-        assert(attrs[@"datatype"].objectValue           );
-        
-        mflog("Attributes: %@", attrs);
-        
-        /// Validate <header>
-        
-        NSXMLNode *header = [data childAtIndex:0];
-        assert(header.childCount == 1);
-        NSXMLNode *tool = [header childAtIndex:0];
-        assert([tool.name isEqual: @"tool"]);
-        assert( isclass(tool, NSXMLElement) );
-        attrs = xml_attrdict((NSXMLElement *)tool);
-        assert([attrs[@"tool-id"].objectValue       isEqual: @"com.apple.dt.xcode"] );
-        assert([attrs[@"tool-name"].objectValue     isEqual: @"Xcode"]              );
-        if ((0)) { /// We hope our code can support other versions, too?
-            assert([attrs[@"tool-version"].objectValue  isEqual: @"16.1"]               );
-            assert([attrs[@"build-num"].objectValue     isEqual: @"16B5001e"]           );
-        }
-        
-        /// Store data
-        _data = data;
-    }
-
     #pragma mark - NSTableView
 
     #pragma mark - NSTableViewDataSource
 
-    - (NSInteger)numberOfRowsInTableView:(NSTableView *)tableView {
+    - (NSInteger) numberOfRowsInTableView: (NSTableView *)tableView {
         NSXMLElement *body = (id)[self.data childAtIndex: 1]; /// This makes assumptions based on the tests we do in `setData:`
         auto result = [body childCount];
         return result;
@@ -222,11 +276,6 @@
     - (NSView *) tableView: (NSTableView *)tableView viewForTableColumn: (NSTableColumn *)tableColumn row: (NSInteger)row {
     
         #define iscol(colid) [[tableColumn identifier] isEqual: (colid)]
-    
-        NSTableCellView *cell = [tableView makeViewWithIdentifier: @"theReusableCell_Table" owner: self]; /// [Jun 2025] What to pass as owner here? Will this lead to retain cycle?
-        cell.textField.delegate = (id)self; /// Optimization: Could prolly set this once in IB [Oct 2025]
-        cell.textField.lineBreakMode = NSLineBreakByWordWrapping;
-        cell.textField.selectable = YES;
         
         NSXMLElement *transUnit = [self rowModel: row];
         
@@ -234,49 +283,28 @@
         assert([transUnit.name isEqual: @"trans-unit"]);
         
         /// Get uiString
-        NSString *uiString = @"<Error in code>";
-        if ((0)) {}
-            else if (iscol(@"id"))     uiString = getNode(transUnit, @"id").objectValue;
-            else if (iscol(@"source")) uiString = getNode(transUnit, @"source").objectValue;
-            else if (iscol(@"target")) uiString = getNode(transUnit, @"target").objectValue ?: @""; /// ?: cause `<target>` sometimes doesnt' exist. [Oct 2025]
-            else if (iscol(@"note"))   uiString = getNode(transUnit, @"note").objectValue;
-            else if (iscol(@"state")) {
-                if ([getNode(transUnit, @"translate").objectValue isEqual: @"no"])
-                    uiString = @"mf_dont_translate";
-                else
-                    uiString = getNode(transUnit, @"state").objectValue ?: @""; /// `?:` cause `<target>` sometimes doesnt' exist [Oct 2025]
-            }
-        else assert(false);
-        
+        NSString *uiString = nodeForCol(transUnit, [tableColumn identifier]);
         
         /// Special stuff for target column
         void (^editingCallback)(NSString *newString) = nil;
-        if (iscol(@"target")) {
-            editingCallback = ^void (NSString *newString) {
-                mflog(@"<target> edited: %@", newString);
-                [appdel writeTranslationDataToFile];
-                
-            };
-            [cell.textField setEditable: iscol(@"target")]; /// FIxme: Editable disables the intrinsic height, causing content to be truncated. [Oct 2025]
-        }
         
         /// Validate uiString
+        bool targetCellShouldBeEditable = true;
         if (iscol(@"state"))    assert(!uiString || isclass(uiString, NSString));
         else                    assert(isclass(uiString, NSString));
         
         /// Handle pluralizable strings
         {
-            if ([xml_childnamed(transUnit, @"source").objectValue containsString: @"%#@"]) {
-                if ((0)) {}
-                    else if (iscol(@"id"))       ;
-                    else if (iscol(@"source"))   uiString = @"(pluralizable)";
-                    else if (iscol(@"target")) { uiString = @"(pluralizable)"; [cell.textField setEditable: NO]; }
-                    else if (iscol(@"state"))    uiString = @"(pluralizable)";
-                    else if (iscol(@"note"))     ;
-                else assert(false);
+            if ([xml_childnamed(transUnit, @"source").objectValue containsString: @"%#@"]) { /// Detects the `%#@formatSstring@`
+                if      (iscol(@"id"))       {}
+                else if (iscol(@"source"))   uiString = @"(pluralizable)";
+                else if (iscol(@"target")) { uiString = @"(pluralizable)"; targetCellShouldBeEditable = false; } /// We never want the `%#@formatSstring@` to be changed by the translators, so we override it. We don't hide it cause 1.  it holds the comment and 2. we like having a 1-to-1 relationship between transUnits and rows in the table.
+                else if (iscol(@"state"))    uiString = @"(pluralizable)";
+                else if (iscol(@"note"))     {}
+                else                         assert(false);
             }
             
-            if ([xml_attr(transUnit, @"id").objectValue containsString: @"|==|"]) {
+            if ([xml_attr(transUnit, @"id").objectValue containsString: @"|==|"]) { /// This detects the pluralizable variants.
                 
                 if (iscol(@"id")) {
                     NSArray *a = [xml_attr(transUnit, @"id").objectValue componentsSeparatedByString: @"|==|"]; assert(a.count == 2);
@@ -286,20 +314,18 @@
                     NSString *pluralVariant = [substitutionPath substringFromIndex: @"substitutions.pluralizable.plural.".length];
                     uiString = stringf(@"%@ (%@)", baseKey, pluralVariant);
                 }
-                else if (iscol(@"note")) uiString = @"";
+                else if (iscol(@"note")) uiString = @""; /// Delete the note cause the `%#@` string already has it. (We assume that the `%#@` always appears in the row right above [Oct 2025])
             }
         }
         
-        /// Override raw string with colorful symbols / badges
+        /// Override raw state string with colorful symbols / badges
         
         NSAttributedString *uiStringAttributed  = [[NSAttributedString alloc] initWithString: (uiString ?: @"")];
         
         #define attributed(str) [[NSAttributedString alloc] initWithString: (str)]
         
+        NSColor *stateCellBackgroundColor = nil;
         if (iscol(@"state")) {
-        
-            NSColor *backgroundColor = nil;
-        
             if ((0)) {}
                 else if ([uiString isEqual: @"translated"]) {
                     auto image = [NSImage imageWithSystemSymbolName: @"checkmark.circle" accessibilityDescription: uiString]; /// Fixme: This disappears when you double-click it.
@@ -312,22 +338,30 @@
                 }
                 else if ([uiString isEqual: @"mf_dont_translate"]) {
                     uiStringAttributed = attributed(@"DON'T TRANSLATE");
-                    backgroundColor = [NSColor systemGrayColor];
+                    stateCellBackgroundColor = [NSColor systemGrayColor];
                 }
                 else if ([uiString isEqual: @"new"]) {
                     uiStringAttributed = attributed(@"NEW");
-                    backgroundColor = [NSColor systemBlueColor];
+                    stateCellBackgroundColor = [NSColor systemBlueColor];
                 }
                 else if ([uiString isEqual: @"needs-review-l10n"]) {
                     uiStringAttributed = attributed(@"NEEDS REVIEW");
-                    backgroundColor = [NSColor systemOrangeColor];
+                    stateCellBackgroundColor = [NSColor systemOrangeColor];
                 }
                 else if ([uiString isEqual: @"(pluralizable)"]) {
                     uiStringAttributed = attributed(@"");
                 }
             else assert(false);
-            
-            if (backgroundColor) {
+        }
+        
+        /// Turn off editing for `mf_dont_translate`
+        if (iscol(@"target") && [nodeForCol(transUnit, @"state") isEqual: @"mf_dont_translate"])
+            targetCellShouldBeEditable = false;
+        
+        /// Configure cell
+        NSTableCellView *cell;
+        {
+            if (stateCellBackgroundColor) {
                 cell = [tableView makeViewWithIdentifier: @"theReusableCell_TableState" owner: self];
                 { /// Style copies Xcode xcloc editor. Rest of the style defined in IB.
                     cell.nextKeyView.wantsLayer = YES;
@@ -335,14 +369,29 @@
                     cell.nextKeyView.layer.borderWidth  = 1;
                 }
                 
-                cell.nextKeyView.layer.borderColor     = [backgroundColor CGColor];
-                cell.nextKeyView.layer.backgroundColor = [[backgroundColor colorWithAlphaComponent: 0.15] CGColor];
+                cell.nextKeyView.layer.borderColor     = [stateCellBackgroundColor CGColor];
+                cell.nextKeyView.layer.backgroundColor = [[stateCellBackgroundColor colorWithAlphaComponent: 0.15] CGColor];
             }
+            else {
+                cell = [tableView makeViewWithIdentifier: @"theReusableCell_Table" owner: self]; /// [Jun 2025] What to pass as owner here? Will this lead to retain cycle?
+                cell.textField.delegate = (id)self; /// Optimization: Could prolly set this once in IB [Oct 2025]
+                cell.textField.lineBreakMode = NSLineBreakByWordWrapping;
+                cell.textField.selectable = YES;
+                
+                if (iscol(@"target")) {
+                    editingCallback = ^void (NSString *newString) {
+                        mflog(@"<target> edited: %@", newString);
+                        [appdel writeTranslationDataToFile];
+                        
+                    };
+                    [cell.textField setEditable: targetCellShouldBeEditable]; /// FIxme: Editable disables the intrinsic height, causing content to be truncated. [Oct 2025]
+                }
+            }
+            
+            [cell.textField setAttributedStringValue: uiStringAttributed];
+            [cell.textField mf_setAssociatedObject: editingCallback forKey: @"editingCallback"];
         }
         
-        /// Configure cell
-        [cell.textField setAttributedStringValue: uiStringAttributed];
-        [cell.textField mf_setAssociatedObject: editingCallback forKey: @"editingCallback"];
         
         /// Return
         return cell;

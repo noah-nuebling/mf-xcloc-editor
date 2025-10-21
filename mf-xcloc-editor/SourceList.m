@@ -111,7 +111,7 @@
         
         NSXMLElement *file = self->files[self.selectedRow];
         
-        appdel->tableView.data = file;
+        [appdel->tableView setData: file];
         [appdel->tableView reloadData];
     }
 
