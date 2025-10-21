@@ -126,6 +126,7 @@
     
         NSTableCellView *cell = [tableView makeViewWithIdentifier:@"theReusableCell_Table" owner: self]; /// [Jun 2025] What to pass as owner here? Will this lead to retain cycle?
         cell.textField.delegate = (id)self; /// Optimization: Could prolly set this once in IB [Oct 2025]
+        cell.textField.lineBreakMode = NSLineBreakByWordWrapping;
         
         NSXMLElement *body = (id)[self.data childAtIndex: 1]; /// This makes assumptions based on the tests we do in `setData:`
         NSXMLNode *transUnit = [body childAtIndex: row];
@@ -156,6 +157,7 @@
                     [appdel writeTranslationDataToFile];
                     
                 };
+                [cell.textField setEditable: iscol(@"target")];
             }
             else if (iscol("state")) {
                 NSXMLNode *ch = xml_childnamed(transUnit, @"target");
@@ -172,9 +174,35 @@
         if (iscol("state")) assert(!uiString || isclass(uiString, NSString));
         else                assert(isclass(uiString, NSString));
         
+        /// Handle pluralizable strings
+        {
+            if ([xml_childnamed(transUnit, @"source").objectValue containsString: @"%#@"]) {
+                if ((0)) {}
+                    else if (iscol("id"))       ;
+                    else if (iscol("source"))   uiString = @"(pluralizable)";
+                    else if (iscol("target")) { uiString = @"(pluralizable)"; [cell.textField setEditable: NO]; }
+                    else if (iscol("state"))    uiString = @"";
+                    else if (iscol("note"))     ;
+                else assert(false);
+            }
+            
+            if ([attrs[@"id"] containsString: @"|==|"]) {
+                
+                if (iscol("id")) {
+                    NSArray *a = [attrs[@"id"] componentsSeparatedByString: @"|==|"]; assert(a.count == 2);
+                    NSString *baseKey = a[0];
+                    NSString *substitutionPath = a[1];
+                    assert([substitutionPath hasPrefix: @"substitutions.pluralizable.plural."]);
+                    NSString *pluralVariant = [substitutionPath substringFromIndex: @"substitutions.pluralizable.plural.".length];
+                    uiString = stringf(@"%@ (%@)", baseKey, pluralVariant);
+                }
+                else if (iscol("note")) uiString = @"";
+            }
+        }
+        
+        
         /// Configure cell
         [cell.textField setStringValue: uiString ?: @""];
-        [cell.textField setEditable: iscol(@"target")];
         [cell.textField mf_setAssociatedObject: editingCallback forKey: @"editingCallback"];
         
         /// Return
