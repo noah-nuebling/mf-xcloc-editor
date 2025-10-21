@@ -36,6 +36,7 @@
         self.usesAutomaticRowHeights = YES;
         
         /// Register ReusableViews
+        ///     Not sure this is necesssary / correct. What about `theReusableCell_TableState` [Oct 2025]
         [self registerNib: [[NSNib alloc] initWithNibNamed: @"ReusableViews" bundle: nil]  forIdentifier: @"theReusableCell_Table"];
         
         /// Add columns
@@ -59,26 +60,37 @@
                 for (id item in items) [v addItem: item];
                 return v;
             };
-            auto mfui_item = ^NSMenuItem *(NSString *identifier, NSString *title) {
+            auto mfui_item = ^NSMenuItem *(NSString *identifier, NSString *symbolName, NSString *title) {
                 auto v = [NSMenuItem new];
                 v.identifier = identifier;
                 v.title = title;
+                v.image = [NSImage imageWithSystemSymbolName: symbolName accessibilityDescription: nil];
                 v.action = @selector(tableMenuItemClicked:);
                 v.target = self;
                 return v;
             };
             
             self.menu = mfui_menu(@[
-                mfui_item(@"mark_as_reviewed", @"Mark as Reviewed"),
-                mfui_item(@"mark_for_review",  @"Mark for Review"),
+                mfui_item(@"mark_as_translated", @"checkmark.circle", @"Mark as Translated"),
+                mfui_item(@"mark_for_review",    @"x.circle", @"Mark for Review"),
             ]);
         }
         
         /// Return
         return self;
     }
-
+    
+    
     #pragma mark - Menu Items
+    
+    - (NSInteger) indexOfColumnWithIdentifier: (NSUserInterfaceItemIdentifier)identifier {
+        NSInteger i = 0;
+        for (NSTableColumn *col in self.tableColumns) {
+            if ([col.identifier isEqual: identifier]) return i;
+            i++;
+        }
+        return -1;
+    }
     
     - (void) tableMenuItemClicked: (NSMenuItem *)menuItem {
         
@@ -87,7 +99,7 @@
         NSXMLElement *transUnit = [self rowModel: self.clickedRow];
         
         if ((0)) {}
-            else if ([menuItem.identifier isEqual: @"mark_as_reviewed"]) {
+            else if ([menuItem.identifier isEqual: @"mark_as_translated"]) {
                 getNode(transUnit, @"state").objectValue = @"translated";
             }
             else if ([menuItem.identifier isEqual: @"mark_for_review"]) {
@@ -95,11 +107,30 @@
             }
         else assert(false);
         
-        [self reloadData];
+        [self
+            reloadDataForRowIndexes:    [NSIndexSet indexSetWithIndex: self.clickedRow]
+            columnIndexes:              [NSIndexSet indexSetWithIndex: [self indexOfColumnWithIdentifier: @"state"]]
+        ]; /// Specifying rows and colums for speedup, but I think the delay is just built in to NSMenu  (macOS Tahoe, [Oct 2025])
         [appdel writeTranslationDataToFile];
     }
     
     - (BOOL) validateMenuItem: (NSMenuItem *)menuItem {
+        
+        auto transUnit = [self rowModel: self.clickedRow];
+        
+        if ([getNode(transUnit, @"translate").objectValue isEqual: @"no"]) return NO;
+        if (
+            [getNode(transUnit, @"state").objectValue isEqual: @"translated"] &&
+            [menuItem.identifier isEqual: @"mark_as_translated"]
+        ) {
+            return NO;
+        }
+        if (
+            [getNode(transUnit, @"state").objectValue isEqual: @"needs-review-l10n"] &&
+            [menuItem.identifier isEqual: @"mark_for_review"]
+        ) {
+            return NO;
+        }
         
         return YES;
     }
@@ -192,7 +223,7 @@
     
         #define iscol(colid) [[tableColumn identifier] isEqual: (colid)]
     
-        NSTableCellView *cell = [tableView makeViewWithIdentifier:@"theReusableCell_Table" owner: self]; /// [Jun 2025] What to pass as owner here? Will this lead to retain cycle?
+        NSTableCellView *cell = [tableView makeViewWithIdentifier: @"theReusableCell_Table" owner: self]; /// [Jun 2025] What to pass as owner here? Will this lead to retain cycle?
         cell.textField.delegate = (id)self; /// Optimization: Could prolly set this once in IB [Oct 2025]
         cell.textField.lineBreakMode = NSLineBreakByWordWrapping;
         cell.textField.selectable = YES;
@@ -266,30 +297,47 @@
         #define attributed(str) [[NSAttributedString alloc] initWithString: (str)]
         
         if (iscol(@"state")) {
+        
+            NSColor *backgroundColor = nil;
+        
             if ((0)) {}
                 else if ([uiString isEqual: @"translated"]) {
-                    auto image = [NSImage imageWithSystemSymbolName: @"checkmark.circle" accessibilityDescription: uiString];
-                
-                    auto textAttachment = [NSTextAttachment new];
-                    [textAttachment setImage: image];
-                    
+                    auto image = [NSImage imageWithSystemSymbolName: @"checkmark.circle" accessibilityDescription: uiString]; /// Fixme: This disappears when you double-click it.
+                    auto textAttachment = [NSTextAttachment new]; {
+                        [textAttachment setImage: image];
+                    }
                     uiStringAttributed = [NSAttributedString attributedStringWithAttachment: textAttachment attributes: @{
                         NSForegroundColorAttributeName: [NSColor systemGreenColor]
                     }];
                 }
                 else if ([uiString isEqual: @"mf_dont_translate"]) {
-                    uiStringAttributed = attributed(@"DONT TRANSLATE");
+                    uiStringAttributed = attributed(@"DON'T TRANSLATE");
+                    backgroundColor = [NSColor systemGrayColor];
                 }
                 else if ([uiString isEqual: @"new"]) {
-                    uiStringAttributed = attributed(@"Newwww");
+                    uiStringAttributed = attributed(@"NEW");
+                    backgroundColor = [NSColor systemBlueColor];
                 }
                 else if ([uiString isEqual: @"needs-review-l10n"]) {
-                    uiStringAttributed = attributed(@"Needs Reviewwww");
+                    uiStringAttributed = attributed(@"NEEDS REVIEW");
+                    backgroundColor = [NSColor systemOrangeColor];
                 }
                 else if ([uiString isEqual: @"(pluralizable)"]) {
                     uiStringAttributed = attributed(@"");
                 }
             else assert(false);
+            
+            if (backgroundColor) {
+                cell = [tableView makeViewWithIdentifier: @"theReusableCell_TableState" owner: self];
+                { /// Style copies Xcode xcloc editor. Rest of the style defined in IB.
+                    cell.nextKeyView.wantsLayer = YES;
+                    cell.nextKeyView.layer.cornerRadius = 3;
+                    cell.nextKeyView.layer.borderWidth  = 1;
+                }
+                
+                cell.nextKeyView.layer.borderColor     = [backgroundColor CGColor];
+                cell.nextKeyView.layer.backgroundColor = [[backgroundColor colorWithAlphaComponent: 0.15] CGColor];
+            }
         }
         
         /// Configure cell

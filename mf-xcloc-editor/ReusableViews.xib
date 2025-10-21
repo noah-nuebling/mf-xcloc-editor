@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="24123.1" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="24410" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="24123.1"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="24410"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -49,6 +49,40 @@
                 <outlet property="textField" destination="ATs-3R-nuV" id="056-EJ-jaR"/>
             </connections>
             <point key="canvasLocation" x="-303.5" y="-61.5"/>
+        </tableCellView>
+        <tableCellView identifier="theReusableCell_TableState" verticalCompressionResistancePriority="1000" id="O08-pG-JwC" userLabel="Table Cell - State">
+            <rect key="frame" x="0.0" y="0.0" width="111" height="48"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+            <subviews>
+                <customView translatesAutoresizingMaskIntoConstraints="NO" id="H5e-M4-U47" userLabel="Background View">
+                    <rect key="frame" x="2" y="26" width="72" height="14"/>
+                    <subviews>
+                        <textField focusRingType="none" horizontalHuggingPriority="1000" verticalHuggingPriority="1000" horizontalCompressionResistancePriority="250" verticalCompressionResistancePriority="1000" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="NBf-mh-HuN">
+                            <rect key="frame" x="2" y="2" width="68" height="10"/>
+                            <textFieldCell key="cell" allowsUndo="NO" sendsActionOnEndEditing="YES" title="Table View Cell" id="7Vi-St-C03">
+                                <font key="font" metaFont="systemBold" size="8"/>
+                                <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                            </textFieldCell>
+                        </textField>
+                    </subviews>
+                    <constraints>
+                        <constraint firstItem="NBf-mh-HuN" firstAttribute="top" secondItem="H5e-M4-U47" secondAttribute="top" constant="2" id="e9J-GE-7yD"/>
+                        <constraint firstItem="NBf-mh-HuN" firstAttribute="leading" secondItem="H5e-M4-U47" secondAttribute="leading" constant="4" id="jq8-pC-uTC"/>
+                        <constraint firstAttribute="trailing" secondItem="NBf-mh-HuN" secondAttribute="trailing" constant="4" id="qDN-0g-0fr"/>
+                        <constraint firstAttribute="bottom" secondItem="NBf-mh-HuN" secondAttribute="bottom" constant="2" id="qN5-Q4-gN0"/>
+                    </constraints>
+                </customView>
+            </subviews>
+            <constraints>
+                <constraint firstItem="H5e-M4-U47" firstAttribute="leading" secondItem="O08-pG-JwC" secondAttribute="leading" constant="2" id="PCC-DB-XYR"/>
+                <constraint firstItem="H5e-M4-U47" firstAttribute="top" secondItem="O08-pG-JwC" secondAttribute="top" constant="8" id="aTZ-c1-OuA"/>
+            </constraints>
+            <connections>
+                <outlet property="nextKeyView" destination="H5e-M4-U47" id="bIa-nc-TjG"/>
+                <outlet property="textField" destination="NBf-mh-HuN" id="T0B-5F-urC"/>
+            </connections>
+            <point key="canvasLocation" x="-240.5" y="120"/>
         </tableCellView>
     </objects>
 </document>
