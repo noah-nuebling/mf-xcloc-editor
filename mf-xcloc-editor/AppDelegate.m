@@ -14,10 +14,19 @@
 #pragma mark - Lifecycle
 
 NSString *getXliffPath(void) {
+    
     NSString *xclocPath;
-        if ((0)) xclocPath = @"/Users/noah/mmf-stuff/xcode-localization-screenshot-fix/CustomImplForLocalizationScreenshotTest/Notes/Examples/example-da.xcloc";
-        else     xclocPath = @"/Users/noah/mmf-stuff/mf-xcloc-editor/mf-xcloc-editor/example-docs/da.xcloc";
-    NSString *xliffPath = [xclocPath stringByAppendingPathComponent: @"Localized Contents/da.xliff"];
+    if ((0)) xclocPath = @"/Users/noah/mmf-stuff/xcode-localization-screenshot-fix/CustomImplForLocalizationScreenshotTest/Notes/Examples/example-da.xcloc";
+    if ((0)) xclocPath = @"/Users/noah/mmf-stuff/mf-xcloc-editor/mf-xcloc-editor/example-docs/da.xcloc";
+    else     xclocPath = @"/Users/noah/Downloads/Mac Mouse Fix Translations (German)/Mac Mouse Fix.xcloc";
+    
+    NSString *xliffPath;
+    for (NSString *p in [[NSFileManager defaultManager] enumeratorAtPath: xclocPath])
+        if ([p hasSuffix: @".xliff"]) {
+            xliffPath = [xclocPath stringByAppendingPathComponent: p];
+            break;
+        } /// We always expect there to be only one .xliff in the .xcloc
+
     return xliffPath;
 }
 
@@ -47,7 +56,8 @@ NSString *getXliffPath(void) {
     /// Write to file
     NSError *err = nil;
     NSString *xliffPath = getXliffPath();
-    [[self->sourceList.xliffDoc XMLString] writeToFile: xliffPath atomically: YES encoding: NSUTF8StringEncoding error: &err];
+    
+    [[self->sourceList.xliffDoc XMLStringWithOptions: NSXMLNodePrettyPrint] writeToFile: xliffPath atomically: YES encoding: NSUTF8StringEncoding error: &err];
     if (err) {
         assert(false);
         mflog(@"An error occured while writing to the xliff file: %@", err);
