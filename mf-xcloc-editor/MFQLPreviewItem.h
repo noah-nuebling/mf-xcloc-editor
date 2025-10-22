@@ -12,6 +12,6 @@
 
     @property NSURL * previewItemURL;
     @property NSString * previewItemTitle;
-    @property id previewItemDisplayState;
+    //@property id previewItemDisplayState;
 
 @end

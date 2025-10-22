@@ -16,7 +16,7 @@ typedef struct {
 
 } GlobalOutlets; /// Objects that we want to be available everywhere in the app
 
-@interface AppDelegate : NSObject <NSApplicationDelegate>
+@interface AppDelegate : NSObject <NSApplicationDelegate, NSMenuItemValidation>
     {
         @public
         MainWindowController *mainController;

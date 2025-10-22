@@ -59,6 +59,7 @@
 		4FF447A82DF701EE008F2D74 /* SourceList.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SourceList.h; sourceTree = "<group>"; };
 		4FF447A92DF701EE008F2D74 /* SourceList.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SourceList.m; sourceTree = "<group>"; };
 		4FF4FA1D2DF6270F008F2D74 /* mf-xcloc-editor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "mf-xcloc-editor.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		4FFBA6B22EA9A1FF00CF1A71 /* Constants.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Constants.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -95,6 +96,7 @@
 		4FF4286A2DF63AB2008F2D74 /* mf-xcloc-editor */ = {
 			isa = PBXGroup;
 			children = (
+				4FFBA6B22EA9A1FF00CF1A71 /* Constants.h */,
 				4FF428612DF63AB2008F2D74 /* AppDelegate.h */,
 				4FF428622DF63AB2008F2D74 /* AppDelegate.m */,
 				4FF447A72DF6CB3A008F2D74 /* Utility.h */,

@@ -15,6 +15,8 @@
 #import "NSObject+Additions.h"
 #import "AppDelegate.h"
 #import "MFQLPreviewItem.h"
+#import "Constants.h"
+
 
 #define kMFTransUnitState_Translated      @"translated"
 #define kMFTransUnitState_DontTranslate   @"mf_dont_translate"
@@ -92,8 +94,8 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
             };
             
             self.menu = mfui_menu(@[
-                mfui_item(@"mark_as_translated", @"checkmark.circle", @"Mark as Translated"),
-                mfui_item(@"mark_for_review",    @"x.circle", @"Mark for Review"),
+                mfui_item(@"mark_as_translated", kMFStr_MarkAsTranslated_Symbol, kMFStr_MarkAsTranslated), /// validateMenuItem: in AppDelegate.m [Oct 2025]
+                mfui_item(@"mark_for_review",    kMFStr_MarkForReview_Symbol, kMFStr_MarkForReview),
             ]);
         }
         
@@ -104,25 +106,40 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
     
     #pragma mark - Keyboard control
     
+        - (void) returnFocus {
+            
+            /// After another UIElement has had keyboardFocus, it can use this method to give it back to the `TableView`
+            
+            [self.window makeFirstResponder: self];
+            if (self.selectedRow == -1) [self selectRowIndexes: [NSIndexSet indexSetWithIndex: 0] byExtendingSelection: NO];
+            [self scrollRowToVisible: self.selectedRow];
+        
+        }
+    
         - (void) keyDown: (NSEvent *)theEvent {
             
             auto key = [theEvent charactersIgnoringModifiers];
             
-            if (QLPreviewPanel.sharedPreviewPanel.visible) {
+            
+            if (
+                (0) && /// Disable keyboard controls for previewItems, cause it's not that useful and currently produces a bit of weird behavior (I think. Can't remember what [Oct 2025])
+                QLPreviewPanel.sharedPreviewPanel.visible
+            ) {
                 if ([key isEqual: stringf(@"%C", (unichar)NSLeftArrowFunctionKey)]) /// Flip through different screenshots containing the currently selected string. Could also implement this in `previewPanel:handleEvent:` [Oct 2025]
                     [self _incrementCurrentPreviewItem: -1];
                 else if ([key isEqual: stringf(@"%C", (unichar)NSRightArrowFunctionKey)])
                     [self _incrementCurrentPreviewItem: +1];
+                else
+                    [super keyDown: theEvent];
             }
             else {
-                if ([key isEqual: stringf(@"%C", (unichar)NSLeftArrowFunctionKey)]) /// Select the sourceList
+                if ([key isEqual: stringf(@"%C", (unichar)NSLeftArrowFunctionKey)])   /// Select the sourceList
                     [appdel->sourceList.window makeFirstResponder: appdel->sourceList];
+                else if ([key isEqual:@" "])	/// Space key opens the preview panel. || TODO: Also support Command-Y (using Menu Item)
+                    [self togglePreviewPanel: self];
+                else
+                    [super keyDown: theEvent];
             }
-            
-            if ([key isEqual:@" "])	/// Space key opens the preview panel. || TODO: Also support Command-Y (using Menu Item)
-                [self togglePreviewPanel: self];
-            else
-                [super keyDown: theEvent];
         }
         - (void) cancelOperation: (id)sender {
             
@@ -390,6 +407,15 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
             - (void) beginPreviewPanelControl: (QLPreviewPanel *)panel {
                 [panel setDelegate: self];
                 [panel setDataSource: self];
+                /// Restore displayState
+                ///     Problem: QuickLook panel is comically big and when you close and reopen it, it looses its previous size [Oct 2025]
+                ///     Solution ideas:
+                ///         - `[panel displayState]` sounds like its made for restoring size but is always nil [Oct 2025]
+                ///             (The `<QLPreviewItem>`s also have displayState I haven't looked into that.
+                ///         - We can override frame in `windowDidBecomeKey:` but then the QLPreviewPanel overrides it back once the content is fully loaded it seems
+                ///         - Did some digging and looks like `-[QLPreviewPanelController adjustedPanelFrame:ignoringCurrentFrame:]` is the thing determining the size.
+                ///             -> We could swizzle it, but that's too crazy [Oct 2025]
+                ///         - Sidenote: While digging I found `"QLPreviewKeepConstantWidth"` (`CFPreferences` app value). I tried to set it in hopes of it making it keep the width we set in `windowDidBecomeKey:` but it didn't work. Not sure I was doing it right.
                 if (_lastQLPanelDisplayState) [panel setDisplayState: _lastQLPanelDisplayState];
                 return;
             }
@@ -401,9 +427,38 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
         #pragma mark QLPreviewPanelDelegate
         
             - (NSRect) previewPanel: (QLPreviewPanel *)panel sourceFrameOnScreenForPreviewItem: (id <QLPreviewItem>)item {
-                /// TODO: Implement this for nice zoom-transition
-                return NSMakeRect(0, 0, 0, 0);
+                
+                
+                NSRect sourceFrame_Window = {};
+                
+                if ((0))
+                {
+                    NSRect colRect = [self rectOfColumn: [self columnWithIdentifier: @"id"]];
+                    NSRect rowRect = [self rectOfRow: [self selectedRow]];
+                    NSRect sourceRect = NSIntersectionRect(colRect, rowRect);
+                    sourceFrame_Window = [self convertRect: sourceRect toView: nil];
+                }
+                else {
+                    NSTableCellView *cellView =[self viewAtColumn: [self columnWithIdentifier: @"id"] row: [self selectedRow] makeIfNecessary: NO];
+                    NSButton *quickLookButton = firstmatch(cellView.subviews, cellView.subviews.count, nil, sv, [sv.identifier isEqual: @"quick-look-button"]); /// We previously used `[cell nextKeyView];`. I thought it worked but here it didn't [Oct 2025]
+                    sourceFrame_Window = [quickLookButton.superview convertRect: quickLookButton.frame toView: nil];
+                }
+                
+                NSRect sourceFrame_Screen = [self.window convertRectToScreen: sourceFrame_Window];
+                
+                return sourceFrame_Screen;
             }
+            
+            - (id) previewPanel: (QLPreviewPanel *)panel transitionImageForPreviewItem: (id<QLPreviewItem>)item contentRect: (NSRect *)contentRect {
+                
+                if ((0)) /// Setting eye doesn't really show an eye, but it makes the panel fade out during the transition
+                    return [NSImage imageWithSystemSymbolName: @"eye" accessibilityDescription: nil];
+                else if ((1))
+                    return [[NSImage alloc] initWithSize: NSMakeSize(10, 10)]; /// Use empty image in hopes of getting a faster fade-out like finder, but it looks the same as using @"eye"
+                else
+                    return nil;
+            }
+            
             - (BOOL) previewPanel: (QLPreviewPanel *)panel handleEvent: (NSEvent *)event {
                 /// redirect all key down events from the QLPanel to the table view (So you can flip through rows) [Oct 2025]
                 if ([event type] == NSEventTypeKeyDown) {
@@ -492,7 +547,7 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
                 {
                     item.previewItemTitle = [imagePath lastPathComponent];
                     item.previewItemURL   = [NSURL fileURLWithPath: annotatedImagePath];
-                    item.previewItemDisplayState = nil; /// Do we need this? [Oct 2025]
+                    // item.previewItemDisplayState = nil; /// Do we need this? [Oct 2025]
                 }
                 
                 return item;
@@ -518,25 +573,28 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
     }
     
     - (void) tableMenuItemClicked: (NSMenuItem *)menuItem {
+        [self toggleIsTranslatedState: self.clickedRow]; /// All our menuItems are for toggling and `validateMenuItem:` makes it so we can only toggle [Oct 2025]
+    }
+    
+    - (void) toggleIsTranslatedState: (NSInteger)row {
         
-        mflog(@"menuItem clicked: %@ %ld", menuItem, self.clickedRow);
-        
-        NSXMLElement *transUnit = [self rowModel: self.clickedRow];
-        
-        if ((0)) {}
-            else if ([menuItem.identifier isEqual: @"mark_as_translated"]) {
-                rowModel_setCellModel(transUnit, @"state", kMFTransUnitState_Translated);
-            }
-            else if ([menuItem.identifier isEqual: @"mark_for_review"]) {
-                rowModel_setCellModel(transUnit, @"state", kMFTransUnitState_NeedsReview);
-            }
-        else assert(false);
+        auto transUnit = [self rowModel: row];
+        if (![self rowIsTranslated: row])
+            rowModel_setCellModel(transUnit, @"state", kMFTransUnitState_Translated);
+        else
+            rowModel_setCellModel(transUnit, @"state", kMFTransUnitState_NeedsReview);
         
         [self /// Specifying rows and colums  to updatefor speedup, but I think the delay is just built in to NSMenu  (macOS Tahoe, [Oct 2025])
-            reloadDataForRowIndexes:    [NSIndexSet indexSetWithIndex: self.clickedRow]
+            reloadDataForRowIndexes:    [NSIndexSet indexSetWithIndex: row]
             columnIndexes:              [NSIndexSet indexSetWithIndex: [self indexOfColumnWithIdentifier: @"state"]]
         ];
         [appdel writeTranslationDataToFile];
+    }
+    
+    - (BOOL) rowIsTranslated: (NSInteger)row {
+        auto transUnit = [self rowModel: row];
+        auto state = rowModel_getCellModel(transUnit, @"state");
+        return [state isEqual: kMFTransUnitState_Translated];
     }
     
     - (BOOL) validateMenuItem: (NSMenuItem *)menuItem {
@@ -552,7 +610,7 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
             return NO;
         }
         if (
-            [rowModel_getCellModel(transUnit, @"state") isEqual: kMFTransUnitState_NeedsReview] &&
+            ![rowModel_getCellModel(transUnit, @"state") isEqual: kMFTransUnitState_Translated] && /// `tableMenuItemClicked:` expects us to only allow toggling (only one of the two items may be active) [Oct 2025]. (This may be stupid)
             [menuItem.identifier isEqual: @"mark_for_review"]
         ) {
             return NO;
@@ -670,15 +728,18 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
                 cell.textField.selectable = YES;
                 
                 if (iscol(@"target")) {
+                    __block NSString *oldString = uiString;
                     auto editingCallback = ^void (NSString *newString) {
                         mflog(@"<target> edited: %@", newString);
                         rowModel_setCellModel(transUnit, @"target", newString);
-                        rowModel_setCellModel(transUnit, @"state", kMFTransUnitState_Translated);
+                        if (![oldString isEqual: newString])
+                            rowModel_setCellModel(transUnit, @"state", kMFTransUnitState_Translated);
                         [appdel writeTranslationDataToFile];
                         [self /// Don't call `-[reloadData]` since that looses the current selection.
                             reloadDataForRowIndexes: [NSIndexSet indexSetWithIndex: row]
                             columnIndexes: [NSIndexSet indexSetWithIndex: [self indexOfColumnWithIdentifier: @"state"]]
                         ];
+                        oldString = newString;
                         
                     };
                     [cell.textField mf_setAssociatedObject: editingCallback forKey: @"editingCallback"];
@@ -691,8 +752,7 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
                         cell = [tableView makeViewWithIdentifier: @"theReusableCell_Table" owner: self]; /// Go back to default cell (Fixme: refactor) (We don't modify cause that affects future calls to `makeViewWithIdentifier:`)
                     }
                     else {
-                        
-                        NSButton *quickLookButton = (id)[cell nextKeyView];
+                        NSButton *quickLookButton = firstmatch(cell.subviews, cell.subviews.count, nil, sv, [sv.identifier isEqual: @"quick-look-button"]);
                         [quickLookButton setAction: @selector(quickLookButtonPressed:)];
                         [quickLookButton setTarget: self];
                         [quickLookButton mf_setAssociatedObject: @(row) forKey: @"rowOfQuickLookButton"];

@@ -8,6 +8,7 @@
 #import "AppDelegate.h"
 #import "Utility.h"
 #import "MainWindowController.h"
+#import "Constants.h"
 
 @implementation AppDelegate
 
@@ -106,12 +107,49 @@ NSString *getXliffPath(NSString *xclocPath) {
     }
 }
 
+- (BOOL) validateMenuItem: (NSMenuItem *)menuItem {
+    
+    if (menuItem.action == @selector(filterMenuItemSelected:)) {
+        return YES;
+    }
+    else if (menuItem.action == @selector(quickLookMenuItemSelected:)) {
+        return YES;
+    }
+    else if (menuItem.action == @selector(markAsTranslatedMenuItemSelected:)) {
+        
+        NSInteger selectedRow = appdel->tableView.selectedRow;
+        if (selectedRow == -1) {
+            menuItem.title = kMFStr_MarkAsTranslated; /// Setting the image/title here as well so they are not 'unitialized' raw values from the IB. [Oct 2025]
+            menuItem.image = [NSImage imageWithSystemSymbolName: kMFStr_MarkAsTranslated_Symbol accessibilityDescription: nil];
+            return NO;
+        }
+        else if ([appdel->tableView rowIsTranslated: selectedRow]) {
+            menuItem.title = kMFStr_MarkForReview;
+            menuItem.image = [NSImage imageWithSystemSymbolName: kMFStr_MarkForReview_Symbol accessibilityDescription: nil];
+            return YES;
+        }
+        else {
+            menuItem.title = kMFStr_MarkAsTranslated;
+            menuItem.image = [NSImage imageWithSystemSymbolName: kMFStr_MarkAsTranslated_Symbol accessibilityDescription: nil];
+            return YES;
+        }
+    
+        return YES;
+    }
+    else
+        return [super validateMenuItem: menuItem];
+}
+
 - (IBAction) filterMenuItemSelected: (id)sender {
     [self->filterField.window makeFirstResponder: self->filterField];
 }
 
-- (IBAction)quickLookMenuItemSelected:(id)sender {
+- (IBAction) quickLookMenuItemSelected: (id)sender {
     [self->tableView togglePreviewPanel: sender];
+}
+
+- (IBAction) markAsTranslatedMenuItemSelected: (id)sender {
+    [appdel->tableView toggleIsTranslatedState: appdel->tableView.selectedRow];
 }
 
 

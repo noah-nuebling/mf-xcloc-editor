@@ -13,17 +13,46 @@
 #import "TableView.h"
 #import "AppDelegate.h"
 
+#import <Carbon/Carbon.h>
 
 @interface TitlbarAccessoryViewController : NSTitlebarAccessoryViewController @end
 @implementation TitlbarAccessoryViewController { @public NSView *_theView; }
     - (void)loadView { self.view = _theView; }
 @end
 
-@interface FilterField : NSTextField @end
+@interface FilterField : NSTextField <NSTextFieldDelegate, NSControlTextEditingDelegate> @end
 @implementation FilterField
 
-    - (void)cancelOperation:(id)sender { /// Return focus to the TableView when the user hits enter.
-        [appdel->tableView.window makeFirstResponder: appdel->tableView];
+- (instancetype) initWithFrame: (NSRect)frame {
+    self = [super initWithFrame:frame];
+    if (self) {
+        self.delegate = self;
+    }
+    return self;
+}
+
+    - (void) cancelOperation: (id)sender { /// escape
+        [self setStringValue: @""];
+        [appdel->tableView updateFilter: @""];  /// Can't get our `NSControlTextDidChangeNotification` callback to trigger 'naturally' [Oct 2025]
+        [appdel->tableView returnFocus];        /// Return focus to the TableView when the user hits escape.
+    }
+    
+    - (BOOL) control: (NSControl *)control textView: (NSTextView *)textView doCommandBySelector: (SEL)commandSelector {
+        
+        if      (commandSelector == @selector(moveUp:)) { /// upArrow || Disabling upArrow and downArrow since it can be error prone when you're browsing the rows and hitting enter and then changing the filter instead of opening quickLook [Oct 2025]
+            [appdel->tableView keyDown: makeKeyDown(NSUpArrowFunctionKey, kVK_UpArrow)];
+            [appdel->tableView returnFocus];
+        }
+        else if (commandSelector == @selector(moveDown:)) { /// downArrow
+            [appdel->tableView keyDown: makeKeyDown(NSDownArrowFunctionKey, kVK_DownArrow)];
+            [appdel->tableView returnFocus];
+        }
+        else if (commandSelector == @selector(insertNewline:)) /// return
+            [appdel->tableView returnFocus];
+        else
+            return NO;
+        
+        return YES;
     }
 
 @end
@@ -119,7 +148,7 @@
             [result.tableView.enclosingScrollView.widthAnchor constraintGreaterThanOrEqualToConstant: 200].active = YES;
         }
         
-        /// Set up `result.filterField`
+        /// Set up `result.filterField` callback
         [[NSNotificationCenter defaultCenter] addObserverForName: NSControlTextDidChangeNotification object: result.filterField queue: nil usingBlock: ^(NSNotification * _Nonnull notification) {
             mflog(@"filter fiellddd: %@", result.filterField.stringValue);
             [appdel->tableView updateFilter: result.filterField.stringValue];

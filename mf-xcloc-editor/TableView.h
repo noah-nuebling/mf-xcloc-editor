@@ -23,4 +23,7 @@
     - (void) reloadWithNewData: (NSArray <NSXMLElement *> *)transUnits;
     - (void) updateFilter: (NSString *)newFilterString;
     - (IBAction)togglePreviewPanel:(id)previewPanel;
+    - (void) returnFocus;
+    - (void) toggleIsTranslatedState: (NSInteger)row;
+    - (BOOL) rowIsTranslated: (NSInteger)row;
 @end

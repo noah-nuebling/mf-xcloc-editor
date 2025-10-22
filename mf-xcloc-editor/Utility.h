@@ -14,6 +14,10 @@
 #define isclass(obj, classname)        ({ [[(obj) class] isSubclassOfClass: [classname class]]; })
 #define stringf(format, args...)        [NSString stringWithFormat: (format), ## args]
 
+
+
+#define loopc(varname, count) for (int64_t varname = 0; varname < (count); varname++)
+
 #define mfonce dispatch_once
 #define mfoncet ({ static dispatch_once_t onceToken; &onceToken; })
 
@@ -77,3 +81,19 @@ static NSArray<NSString *> *findPaths(NSString *dirPath, BOOL (^condition)(NSStr
     return result;
 }
 
+#import <AppKit/AppKit.h>
+
+static NSEvent *makeKeyDown(unichar keyEquivalent, int keyCode) {
+    return [NSEvent
+        keyEventWithType: NSEventTypeKeyDown
+        location: NSZeroPoint
+        modifierFlags: 0
+        timestamp: 0
+        windowNumber: 0
+        context: nil
+        characters: stringf(@"%C", (unichar)keyEquivalent)
+        charactersIgnoringModifiers: stringf(@"%C", (unichar)keyEquivalent)
+        isARepeat: NO
+        keyCode: keyCode
+    ];
+}

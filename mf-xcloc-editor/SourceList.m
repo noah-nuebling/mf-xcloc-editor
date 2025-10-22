@@ -176,8 +176,7 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
                 [[event charactersIgnoringModifiers] isEqual: @"\r"] ||
                 [[event charactersIgnoringModifiers] isEqual: stringf(@"%C", (unichar)NSRightArrowFunctionKey)]
             ) {
-                [appdel->tableView.window makeFirstResponder: appdel->tableView];
-                if (appdel->tableView.selectedRow == -1) [appdel->tableView selectRowIndexes: [NSIndexSet indexSetWithIndex: 0] byExtendingSelection: NO];
+                [appdel->tableView returnFocus];
             }
             else
                 [super keyDown: event];
