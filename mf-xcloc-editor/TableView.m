@@ -175,9 +175,6 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
                 assert(isclass(transUnit, NSXMLElement));
                 assert([transUnit.name isEqual: @"trans-unit"]);
             }
-                
-            if ([rowModel_getCellModel(transUnit, @"state") isEqual: kMFTransUnitState_DontTranslate])
-                continue; /// Always filter dontTranslate rows (Why does Xcode even export those?)
             
             if (![_filterString length]) { [_displayedTransUnits addObject: transUnit]; }
             else {

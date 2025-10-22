@@ -93,7 +93,7 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
         assert( allsatisfy(xliff.children, xliff.childCount, x, [x.name isEqual: @"file"]) );
     
         /// Unwrap the transUnits
-        auto allTransUnits = [NSMutableArray new];
+        auto transUnitsFromAllFiles = [NSMutableArray new];
         self->files = [NSMutableArray new];
         for (NSXMLElement *file in xliff.children) {
         
@@ -147,10 +147,20 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
             
             NSArray<NSXMLElement *> *transUnits = (id)[xml_childnamed(file, @"body") children];
             
-            [self->files addObject: File_Make(transUnits, xml_attr(file, @"original").objectValue)];
-            [allTransUnits addObjectsFromArray: transUnits];
+            NSMutableArray<NSXMLElement *> *filteredTransUnits = [NSMutableArray new]; /// Filter out transUnits with `kMFTransUnitState_DontTranslate` (Why does Xcode even export those?)  || Reimplements the logic in `rowModel_getCellModel` Maybe we should reuse that? [Oct 2025]
+            {
+                for (NSXMLElement *transUnit in transUnits) {
+                    if ([xml_attr(transUnit, @"translate").objectValue isEqual: @"no"])
+                        continue;
+                    [filteredTransUnits addObject: transUnit];
+                }
+            }
+            if (filteredTransUnits.count) {
+                [self->files addObject: File_Make(filteredTransUnits, xml_attr(file, @"original").objectValue)];
+                [transUnitsFromAllFiles addObjectsFromArray: filteredTransUnits];
+            }
         }
-        [self->files insertObject: File_Make(allTransUnits, @"All Documents") atIndex: 0];
+        [self->files insertObject: File_Make(transUnitsFromAllFiles, @"All Documents") atIndex: 0];
         
         /// Store xliff doc
         self->_xliffDoc = xliffDoc;
