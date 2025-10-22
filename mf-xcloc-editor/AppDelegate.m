@@ -13,20 +13,18 @@
 
 #pragma mark - Lifecycle
 
-NSString *getXliffPath(void) {
-    
+NSString *getXclocPath(void) {
     NSString *xclocPath;
     if ((0)) xclocPath = @"/Users/noah/mmf-stuff/xcode-localization-screenshot-fix/CustomImplForLocalizationScreenshotTest/Notes/Examples/example-da.xcloc";
     if ((0)) xclocPath = @"/Users/noah/mmf-stuff/mf-xcloc-editor/mf-xcloc-editor/example-docs/da.xcloc";
     else     xclocPath = @"/Users/noah/Downloads/Mac Mouse Fix Translations (German)/Mac Mouse Fix.xcloc";
-    
-    NSString *xliffPath;
-    for (NSString *p in [[NSFileManager defaultManager] enumeratorAtPath: xclocPath])
-        if ([p hasSuffix: @".xliff"]) {
-            xliffPath = [xclocPath stringByAppendingPathComponent: p];
-            break;
-        } /// We always expect there to be only one .xliff in the .xcloc
+    return xclocPath;
+}
 
+NSString *getXliffPath(NSString *xclocPath) {
+    NSString *xliffPath = findPaths(xclocPath, ^BOOL (NSString *p){
+        return [p hasSuffix: @".xliff"];
+    })[0];
     return xliffPath;
 }
 
@@ -38,24 +36,58 @@ NSString *getXliffPath(void) {
     self->tableView = outlets.tableView;
     self->sourceList = outlets.sourceList;
     
-    NSString *xliffPath = getXliffPath();
+    /// Get xcloc path
+    auto xclocPath = getXclocPath();
+    self->xclocPath = xclocPath;
     
-    NSError *err = nil;
-    NSXMLDocument *doc = [[NSXMLDocument alloc] initWithContentsOfURL: [NSURL fileURLWithPath: xliffPath] options: NSXMLNodeOptionsNone error: &err];
-    if (err) fail(end, @"Loading XMLDocument from path '%@' failed with error: '%@'", xliffPath, err);
-
-    self->sourceList.xliffDoc = doc;
-    [self->sourceList reloadData];
     
-    end: {}
+    #define fail(msg...) ({ \
+        mflog(msg); /** TODO: Maybe show an NSAlert. */\
+        exit(1); \
+    })
     
+    
+    {
+        /// Load xliff
+        NSXMLDocument *doc = nil;
+        {
+            auto xliffPath = getXliffPath(xclocPath);
+        
+            NSError *err = nil;
+            doc = [[NSXMLDocument alloc] initWithContentsOfURL: [NSURL fileURLWithPath: xliffPath] options: NSXMLNodeOptionsNone error: &err];
+            if (err) fail(@"Loading XMLDocument from path '%@' failed with error: '%@'", xliffPath, err);
+        }
+        
+        /// Load localizedStringData.plist
+        NSArray *localizedStringsDataPlist = nil;
+        {
+            auto stringsDataPath = findPaths(xclocPath, ^BOOL (NSString *p) {
+                return [p hasSuffix: @"localizedStringData.plist"];
+            })[0];
+            
+            
+            NSError *err = nil;
+            localizedStringsDataPlist = [[NSArray alloc] initWithContentsOfURL: [NSURL fileURLWithPath: stringsDataPath] error: &err];
+            if (err) fail(@"Loading localizedStringsData.plist failed with error: %@", err);
+            
+            /// TESTING
+            mflog(@"Loaded localizedStringsData.plist: %@", localizedStringsDataPlist);
+        }
+        
+        /// Store localizedStringsDataPlist
+        self->tableView.localizedStringsDataPlist = localizedStringsDataPlist;
+        
+        /// Update SourceList
+        self->sourceList.xliffDoc = doc;
+        [self->sourceList reloadData];
+    }
 }
 
 - (void) writeTranslationDataToFile {
     
     /// Write to file
     NSError *err = nil;
-    NSString *xliffPath = getXliffPath();
+    NSString *xliffPath = getXliffPath(getXclocPath());
     
     [[self->sourceList.xliffDoc XMLStringWithOptions: NSXMLNodePrettyPrint] writeToFile: xliffPath atomically: YES encoding: NSUTF8StringEncoding error: &err];
     if (err) {

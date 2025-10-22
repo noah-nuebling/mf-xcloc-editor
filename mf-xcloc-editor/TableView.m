@@ -14,6 +14,7 @@
 #import "Utility.h"
 #import "NSObject+Additions.h"
 #import "AppDelegate.h"
+#import "MFQLPreviewItem.h"
 
 #define kTransUnitState_Translated      @"translated"
 #define kTransUnitState_DontTranslate   @"mf_dont_translate"
@@ -119,11 +120,10 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
 
     #pragma mark - Data
 
-
-
     static NSMutableArray<NSXMLElement *> *_displayedTransUnits = nil; /// Main dataModel displayed by this table.
     
     - (NSXMLElement *) rowModel: (NSInteger)row {
+        if (row == -1) return nil; /// `self.selectedRow` can return -1 if no row is selected
         return _displayedTransUnits[row];
     }
 
@@ -227,6 +227,184 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
         [self reloadData];
     }
     
+    #pragma mark - Quick Look
+    
+        /// See Apple `QuickLookDownloader` sample project: https://developer.apple.com/library/archive/samplecode/QuickLookDownloader/Introduction/Intro.html
+    
+        - (NSDictionary *_Nullable) _localizedStringsDataPlist_GetEntryForRowModel: (NSXMLElement *)transUnit {
+            
+            /**
+                Example `localizedStringsDataPlist.plist` entry from `Mac Mouse Fix.xloc`:
+                ```
+                {
+                    bundleID = "some.id";
+                    bundlePath = "some/path";
+                    screenshots =         (
+                                    {
+                            frame = "{{168, 734}, {585, 36}}";
+                            name = "3. Copy - ButtonsTab State 0.jpeg";
+                        },
+                                    {
+                            frame = "{{168, 1006}, {585, 36}}";
+                            name = "13. Copy - ButtonsTab State 0.jpeg";
+                        },
+                                    {
+                            frame = "{{168, 734}, {585, 36}}";
+                            name = "3. Copy - ButtonsTab State 1.jpeg";
+                        }
+                    );
+                    stringKey = "trigger.substring.click.1";
+                    tableName = Localizable;
+                },
+                ```
+            */
+            
+            NSDictionary *matchingPlistEntry = nil;
+            for (NSDictionary *entry in self->_localizedStringsDataPlist) {
+                if ([entry[@"stringKey"] isEqual: rowModel_getCellModel(transUnit, @"id")]) {
+                    if (matchingPlistEntry) assert(false); /// Multiple entries for this key
+                    matchingPlistEntry = entry;
+                }
+            }
+            if ((0)) assert([matchingPlistEntry[@"tableName"] isEqual: rowModel_getCellModel(transUnit, @"fileName")]); /// Our `rowModel` doesn't actually have a `@"fileName"`, but if it did, this should be true. [Oct 2025]
+            
+            return matchingPlistEntry;
+        };
+        
+        static id _lastQLPanelDisplayState = nil;
+        
+        - (IBAction) quickLookButtonPressed: (id)quickLookButton {
+            NSInteger row = [[quickLookButton mf_associatedObjectForKey: @"rowOfQuickLookButton"] integerValue];
+            [self selectRowIndexes: [NSIndexSet indexSetWithIndex: row] byExtendingSelection: NO];
+            [[QLPreviewPanel sharedPreviewPanel] makeKeyAndOrderFront: nil];
+        }
+        
+        - (IBAction)togglePreviewPanel:(id)previewPanel {
+            if (
+                [QLPreviewPanel sharedPreviewPanelExists] &&
+                [[QLPreviewPanel sharedPreviewPanel] isVisible]
+            ) {
+                [[QLPreviewPanel sharedPreviewPanel] orderOut: nil];
+            }
+            else
+                [[QLPreviewPanel sharedPreviewPanel] makeKeyAndOrderFront: nil];
+        }
+        - (void)keyDown:(NSEvent *)theEvent {
+            if ([[theEvent charactersIgnoringModifiers] isEqual:@" "])	/// Space key opens the preview panel. || TODO: Also support Command-Y (using Menu Item)
+                [self togglePreviewPanel: self];
+            else
+                [super keyDown: theEvent];
+        }
+        - (void)tableViewSelectionDidChange:(NSNotification *)notification {
+            [QLPreviewPanel.sharedPreviewPanel reloadData];
+        }
+        
+        #pragma mark QLPreviewPanelController
+        
+            /// These are from an NSObject category not a protocol. Not mentioned in any docs. All hail the lord Claude 4.5.
+            
+            - (BOOL) acceptsPreviewPanelControl: (QLPreviewPanel *)panel {
+                return YES;
+            }
+            - (void) beginPreviewPanelControl: (QLPreviewPanel *)panel {
+                [panel setDelegate: self];
+                [panel setDataSource: self];
+                if (_lastQLPanelDisplayState) [panel setDisplayState: _lastQLPanelDisplayState];
+                return;
+            }
+            - (void) endPreviewPanelControl: (QLPreviewPanel *)panel {
+                _lastQLPanelDisplayState = [panel displayState]; /// This is always nil. || TODO: Make QLPanel window default sizes better & implement size restoration
+                return;
+            }
+
+        #pragma mark QLPreviewPanelDelegate
+        
+            - (NSRect)previewPanel:(QLPreviewPanel *)panel sourceFrameOnScreenForPreviewItem:(id <QLPreviewItem>)item {
+                /// TODO: Implement this for nice zoom-transition
+                return NSMakeRect(0, 0, 0, 0);
+            }
+            - (BOOL)previewPanel:(QLPreviewPanel *)panel handleEvent:(NSEvent *)event {
+                /// redirect all key down events from the QLPanel to the table view (So you can flip through rows) [Oct 2025]
+                if ([event type] == NSEventTypeKeyDown) {
+                    [self keyDown: event];
+                    return YES;
+                }
+                return NO;
+            }
+        
+
+        #pragma mark QLPreviewPanelDataSource
+
+            - (NSInteger) numberOfPreviewItemsInPreviewPanel: (QLPreviewPanel *)panel {
+                
+                NSDictionary *plistEntry = [self _localizedStringsDataPlist_GetEntryForRowModel: [self rowModel: self.selectedRow]];
+                return [plistEntry[@"screenshots"] count];
+            };
+
+            - (id <QLPreviewItem>) previewPanel: (QLPreviewPanel *)panel previewItemAtIndex: (NSInteger)index {
+                
+                NSDictionary *plistEntry = [self _localizedStringsDataPlist_GetEntryForRowModel: [self rowModel: self.selectedRow]];
+                NSDictionary *screenshotEntry = plistEntry[@"screenshots"][index];
+                
+                NSRect frame = NSRectFromString(screenshotEntry[@"frame"]);
+                NSString *name = screenshotEntry[@"name"];
+                
+                NSString *imagePath = findPaths([stringf(@"%@%@", appdel->xclocPath, @"/Notes/Screenshots/") stringByStandardizingPath], ^BOOL(NSString *path) {
+                    return [[path lastPathComponent] isEqual: name];
+                })[0];
+                
+                auto image = [[NSImage alloc] initWithContentsOfFile: imagePath];
+                
+                auto annotatedImage = [NSImage imageWithSize: image.size flipped: YES drawingHandler: ^BOOL(NSRect dstRect) {
+                    
+                    [image drawInRect: dstRect];
+                    
+                    [NSColor.systemRedColor setStroke];
+                    
+                    auto path = [NSBezierPath bezierPathWithRect: frame];
+                    [path setLineWidth: 3.0];
+                    [path stroke];
+
+                    return YES;
+                }];
+                
+                /// Get `annotatedImagePath`
+                ///     We have to write the annotated image to a file to get the QLPreviewPanel to load it.
+                ///         Xcode's xcloc editor circumvents this somehow (But it's also buggy and doesn't update the annotations correctly)
+                ///         If the `annotatedImagePath` is a unique identifier for the annotated image, we could use it to cache the annotatedImage. [Oct 2025]
+                
+                auto annotatedImagePath = [[[[NSFileManager defaultManager] temporaryDirectory] path] stringByAppendingPathComponent: stringf(@"%@%@%@%@%@%@",
+                    @"/mf-xcloc-editor/annotated-screenshots/",
+                    [[imagePath lastPathComponent] stringByDeletingPathExtension],
+                    @" --- ",
+                    NSStringFromRect(frame),
+                    @".",
+                    [imagePath pathExtension]
+                )];
+                
+                /// Make parent dirs
+                NSError *err = nil;
+                [[NSFileManager defaultManager] createDirectoryAtPath: [annotatedImagePath stringByDeletingLastPathComponent] withIntermediateDirectories: YES attributes: nil error: &err];
+                if (err) assert(false);
+                
+                /// Write `annotatedImage` to `annotatedImagePath`
+                ///     I'm not sure what's the proper way to do this.
+                ///         (Tried `representationOfImageRepsInArray:` and it didn't work)
+                err = nil;
+                auto jpegData = [[NSBitmapImageRep imageRepWithData: [annotatedImage TIFFRepresentation]] representationUsingType: NSBitmapImageFileTypeJPEG properties: @{}];
+                [jpegData writeToFile: annotatedImagePath options: NSDataWritingAtomic error: &err];
+                if (err) assert(false);
+                
+                auto item = [MFQLPreviewItem new];
+                {
+                    item.previewItemTitle = [imagePath lastPathComponent];
+                    item.previewItemURL   = [NSURL fileURLWithPath: annotatedImagePath];
+                    item.previewItemDisplayState = nil; /// Do we need this? [Oct 2025]
+                }
+                
+                return item;
+            };
+    
     #pragma mark - Selection
     
     #if 0
@@ -308,7 +486,6 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
         NSString *uiString = rowModel_getCellModel(transUnit, [tableColumn identifier]);
         
         /// Special stuff for `<target>` column
-        void (^editingCallback)(NSString *newString) = nil;
         bool targetCellShouldBeEditable = true;
         
         /// Handle pluralizable strings
@@ -389,24 +566,48 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
                 cell.nextKeyView.layer.backgroundColor = [[stateCellBackgroundColor colorWithAlphaComponent: 0.15] CGColor];
             }
             else {
-                cell = [tableView makeViewWithIdentifier: @"theReusableCell_Table" owner: self]; /// [Jun 2025] What to pass as owner here? Will this lead to retain cycle?
+                
+                if (iscol(@"id"))
+                    cell = [tableView makeViewWithIdentifier: @"theReusableCell_TableID" owner: self]; /// [Jun 2025] What to pass as owner here? Will this lead to retain cycle?
+                else
+                    cell = [tableView makeViewWithIdentifier: @"theReusableCell_Table" owner: self];
+                
                 cell.textField.delegate = (id)self; /// Optimization: Could prolly set this once in IB [Oct 2025]
                 cell.textField.lineBreakMode = NSLineBreakByWordWrapping;
                 cell.textField.selectable = YES;
                 
                 if (iscol(@"target")) {
-                    editingCallback = ^void (NSString *newString) {
+                    auto editingCallback = ^void (NSString *newString) {
                         mflog(@"<target> edited: %@", newString);
                         rowModel_setCellModel(transUnit, @"target", newString);
                         [appdel writeTranslationDataToFile];
                         
                     };
+                    [cell.textField mf_setAssociatedObject: editingCallback forKey: @"editingCallback"];
                     [cell.textField setEditable: targetCellShouldBeEditable]; /// FIxme: Editable disables the intrinsic height, causing content to be truncated. [Oct 2025]
+                }
+                else if (iscol(@"id")) {
+                    auto matchingPlistEntry = [self _localizedStringsDataPlist_GetEntryForRowModel: transUnit];
+                    if (!matchingPlistEntry) {
+                        /// Remove the quicklook button from IB
+                        cell = [tableView makeViewWithIdentifier: @"theReusableCell_Table" owner: self]; /// Go back to default cell (Fixme: refactor) (We don't modify cause that affects future calls to `makeViewWithIdentifier:`)
+                    }
+                    else {
+                        
+                        NSButton *quickLookButton = (id)[cell nextKeyView];
+                        [quickLookButton setAction: @selector(quickLookButtonPressed:)];
+                        [quickLookButton setTarget: self];
+                        [quickLookButton mf_setAssociatedObject: @(row) forKey: @"rowOfQuickLookButton"];
+                        
+                        /// Set up things ...
+                    }
+                    
+                    
+                    
                 }
             }
             
             [cell.textField setAttributedStringValue: uiStringAttributed];
-            [cell.textField mf_setAssociatedObject: editingCallback forKey: @"editingCallback"];
         }
         
         

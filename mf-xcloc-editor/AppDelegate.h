@@ -22,6 +22,7 @@ typedef struct {
         MainWindowController *mainController;
         SourceList *sourceList;
         TableView *tableView;
+        NSString *xclocPath;
     }
     
     - (void) writeTranslationDataToFile; /// Little weird for this to be on AppDelegate [Oct 2025]

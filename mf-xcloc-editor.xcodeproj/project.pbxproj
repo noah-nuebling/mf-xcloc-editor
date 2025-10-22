@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4F4CFDBF2EA8D4F30047E5E8 /* MFQLPreviewItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 4F4CFDBE2EA8D4F30047E5E8 /* MFQLPreviewItem.m */; };
 		4F7E02D12EA7758800C2F693 /* NSObject+Additions.m in Sources */ = {isa = PBXBuildFile; fileRef = 4F7E02D02EA7758700C2F693 /* NSObject+Additions.m */; };
 		4FAD64792E69D1DD00643726 /* MainWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4FAD64782E69D1DD00643726 /* MainWindowController.m */; };
 		4FC6FA632E6A0BA700459F13 /* ReusableViews.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4FC6FA622E6A0BA700459F13 /* ReusableViews.xib */; };
@@ -34,6 +35,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		4F4CFDBD2EA8D4F30047E5E8 /* MFQLPreviewItem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MFQLPreviewItem.h; sourceTree = "<group>"; };
+		4F4CFDBE2EA8D4F30047E5E8 /* MFQLPreviewItem.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MFQLPreviewItem.m; sourceTree = "<group>"; };
 		4F7E02CF2EA7758700C2F693 /* NSObject+Additions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSObject+Additions.h"; sourceTree = "<group>"; };
 		4F7E02D02EA7758700C2F693 /* NSObject+Additions.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSObject+Additions.m"; sourceTree = "<group>"; };
 		4F7E02D22EA77C9700C2F693 /* da.xcloc */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = da.xcloc; sourceTree = "<group>"; };
@@ -107,6 +110,8 @@
 				4FF447A92DF701EE008F2D74 /* SourceList.m */,
 				4FF447A42DF6BC6E008F2D74 /* TableView.h */,
 				4FF447A52DF6BC6E008F2D74 /* TableView.m */,
+				4F4CFDBD2EA8D4F30047E5E8 /* MFQLPreviewItem.h */,
+				4F4CFDBE2EA8D4F30047E5E8 /* MFQLPreviewItem.m */,
 				4F7E02D42EA77D3000C2F693 /* example-docs */,
 				4F4D45F12DF732F300FE4CE7 /* Other */,
 			);
@@ -217,6 +222,7 @@
 				4FF4373D2DF63AB8008F2D74 /* main.m in Sources */,
 				4FF447A62DF6BC6F008F2D74 /* TableView.m in Sources */,
 				4FC6FA652E6A365E00459F13 /* MFUI.m in Sources */,
+				4F4CFDBF2EA8D4F30047E5E8 /* MFQLPreviewItem.m in Sources */,
 				4FF447AA2DF701EE008F2D74 /* SourceList.m in Sources */,
 				4F7E02D12EA7758800C2F693 /* NSObject+Additions.m in Sources */,
 			);

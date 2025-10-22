@@ -11,7 +11,6 @@
 
 #define auto __auto_type                /// `auto` keyword is unused in C, so overriding with CPP-style `__auto_type` should be fine.
 #define mflog(msg...)                   NSLog(@ __FILE_NAME__ ": " msg)
-#define fail(goto_label, reason...)    ({ mflog(reason); goto goto_label; })
 #define isclass(obj, classname)        ({ [[(obj) class] isSubclassOfClass: [classname class]]; })
 #define stringf(format, args...)        [NSString stringWithFormat: (format), ## args]
 
@@ -66,3 +65,15 @@ static NSMutableDictionary<NSString *, NSXMLNode *> *xml_attrdict(NSXMLElement *
     for (NSXMLNode *el in [_xmlElement attributes]) result[el.name] = el;
     return result;
 }
+
+static NSArray<NSString *> *findPaths(NSString *dirPath, BOOL (^condition)(NSString *path)) {
+    
+    auto result = [NSMutableArray new];
+    
+    for (NSString *p in [[NSFileManager defaultManager] enumeratorAtPath: dirPath])
+        if (condition(p))
+            [result addObject: [dirPath stringByAppendingPathComponent: p]]; /// Make path absolute, (So when it's passed into `condition()` it's still relative – hope that's not confusing [Oct 2025]
+
+    return result;
+}
+

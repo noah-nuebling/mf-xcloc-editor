@@ -15,7 +15,7 @@
                 <textField focusRingType="none" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Skj-PT-qtH">
                     <rect key="frame" x="2" y="7" width="222" height="17"/>
                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
-                    <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" title="Table View Cell" id="MIF-Jj-5bO">
+                    <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" title="Outline View Cell" id="MIF-Jj-5bO">
                         <font key="font" metaFont="system"/>
                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -25,7 +25,7 @@
             <connections>
                 <outlet property="textField" destination="Skj-PT-qtH" id="49P-0K-5VG"/>
             </connections>
-            <point key="canvasLocation" x="-257" y="21"/>
+            <point key="canvasLocation" x="-449" y="-239"/>
         </tableCellView>
         <tableCellView identifier="theReusableCell_Table" verticalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="Fin-0A-5dD" userLabel="Table Cell">
             <rect key="frame" x="0.0" y="0.0" width="115" height="31"/>
@@ -33,7 +33,7 @@
                 <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" verticalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="ATs-3R-nuV">
                     <rect key="frame" x="0.0" y="8" width="115" height="15"/>
                     <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="Table View Cell" id="XR4-JF-5QN">
-                        <font key="font" metaFont="system" size="12"/>
+                        <font key="font" metaFont="cellTitle"/>
                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                         <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                     </textFieldCell>
@@ -48,18 +48,53 @@
             <connections>
                 <outlet property="textField" destination="ATs-3R-nuV" id="056-EJ-jaR"/>
             </connections>
-            <point key="canvasLocation" x="-303.5" y="-61.5"/>
+            <point key="canvasLocation" x="-505" y="-137"/>
+        </tableCellView>
+        <tableCellView identifier="theReusableCell_TableID" verticalCompressionResistancePriority="1000" id="JTE-ER-1V4" userLabel="Table Cell - ID">
+            <rect key="frame" x="0.0" y="0.0" width="168" height="62"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+            <subviews>
+                <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" verticalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="QQo-Qf-nO7" userLabel="Table View Cell">
+                    <rect key="frame" x="0.0" y="39" width="115" height="15"/>
+                    <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="Table View Cell - ID" id="TWI-eH-Nff">
+                        <font key="font" metaFont="cellTitle"/>
+                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
+                <button verticalHuggingPriority="750" horizontalCompressionResistancePriority="1000" verticalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="qr8-CF-vVi">
+                    <rect key="frame" x="2" y="15" width="31" height="16"/>
+                    <buttonCell key="cell" type="push" title="View Screenshot" bezelStyle="rounded" image="NSQuickLookTemplate" imagePosition="only" alignment="center" controlSize="mini" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="GSq-rv-bbb">
+                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                        <font key="font" metaFont="miniSystem"/>
+                    </buttonCell>
+                </button>
+            </subviews>
+            <constraints>
+                <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="QQo-Qf-nO7" secondAttribute="trailing" constant="2" id="D1U-fc-Xcs"/>
+                <constraint firstItem="QQo-Qf-nO7" firstAttribute="leading" secondItem="JTE-ER-1V4" secondAttribute="leading" constant="2" id="DMG-i7-9u2"/>
+                <constraint firstItem="qr8-CF-vVi" firstAttribute="top" secondItem="QQo-Qf-nO7" secondAttribute="bottom" constant="8" symbolic="YES" id="GZV-4h-QeD"/>
+                <constraint firstAttribute="bottom" relation="greaterThanOrEqual" secondItem="QQo-Qf-nO7" secondAttribute="bottom" constant="8" id="Hy3-oM-NUS"/>
+                <constraint firstItem="qr8-CF-vVi" firstAttribute="leading" secondItem="JTE-ER-1V4" secondAttribute="leading" constant="2" id="kKe-cn-Vgm"/>
+                <constraint firstItem="QQo-Qf-nO7" firstAttribute="top" secondItem="JTE-ER-1V4" secondAttribute="top" constant="8" id="nlz-Fe-swT"/>
+                <constraint firstAttribute="bottom" relation="greaterThanOrEqual" secondItem="qr8-CF-vVi" secondAttribute="bottom" constant="8" id="u3y-Ca-OgJ"/>
+            </constraints>
+            <connections>
+                <outlet property="nextKeyView" destination="qr8-CF-vVi" id="1NF-S2-zpp"/>
+                <outlet property="textField" destination="QQo-Qf-nO7" id="xeh-gI-5A1"/>
+            </connections>
+            <point key="canvasLocation" x="-293" y="-118"/>
         </tableCellView>
         <tableCellView identifier="theReusableCell_TableState" verticalCompressionResistancePriority="1000" id="O08-pG-JwC" userLabel="Table Cell - State">
-            <rect key="frame" x="0.0" y="0.0" width="111" height="48"/>
+            <rect key="frame" x="0.0" y="0.0" width="119" height="33"/>
             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
             <subviews>
                 <customView translatesAutoresizingMaskIntoConstraints="NO" id="H5e-M4-U47" userLabel="Background View">
-                    <rect key="frame" x="2" y="26" width="72" height="14"/>
+                    <rect key="frame" x="2" y="11" width="103" height="14"/>
                     <subviews>
                         <textField focusRingType="none" horizontalHuggingPriority="1000" verticalHuggingPriority="1000" horizontalCompressionResistancePriority="250" verticalCompressionResistancePriority="1000" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="NBf-mh-HuN">
-                            <rect key="frame" x="2" y="2" width="68" height="10"/>
-                            <textFieldCell key="cell" allowsUndo="NO" sendsActionOnEndEditing="YES" title="Table View Cell" id="7Vi-St-C03">
+                            <rect key="frame" x="2" y="2" width="99" height="10"/>
+                            <textFieldCell key="cell" allowsUndo="NO" sendsActionOnEndEditing="YES" title="Table View Cell - State" id="7Vi-St-C03" userLabel="Table View Cell - State">
                                 <font key="font" metaFont="systemBold" size="8"/>
                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -82,7 +117,10 @@
                 <outlet property="nextKeyView" destination="H5e-M4-U47" id="bIa-nc-TjG"/>
                 <outlet property="textField" destination="NBf-mh-HuN" id="T0B-5F-urC"/>
             </connections>
-            <point key="canvasLocation" x="-240.5" y="120"/>
+            <point key="canvasLocation" x="-495" y="-46"/>
         </tableCellView>
     </objects>
+    <resources>
+        <image name="NSQuickLookTemplate" width="26" height="17"/>
+    </resources>
 </document>
