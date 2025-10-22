@@ -35,6 +35,7 @@ NSString *getXliffPath(NSString *xclocPath) {
     
     self->tableView = outlets.tableView;
     self->sourceList = outlets.sourceList;
+    self->filterField = outlets.filterField;
     
     /// Get xcloc path
     auto xclocPath = getXclocPath();
@@ -81,6 +82,32 @@ NSString *getXliffPath(NSString *xclocPath) {
         self->sourceList.xliffDoc = doc;
         [self->sourceList reloadData];
     }
+}
+
+- (void) applicationWillFinishLaunching: (NSNotification *)notification {
+
+    /// Add menuItems
+    
+    
+    if ((0)) /// Tried programmatically adding to mainMenu but then AppKit sends weird messages to AppDelegate like `-[submenu]`, `-[menu]` and `-[_requiresKERegistration]`.
+    { /// Add "Find" item.
+        auto fileMenuItem = [[NSApp mainMenu] itemAtIndex: 1];
+        assert([fileMenuItem.title isEqual: @"File"]);
+        [fileMenuItem.menu addItem: [NSMenuItem separatorItem]];
+        [fileMenuItem.menu addItem: ({
+            auto i = [NSMenuItem new];
+            i.title = @"Find";
+            i.keyEquivalent = @"F";
+            i.image = [NSImage imageWithSystemSymbolName: @"magnifyingglass" accessibilityDescription: nil];
+            i.keyEquivalentModifierMask = NSEventModifierFlagCommand;
+            i.action = @selector(filterMenuItemSelected:);
+            i.target = self;
+        })];
+    }
+}
+
+- (IBAction) filterMenuItemSelected: (id)sender {
+    [self->filterField.window makeFirstResponder: self->filterField];
 }
 
 - (void) writeTranslationDataToFile {

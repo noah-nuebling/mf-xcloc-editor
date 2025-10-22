@@ -119,6 +119,12 @@
                                     <action selector="print:" target="-1" id="qaZ-4w-aoO"/>
                                 </connections>
                             </menuItem>
+                            <menuItem isSeparatorItem="YES" id="cOQ-CO-RPE"/>
+                            <menuItem title="Filter" image="magnifyingglass" catalog="system" keyEquivalent="f" id="8ga-Qf-vov">
+                                <connections>
+                                    <action selector="filterMenuItemSelected:" target="Voe-Tx-rLC" id="p2x-Zl-doG"/>
+                                </connections>
+                            </menuItem>
                         </items>
                     </menu>
                 </menuItem>
@@ -676,4 +682,7 @@
             <point key="canvasLocation" x="200" y="121"/>
         </menu>
     </objects>
+    <resources>
+        <image name="magnifyingglass" catalog="system" width="16" height="15"/>
+    </resources>
 </document>

@@ -22,6 +22,7 @@ typedef struct {
         MainWindowController *mainController;
         SourceList *sourceList;
         TableView *tableView;
+        NSTextField *filterField;
         NSString *xclocPath;
     }
     

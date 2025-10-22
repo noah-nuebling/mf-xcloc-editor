@@ -16,15 +16,15 @@
 #import "AppDelegate.h"
 #import "MFQLPreviewItem.h"
 
-#define kTransUnitState_Translated      @"translated"
-#define kTransUnitState_DontTranslate   @"mf_dont_translate"
-#define kTransUnitState_New             @"new"
-#define kTransUnitState_NeedsReview     @"needs-review-l10n"
+#define kMFTransUnitState_Translated      @"translated"
+#define kMFTransUnitState_DontTranslate   @"mf_dont_translate"
+#define kMFTransUnitState_New             @"new"
+#define kMFTransUnitState_NeedsReview     @"needs-review-l10n"
 static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct 2025]
-    kTransUnitState_New,
-    kTransUnitState_NeedsReview,
-    kTransUnitState_Translated,
-    kTransUnitState_DontTranslate
+    kMFTransUnitState_New,
+    kMFTransUnitState_NeedsReview,
+    kMFTransUnitState_Translated,
+    kMFTransUnitState_DontTranslate
 ];
 
 /// Column-ids
@@ -102,20 +102,57 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
         return self;
     }
     
+    #pragma mark - Keyboard control
+    
+        - (void) keyDown: (NSEvent *)theEvent {
+            
+            auto key = [theEvent charactersIgnoringModifiers];
+            
+            if (QLPreviewPanel.sharedPreviewPanel.visible) {
+                if ([key isEqual: stringf(@"%C", (unichar)NSLeftArrowFunctionKey)]) /// Flip through different screenshots containing the currently selected string. Could also implement this in `previewPanel:handleEvent:` [Oct 2025]
+                    [self _incrementCurrentPreviewItem: -1];
+                else if ([key isEqual: stringf(@"%C", (unichar)NSRightArrowFunctionKey)])
+                    [self _incrementCurrentPreviewItem: +1];
+            }
+            else {
+                if ([key isEqual: stringf(@"%C", (unichar)NSLeftArrowFunctionKey)]) /// Select the sourceList
+                    [appdel->sourceList.window makeFirstResponder: appdel->sourceList];
+            }
+            
+            if ([key isEqual:@" "])	/// Space key opens the preview panel. || TODO: Also support Command-Y (using Menu Item)
+                [self togglePreviewPanel: self];
+            else
+                [super keyDown: theEvent];
+        }
+        - (void) cancelOperation: (id)sender {
+            
+            if ([[self.window firstResponder] isKindOfClass: [NSTextView class]]) { /// If the user is editing a translation, cancel editing
+                [super cancelOperation: sender];
+                return;
+            }
+            
+            [appdel->sourceList.window makeFirstResponder: appdel->sourceList]; /// Return focus to sidebar when user hits escape while editing transUnits. Also see other `cancelOperation:` overrides. [Oct 2025]
+        }
+    
     #pragma mark - Sorting
     
     - (void) tableView: (NSTableView *)tableView sortDescriptorsDidChange: (NSArray<NSSortDescriptor *> *)oldDescriptors { /// This is called when the user clicks the column headers to sort them.
+        
+        auto previouslySelectedRowID = rowModel_getCellModel([self rowModel: [self selectedRow]], @"id");
+        
         [self update_rowModelSorting];
         [self reloadData];
+        
+        [self restoreSelectionWithPreviouslySelectedRowID: previouslySelectedRowID];
     }
 
     #pragma mark - Filtering
     
     static NSString *_filterString = nil;
     - (void) updateFilter: (NSString *)filterString {
+        
         _filterString = filterString;
-        [self update_rowModels];
-        [self reloadData];
+        [self bigUpdateAndStuff];
     }
 
     #pragma mark - Data
@@ -130,14 +167,20 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
     - (void) update_rowModels {
         
         /// Filter
-        if (![_filterString length]) _displayedTransUnits = [self.transUnits mutableCopy];
-        else {
-            _displayedTransUnits = [NSMutableArray new];
-            for (NSXMLElement *transUnit in self.transUnits) {
-                {
-                    assert(isclass(transUnit, NSXMLElement));
-                    assert([transUnit.name isEqual: @"trans-unit"]);
-                }
+        _displayedTransUnits = [NSMutableArray new];
+        for (NSXMLElement *transUnit in self.transUnits) {
+            
+            
+            { /// Validate
+                assert(isclass(transUnit, NSXMLElement));
+                assert([transUnit.name isEqual: @"trans-unit"]);
+            }
+                
+            if ([rowModel_getCellModel(transUnit, @"state") isEqual: kMFTransUnitState_DontTranslate])
+                continue; /// Always filter dontTranslate rows (Why does Xcode even export those?)
+            
+            if (![_filterString length]) { [_displayedTransUnits addObject: transUnit]; }
+            else {
                 auto combinedRowString = stringf(@"%@\n%@\n%@\n%@\n%@",
                     rowModel_getCellModel(transUnit, @"id"),
                     rowModel_getCellModel(transUnit, @"source"),
@@ -198,7 +241,7 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
             else if ([columnID isEqual: @"note"])      return xml_childnamed(transUnit, @"note")   .objectValue;
             else if ([columnID isEqual: @"state"]) {
                 if ([xml_attr(transUnit, @"translate").objectValue isEqual: @"no"])
-                    return kTransUnitState_DontTranslate;
+                    return kMFTransUnitState_DontTranslate;
                 else
                     return xml_attr((NSXMLElement *)xml_childnamed(transUnit, @"target"), @"state").objectValue ?: @""; /// ?: cause `<target>` sometimes doesnt' exist. [Oct 2025]
             }
@@ -212,7 +255,7 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
             else if ([columnID isEqual: @"target"])    xml_childnamed(transUnit, @"target").objectValue = newValue;
             else if ([columnID isEqual: @"note"])      xml_childnamed(transUnit, @"note")  .objectValue = newValue;
             else if ([columnID isEqual: @"state"]) {
-                if ([newValue isEqual: kTransUnitState_DontTranslate])
+                if ([newValue isEqual: kMFTransUnitState_DontTranslate])
                     xml_attr(transUnit, @"translate").objectValue = @"no";
                 else
                     xml_attr((NSXMLElement *)xml_childnamed(transUnit, @"target"), @"state").objectValue = newValue;
@@ -220,11 +263,42 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
         else assert(false);
     };
 
+
+- (void) restoreSelectionWithPreviouslySelectedRowID: (NSString *)previouslySelectedRowID {
+    /// Restore the selection after reloadData resets it.
+    NSInteger newIndex = -1;
+    NSInteger i = 0;
+    for (NSXMLElement *transUnit in _displayedTransUnits) {
+        if ([rowModel_getCellModel(transUnit, @"id") isEqual: previouslySelectedRowID]) {
+            newIndex = i;
+            break;
+        }
+        i++;
+    }
+    if (newIndex != -1) {
+        [self selectRowIndexes: [NSIndexSet indexSetWithIndex: newIndex] byExtendingSelection: NO];
+        [self scrollRowToVisible: newIndex]; /// Tried to do a better job of keeping the row in the same position than `scrollRowToVisible:` but can't get it to work. Coordinates flip and `rectOfRow:` result seems inconsistent. [Oct 2025] || ... update: This still fails sometimes, though rarely. Maybe the APIs are broken? How do they even know how tall all the rows are?
+    }
+}
+
+- (void) bigUpdateAndStuff {
+        
+        /// Fully update the table with new rows, but try to preserve the selection.
+        ///     Not sure this is a good abstraction to have, I don't really understand it [Oct 2025]
+        
+        auto previouslySelectedRowID = rowModel_getCellModel([self rowModel: [self selectedRow]], @"id");
+        
+        [self update_rowModels];;
+        [self reloadData];
+        
+        [self restoreSelectionWithPreviouslySelectedRowID: previouslySelectedRowID];
+    }
+
     - (void) reloadWithNewData: (NSArray <NSXMLElement *> *)transUnits {
         
         self->_transUnits = transUnits;
-        [self update_rowModels];
-        [self reloadData];
+        [self bigUpdateAndStuff];
+
     }
     
     #pragma mark - Quick Look
@@ -289,11 +363,21 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
             else
                 [[QLPreviewPanel sharedPreviewPanel] makeKeyAndOrderFront: nil];
         }
-        - (void)keyDown:(NSEvent *)theEvent {
-            if ([[theEvent charactersIgnoringModifiers] isEqual:@" "])	/// Space key opens the preview panel. || TODO: Also support Command-Y (using Menu Item)
-                [self togglePreviewPanel: self];
-            else
-                [super keyDown: theEvent];
+        
+        - (void) _incrementCurrentPreviewItem: (int)increment {
+            
+            NSInteger newIndex;
+            { /// Increment the index and then bring it back into the valid range. In MMF and elsewhere we have a utility function for this called something like 'cycle'.
+                newIndex = (QLPreviewPanel.sharedPreviewPanel.currentPreviewItemIndex + increment);
+                NSInteger stride = [self numberOfPreviewItemsInPreviewPanel: nil];
+                if (!stride) newIndex = 0; /// Not sure what this should be – -1? [Oct 2025]`
+                else {
+                    while (newIndex < 0)        newIndex += stride;
+                    while (newIndex >= stride)  newIndex -= stride;
+                }
+            }
+        
+            QLPreviewPanel.sharedPreviewPanel.currentPreviewItemIndex = newIndex;
         }
         - (void)tableViewSelectionDidChange:(NSNotification *)notification {
             [QLPreviewPanel.sharedPreviewPanel reloadData];
@@ -319,11 +403,11 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
 
         #pragma mark QLPreviewPanelDelegate
         
-            - (NSRect)previewPanel:(QLPreviewPanel *)panel sourceFrameOnScreenForPreviewItem:(id <QLPreviewItem>)item {
+            - (NSRect) previewPanel: (QLPreviewPanel *)panel sourceFrameOnScreenForPreviewItem: (id <QLPreviewItem>)item {
                 /// TODO: Implement this for nice zoom-transition
                 return NSMakeRect(0, 0, 0, 0);
             }
-            - (BOOL)previewPanel:(QLPreviewPanel *)panel handleEvent:(NSEvent *)event {
+            - (BOOL) previewPanel: (QLPreviewPanel *)panel handleEvent: (NSEvent *)event {
                 /// redirect all key down events from the QLPanel to the table view (So you can flip through rows) [Oct 2025]
                 if ([event type] == NSEventTypeKeyDown) {
                     [self keyDown: event];
@@ -343,6 +427,8 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
 
             - (id <QLPreviewItem>) previewPanel: (QLPreviewPanel *)panel previewItemAtIndex: (NSInteger)index {
                 
+                mflog(@"previewItemAtIndex: called with index: %ld", index);
+                
                 NSDictionary *plistEntry = [self _localizedStringsDataPlist_GetEntryForRowModel: [self rowModel: self.selectedRow]];
                 NSDictionary *screenshotEntry = plistEntry[@"screenshots"][index];
                 
@@ -357,7 +443,7 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
                 
                 auto annotatedImage = [NSImage imageWithSize: image.size flipped: YES drawingHandler: ^BOOL(NSRect dstRect) {
                     
-                    [image drawInRect: dstRect];
+                    [image drawInRect: dstRect]; /// This line is slow
                     
                     [NSColor.systemRedColor setStroke];
                     
@@ -382,18 +468,28 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
                     [imagePath pathExtension]
                 )];
                 
-                /// Make parent dirs
-                NSError *err = nil;
-                [[NSFileManager defaultManager] createDirectoryAtPath: [annotatedImagePath stringByDeletingLastPathComponent] withIntermediateDirectories: YES attributes: nil error: &err];
-                if (err) assert(false);
+                /// Check if annotatedImage already exists
+                /// This is how we cache. Makes things noticably more responsive. `-[NSImage drawInRect:]` is apparently reallyyyy slow. (Cache shaves off like half a second on my M1 MBA on a single run – which seems strange) [Oct 2025]
+                ///     Idea: Claude suggests this may be because the image is compressed? We did choose compressed jpegs to reduce file size IIRC, due to the Xcode bug that forced us to duplicate the images. Compression may no longer be beneficial when switching from Xcode -> mf-xcloc editor. [Oct 2025]
+                if ([[NSFileManager defaultManager] fileExistsAtPath: annotatedImagePath]) {
+                    mflog(@"Using cached annotatedImage file at: %@", annotatedImagePath);
+                }
+                else {
+                    mflog(@"Creating new annotatedImage file at: %@", annotatedImagePath);
                 
-                /// Write `annotatedImage` to `annotatedImagePath`
-                ///     I'm not sure what's the proper way to do this.
-                ///         (Tried `representationOfImageRepsInArray:` and it didn't work)
-                err = nil;
-                auto jpegData = [[NSBitmapImageRep imageRepWithData: [annotatedImage TIFFRepresentation]] representationUsingType: NSBitmapImageFileTypeJPEG properties: @{}];
-                [jpegData writeToFile: annotatedImagePath options: NSDataWritingAtomic error: &err];
-                if (err) assert(false);
+                    /// Make parent dirs
+                    NSError *err = nil;
+                    [[NSFileManager defaultManager] createDirectoryAtPath: [annotatedImagePath stringByDeletingLastPathComponent] withIntermediateDirectories: YES attributes: nil error: &err];
+                    if (err) assert(false);
+                    
+                    /// Write `annotatedImage` to `annotatedImagePath`
+                    ///     I'm not sure what's the proper way to do this.
+                    ///         (Tried `representationOfImageRepsInArray:` and it didn't work)
+                    err = nil;
+                    auto jpegData = [[NSBitmapImageRep imageRepWithData: [annotatedImage TIFFRepresentation]] representationUsingType: NSBitmapImageFileTypeJPEG properties: @{}];
+                    [jpegData writeToFile: annotatedImagePath options: NSDataWritingAtomic error: &err];
+                    if (err) assert(false);
+                }
                 
                 auto item = [MFQLPreviewItem new];
                 {
@@ -432,10 +528,10 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
         
         if ((0)) {}
             else if ([menuItem.identifier isEqual: @"mark_as_translated"]) {
-                rowModel_setCellModel(transUnit, @"state", kTransUnitState_Translated);
+                rowModel_setCellModel(transUnit, @"state", kMFTransUnitState_Translated);
             }
             else if ([menuItem.identifier isEqual: @"mark_for_review"]) {
-                rowModel_setCellModel(transUnit, @"state", kTransUnitState_NeedsReview);
+                rowModel_setCellModel(transUnit, @"state", kMFTransUnitState_NeedsReview);
             }
         else assert(false);
         
@@ -453,13 +549,13 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
         if ([rowModel_getCellModel(transUnit, @"state") isEqual: @"mf_dont_translate"])
             return NO;
         if (
-            [rowModel_getCellModel(transUnit, @"state") isEqual: kTransUnitState_Translated] &&
+            [rowModel_getCellModel(transUnit, @"state") isEqual: kMFTransUnitState_Translated] &&
             [menuItem.identifier isEqual: @"mark_as_translated"]
         ) {
             return NO;
         }
         if (
-            [rowModel_getCellModel(transUnit, @"state") isEqual: kTransUnitState_NeedsReview] &&
+            [rowModel_getCellModel(transUnit, @"state") isEqual: kMFTransUnitState_NeedsReview] &&
             [menuItem.identifier isEqual: @"mark_for_review"]
         ) {
             return NO;
@@ -520,7 +616,7 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
         NSColor *stateCellBackgroundColor = nil;
         if (iscol(@"state")) {
             if ((0)) {}
-                else if ([uiString isEqual: kTransUnitState_Translated]) {
+                else if ([uiString isEqual: kMFTransUnitState_Translated]) {
                     auto image = [NSImage imageWithSystemSymbolName: @"checkmark.circle" accessibilityDescription: uiString]; /// Fixme: This disappears when you double-click it.
                     auto textAttachment = [NSTextAttachment new]; {
                         [textAttachment setImage: image];
@@ -529,15 +625,15 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
                         NSForegroundColorAttributeName: [NSColor systemGreenColor]
                     }];
                 }
-                else if ([uiString isEqual: kTransUnitState_DontTranslate]) {
+                else if ([uiString isEqual: kMFTransUnitState_DontTranslate]) {
                     uiStringAttributed = attributed(@"DON'T TRANSLATE");
                     stateCellBackgroundColor = [NSColor systemGrayColor];
                 }
-                else if ([uiString isEqual: kTransUnitState_New]) {
+                else if ([uiString isEqual: kMFTransUnitState_New]) {
                     uiStringAttributed = attributed(@"NEW");
                     stateCellBackgroundColor = [NSColor systemBlueColor];
                 }
-                else if ([uiString isEqual: kTransUnitState_NeedsReview]) {
+                else if ([uiString isEqual: kMFTransUnitState_NeedsReview]) {
                     uiStringAttributed = attributed(@"NEEDS REVIEW");
                     stateCellBackgroundColor = [NSColor systemOrangeColor];
                 }
@@ -580,7 +676,12 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
                     auto editingCallback = ^void (NSString *newString) {
                         mflog(@"<target> edited: %@", newString);
                         rowModel_setCellModel(transUnit, @"target", newString);
+                        rowModel_setCellModel(transUnit, @"state", kMFTransUnitState_Translated);
                         [appdel writeTranslationDataToFile];
+                        [self /// Don't call `-[reloadData]` since that looses the current selection.
+                            reloadDataForRowIndexes: [NSIndexSet indexSetWithIndex: row]
+                            columnIndexes: [NSIndexSet indexSetWithIndex: [self indexOfColumnWithIdentifier: @"state"]]
+                        ];
                         
                     };
                     [cell.textField mf_setAssociatedObject: editingCallback forKey: @"editingCallback"];
