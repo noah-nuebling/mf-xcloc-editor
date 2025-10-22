@@ -114,9 +114,20 @@
                                     <action selector="runPageLayout:" target="-1" id="Din-rz-gC5"/>
                                 </connections>
                             </menuItem>
+                            <menuItem title="Quick Look" image="eye" catalog="system" keyEquivalent="y" id="3o4-52-NAP">
+                                <connections>
+                                    <action selector="quickLookMenuItemSelected:" target="Voe-Tx-rLC" id="ehL-H6-NXh"/>
+                                </connections>
+                            </menuItem>
                             <menuItem title="Print…" keyEquivalent="p" id="aTl-1u-JFS">
                                 <connections>
                                     <action selector="print:" target="-1" id="qaZ-4w-aoO"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="cOQ-CO-RPE"/>
+                            <menuItem title="Filter" image="magnifyingglass" catalog="system" keyEquivalent="f" id="8ga-Qf-vov">
+                                <connections>
+                                    <action selector="filterMenuItemSelected:" target="Voe-Tx-rLC" id="p2x-Zl-doG"/>
                                 </connections>
                             </menuItem>
                         </items>
@@ -676,4 +687,8 @@
             <point key="canvasLocation" x="200" y="121"/>
         </menu>
     </objects>
+    <resources>
+        <image name="eye" catalog="system" width="21" height="13"/>
+        <image name="magnifyingglass" catalog="system" width="16" height="15"/>
+    </resources>
 </document>

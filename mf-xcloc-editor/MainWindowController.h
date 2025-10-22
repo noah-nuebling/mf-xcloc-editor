@@ -14,6 +14,7 @@
     typedef struct {
         SourceList *sourceList;
         TableView *tableView;
+        NSTextField *filterField;
     } Outlets;
     
     - (Outlets) makeMainWindow;

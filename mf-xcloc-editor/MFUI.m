@@ -16,7 +16,8 @@ NSView *mfoutlet(NSView *__strong *binding_target, NSView *v) {
 NSScrollView *mfscrollview(NSView *v) {
     auto scrollView = mfview(NSScrollView);
     scrollView.documentView = v;
-    if ((0)) scrollView.hasVerticalScroller = YES;
+    if ((1)) scrollView.hasVerticalScroller = YES;
+    scrollView.autohidesScrollers = YES;
     return scrollView;
 }
 

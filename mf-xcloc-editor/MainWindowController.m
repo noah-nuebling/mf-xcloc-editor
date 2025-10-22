@@ -19,6 +19,15 @@
     - (void)loadView { self.view = _theView; }
 @end
 
+@interface FilterField : NSTextField @end
+@implementation FilterField
+
+    - (void)cancelOperation:(id)sender { /// Return focus to the TableView when the user hits enter.
+        [appdel->tableView.window makeFirstResponder: appdel->tableView];
+    }
+
+@end
+
 @implementation MainWindowController
     
     NSSplitView *mfsplitview(NSArray<NSView *> *arrangedSubviews) {
@@ -66,16 +75,13 @@
             mfscrollview(mfoutlet(&result.tableView,  [TableView new]))
         ])));
         
-        /// Outlets
-        NSTextField *out_filterField = nil;
-        
         /// Add accessory view
         [window addTitlebarAccessoryViewController: ({
             
             auto viewController = [TitlbarAccessoryViewController new];
             viewController->_theView = ({
-                auto w = mfwrap(mfmargin(5, 5, 5, 5), mfoutlet(&out_filterField, ({
-                    auto v = mfview(NSTextField);
+                auto w = mfwrap(mfmargin(5, 5, 5, 5), mfoutlet(&result.filterField, ({
+                    auto v = mfview(FilterField);
                     v.editable = YES;
                     v.placeholderString = @"Filter Translations";
                     if ((0)) {
@@ -113,10 +119,10 @@
             [result.tableView.enclosingScrollView.widthAnchor constraintGreaterThanOrEqualToConstant: 200].active = YES;
         }
         
-        /// Set up `out_filterField`
-        [[NSNotificationCenter defaultCenter] addObserverForName: NSControlTextDidChangeNotification object: out_filterField queue: nil usingBlock: ^(NSNotification * _Nonnull notification) {
-            mflog(@"filter fiellddd: %@", out_filterField.stringValue);
-            [appdel->tableView updateFilter: out_filterField.stringValue];
+        /// Set up `result.filterField`
+        [[NSNotificationCenter defaultCenter] addObserverForName: NSControlTextDidChangeNotification object: result.filterField queue: nil usingBlock: ^(NSNotification * _Nonnull notification) {
+            mflog(@"filter fiellddd: %@", result.filterField.stringValue);
+            [appdel->tableView updateFilter: result.filterField.stringValue];
         }];
         
         /// Set window size/position
@@ -132,7 +138,6 @@
         /// Return
         return result;
     }
-    
     
     - (void) windowWillClose: (NSNotification *)notification { /// TODO: This is not called when the window is closed due to application termination [Oct 2025]
         

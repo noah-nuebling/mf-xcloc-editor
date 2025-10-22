@@ -155,6 +155,24 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
         /// Store xliff doc
         self->_xliffDoc = xliffDoc;
     }
+    
+    #pragma mark - Keyboard Control
+    
+        - (void) keyDown: (NSEvent *)event {
+            
+            /// Select the tableView if the user hits space, enter, or rightArrow
+            if (
+                [[event charactersIgnoringModifiers] isEqual: @" "]  ||
+                [[event charactersIgnoringModifiers] isEqual: @"\r"] ||
+                [[event charactersIgnoringModifiers] isEqual: stringf(@"%C", (unichar)NSRightArrowFunctionKey)]
+            ) {
+                [appdel->tableView.window makeFirstResponder: appdel->tableView];
+                if (appdel->tableView.selectedRow == -1) [appdel->tableView selectRowIndexes: [NSIndexSet indexSetWithIndex: 0] byExtendingSelection: NO];
+            }
+            else
+                [super keyDown: event];
+            
+        }
 
     #pragma mark - NSOutlineView
 

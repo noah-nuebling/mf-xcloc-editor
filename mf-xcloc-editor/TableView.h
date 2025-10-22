@@ -22,4 +22,5 @@
     @property(nonatomic) NSArray <NSXMLElement *> *transUnits; /// Section of an XLIFF file that this table displays [Jun 2025]
     - (void) reloadWithNewData: (NSArray <NSXMLElement *> *)transUnits;
     - (void) updateFilter: (NSString *)newFilterString;
+    - (IBAction)togglePreviewPanel:(id)previewPanel;
 @end
