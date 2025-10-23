@@ -126,9 +126,11 @@ static NSMutableDictionary<NSString *, NSXMLNode *> *xml_attrdict(NSXMLElement *
         [fw removeFileWrapper: fw.fileWrappers[kp.lastObject]];
         
         /// Add the new child
-        auto x = [[NSFileWrapper alloc] initRegularFileWithContents: fileContents]; /// Same as `addRegularFileWithContents:`
-        [x setPreferredFilename: kp.lastObject];
-        [fw addFileWrapper: x];
+        {   /// Could use `addRegularFileWithContents:`
+            auto x = [[NSFileWrapper alloc] initRegularFileWithContents: fileContents];
+            [x setPreferredFilename: kp.lastObject];
+            [fw addFileWrapper: x];
+        }
     }
     
 

@@ -114,7 +114,7 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
             
             [self.window makeFirstResponder: self];
             if (self.selectedRow == -1) {
-                NSInteger row = [self rowAtPoint: NSMakePoint(0, self.visibleRect.origin.y)]; /// Get first displayed row on screen.
+                NSInteger row = [self rowAtPoint: NSMakePoint(0, self.visibleRect.origin.y + self.headerView.frame.size.height)]; /// Get first displayed row on screen. || On `self.headerView` usage: Currently seeing `self.visibleRect.origin.y` be `-28`. The visibleRect is 28 taller than the frame. `self.headerView` is 28 tall, so we're using that to compensate[Oct 2025]
                 [self selectRowIndexes: [NSIndexSet indexSetWithIndex: row] byExtendingSelection: NO];
             }
             
@@ -360,8 +360,14 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
         
         - (IBAction) quickLookButtonPressed: (id)quickLookButton {
             NSInteger row = [[quickLookButton mf_associatedObjectForKey: @"rowOfQuickLookButton"] integerValue];
-            [self selectRowIndexes: [NSIndexSet indexSetWithIndex: row] byExtendingSelection: NO];
-            [[QLPreviewPanel sharedPreviewPanel] makeKeyAndOrderFront: nil];
+            
+            if (self.selectedRow == row) {
+                [self togglePreviewPanel: nil];
+            }
+            else {
+                [self selectRowIndexes: [NSIndexSet indexSetWithIndex: row] byExtendingSelection: NO];
+                [[QLPreviewPanel sharedPreviewPanel] makeKeyAndOrderFront: nil];
+            }
         }
         
         - (IBAction)togglePreviewPanel:(id)previewPanel {

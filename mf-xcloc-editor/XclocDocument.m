@@ -91,7 +91,7 @@
             self.xliffDoc = doc;
             self.localizedStringsDataPlist = localizedStringsDataPlist;
             
-            /// Store the xcloc fileWrapper directly
+            /// Store the xcloc fileWrapper directly (Used in `fileWrapperOfType:`) [Oct 2025]
             self.storedXclocFileWrapper = xclocWrapper;
         }
         
