@@ -40,12 +40,12 @@
     - (BOOL) control: (NSControl *)control textView: (NSTextView *)textView doCommandBySelector: (SEL)commandSelector {
         
         if      (commandSelector == @selector(moveUp:)) { /// upArrow || Disabling upArrow and downArrow since it can be error prone when you're browsing the rows and hitting enter and then changing the filter instead of opening quickLook [Oct 2025]
-            [appdel->tableView keyDown: makeKeyDown(NSUpArrowFunctionKey, kVK_UpArrow)];
             [appdel->tableView returnFocus];
+            [appdel->tableView keyDown: makeKeyDown(NSUpArrowFunctionKey, kVK_UpArrow)];
         }
         else if (commandSelector == @selector(moveDown:)) { /// downArrow
-            [appdel->tableView keyDown: makeKeyDown(NSDownArrowFunctionKey, kVK_DownArrow)];
             [appdel->tableView returnFocus];
+            [appdel->tableView keyDown: makeKeyDown(NSDownArrowFunctionKey, kVK_DownArrow)];
         }
         else if (commandSelector == @selector(insertNewline:)) /// return
             [appdel->tableView returnFocus];
@@ -168,7 +168,7 @@
         return result;
     }
     
-    - (void) windowWillClose: (NSNotification *)notification { /// TODO: This is not called when the window is closed due to application termination [Oct 2025]
+    - (void) windowWillClose: (NSNotification *)notification { /// Note: We force this to be called in `applicationShouldTerminate:` [Oct 2025]
         
         [notification.object saveFrameUsingName: @"TheeeEditor"];
     }

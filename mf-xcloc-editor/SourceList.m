@@ -172,9 +172,9 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
             
             /// Select the tableView if the user hits space, enter, or rightArrow
             if (
-                [[event charactersIgnoringModifiers] isEqual: @" "]  ||
-                [[event charactersIgnoringModifiers] isEqual: @"\r"] ||
-                [[event charactersIgnoringModifiers] isEqual: stringf(@"%C", (unichar)NSRightArrowFunctionKey)]
+                eventIsKey(event, ' ') ||
+                eventIsKey(event, '\r') ||
+                eventIsKey(event, NSRightArrowFunctionKey)
             ) {
                 [appdel->tableView returnFocus];
             }

@@ -111,34 +111,35 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
             /// After another UIElement has had keyboardFocus, it can use this method to give it back to the `TableView`
             
             [self.window makeFirstResponder: self];
-            if (self.selectedRow == -1) [self selectRowIndexes: [NSIndexSet indexSetWithIndex: 0] byExtendingSelection: NO];
+            if (self.selectedRow == -1) {
+                NSInteger row = [self rowAtPoint: NSMakePoint(0, self.visibleRect.origin.y)]; /// Get first displayed row on screen.
+                [self selectRowIndexes: [NSIndexSet indexSetWithIndex: row] byExtendingSelection: NO];
+            }
+            
             [self scrollRowToVisible: self.selectedRow];
-        
+            
         }
     
         - (void) keyDown: (NSEvent *)theEvent {
-            
-            auto key = [theEvent charactersIgnoringModifiers];
-            
             
             if (
                 (0) && /// Disable keyboard controls for previewItems, cause it's not that useful and currently produces a bit of weird behavior (I think. Can't remember what [Oct 2025])
                 QLPreviewPanel.sharedPreviewPanel.visible
             ) {
-                if ([key isEqual: stringf(@"%C", (unichar)NSLeftArrowFunctionKey)]) /// Flip through different screenshots containing the currently selected string. Could also implement this in `previewPanel:handleEvent:` [Oct 2025]
+                if (eventIsKey(theEvent, NSLeftArrowFunctionKey)) /// Flip through different screenshots containing the currently selected string. Could also implement this in `previewPanel:handleEvent:` [Oct 2025]
                     [self _incrementCurrentPreviewItem: -1];
-                else if ([key isEqual: stringf(@"%C", (unichar)NSRightArrowFunctionKey)])
+                else if (eventIsKey(theEvent, NSRightArrowFunctionKey))
                     [self _incrementCurrentPreviewItem: +1];
                 else
                     [super keyDown: theEvent];
             }
             else {
-                if ([key isEqual: stringf(@"%C", (unichar)NSLeftArrowFunctionKey)])   /// Select the sourceList
+                if (eventIsKey(theEvent, NSLeftArrowFunctionKey))   /// Select the sourceList
                     [appdel->sourceList.window makeFirstResponder: appdel->sourceList];
-                else if ([key isEqual:@" "])	/// Space key opens the preview panel. || TODO: Also support Command-Y (using Menu Item)
+                else if (eventIsKey(theEvent, ' '))	/// Space key opens the preview panel. || TODO: Also support Command-Y (using Menu Item)
                     [self togglePreviewPanel: self];
                 else
-                    [super keyDown: theEvent];
+                    [super keyDown: theEvent]; /// Handling of UpArrow and DownArrow is built-in to `NSTableView` [Oct 2025]
             }
         }
         - (void) cancelOperation: (id)sender {
@@ -439,7 +440,7 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
                     sourceFrame_Window = [self convertRect: sourceRect toView: nil];
                 }
                 else {
-                    NSTableCellView *cellView =[self viewAtColumn: [self columnWithIdentifier: @"id"] row: [self selectedRow] makeIfNecessary: NO];
+                    NSTableCellView *cellView = [self viewAtColumn: [self columnWithIdentifier: @"id"] row: [self selectedRow] makeIfNecessary: NO];
                     NSButton *quickLookButton = firstmatch(cellView.subviews, cellView.subviews.count, nil, sv, [sv.identifier isEqual: @"quick-look-button"]); /// We previously used `[cell nextKeyView];`. I thought it worked but here it didn't [Oct 2025]
                     sourceFrame_Window = [quickLookButton.superview convertRect: quickLookButton.frame toView: nil];
                 }
@@ -462,6 +463,8 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
             - (BOOL) previewPanel: (QLPreviewPanel *)panel handleEvent: (NSEvent *)event {
                 /// redirect all key down events from the QLPanel to the table view (So you can flip through rows) [Oct 2025]
                 if ([event type] == NSEventTypeKeyDown) {
+                    if (!eventIsKey(event, NSUpArrowFunctionKey) && !eventIsKey(event, NSDownArrowFunctionKey)) /// We disable it for NSUpArrowFunctionKey and NSDownArrowFunctionKey cause the blue row highlight is a little distracting
+                        [self.window makeKeyAndOrderFront: nil]; /// Without this, the `filterField` (Command-F) and "Switch between `SourceList` and `TableView`" (LeftArrow / RightArrow) keys don't work properly. [Oct 2025]
                     [self keyDown: event];
                     return YES;
                 }

@@ -97,3 +97,7 @@ static NSEvent *makeKeyDown(unichar keyEquivalent, int keyCode) {
         keyCode: keyCode
     ];
 }
+
+static BOOL eventIsKey(NSEvent *event, unichar key) {
+    return [stringf(@"%C", (unichar)key) isEqual: [event charactersIgnoringModifiers]];
+}
