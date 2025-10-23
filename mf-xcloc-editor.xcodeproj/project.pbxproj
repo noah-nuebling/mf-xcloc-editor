@@ -12,6 +12,8 @@
 		4FAD64792E69D1DD00643726 /* MainWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4FAD64782E69D1DD00643726 /* MainWindowController.m */; };
 		4FC6FA632E6A0BA700459F13 /* ReusableViews.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4FC6FA622E6A0BA700459F13 /* ReusableViews.xib */; };
 		4FC6FA652E6A365E00459F13 /* MFUI.m in Sources */ = {isa = PBXBuildFile; fileRef = 4FC6FA642E6A365E00459F13 /* MFUI.m */; };
+		4FF08E322EAAA8A100BBE492 /* NSAttributedString+Additions.m in Sources */ = {isa = PBXBuildFile; fileRef = 4FF08E302EAAA7DC00BBE492 /* NSAttributedString+Additions.m */; };
+		4FF08E352EAAC57E00BBE492 /* MFTextField.m in Sources */ = {isa = PBXBuildFile; fileRef = 4FF08E342EAAC57E00BBE492 /* MFTextField.m */; };
 		4FF436D22DF63AB3008F2D74 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4FF428632DF63AB2008F2D74 /* Assets.xcassets */; };
 		4FF436D32DF63AB3008F2D74 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4FF428662DF63AB2008F2D74 /* MainMenu.xib */; };
 		4FF4373C2DF63AB8008F2D74 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 4FF428622DF63AB2008F2D74 /* AppDelegate.m */; };
@@ -47,6 +49,10 @@
 		4FC6FA622E6A0BA700459F13 /* ReusableViews.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ReusableViews.xib; sourceTree = "<group>"; };
 		4FC6FA642E6A365E00459F13 /* MFUI.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MFUI.m; sourceTree = "<group>"; };
 		4FC6FA662E6A367400459F13 /* MFUI.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MFUI.h; sourceTree = "<group>"; };
+		4FF08E2F2EAAA7DC00BBE492 /* NSAttributedString+Additions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSAttributedString+Additions.h"; sourceTree = "<group>"; };
+		4FF08E302EAAA7DC00BBE492 /* NSAttributedString+Additions.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSAttributedString+Additions.m"; sourceTree = "<group>"; };
+		4FF08E332EAAC57E00BBE492 /* MFTextField.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MFTextField.h; sourceTree = "<group>"; };
+		4FF08E342EAAC57E00BBE492 /* MFTextField.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MFTextField.m; sourceTree = "<group>"; };
 		4FF428612DF63AB2008F2D74 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		4FF428622DF63AB2008F2D74 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		4FF428632DF63AB2008F2D74 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -97,6 +103,15 @@
 			path = "example-docs";
 			sourceTree = "<group>";
 		};
+		4FF08E2E2EAAA7D000BBE492 /* Copied from MMF */ = {
+			isa = PBXGroup;
+			children = (
+				4FF08E2F2EAAA7DC00BBE492 /* NSAttributedString+Additions.h */,
+				4FF08E302EAAA7DC00BBE492 /* NSAttributedString+Additions.m */,
+			);
+			path = "Copied from MMF";
+			sourceTree = "<group>";
+		};
 		4FF4286A2DF63AB2008F2D74 /* mf-xcloc-editor */ = {
 			isa = PBXGroup;
 			children = (
@@ -119,6 +134,9 @@
 				4FF447A92DF701EE008F2D74 /* SourceList.m */,
 				4FF447A42DF6BC6E008F2D74 /* TableView.h */,
 				4FF447A52DF6BC6E008F2D74 /* TableView.m */,
+				4FF08E332EAAC57E00BBE492 /* MFTextField.h */,
+				4FF08E342EAAC57E00BBE492 /* MFTextField.m */,
+				4FF08E2E2EAAA7D000BBE492 /* Copied from MMF */,
 				4F4CFDBD2EA8D4F30047E5E8 /* MFQLPreviewItem.h */,
 				4F4CFDBE2EA8D4F30047E5E8 /* MFQLPreviewItem.m */,
 				4F7E02D42EA77D3000C2F693 /* example-docs */,
@@ -229,6 +247,8 @@
 				4FAD64792E69D1DD00643726 /* MainWindowController.m in Sources */,
 				4FF4373C2DF63AB8008F2D74 /* AppDelegate.m in Sources */,
 				4FF4373D2DF63AB8008F2D74 /* main.m in Sources */,
+				4FF08E322EAAA8A100BBE492 /* NSAttributedString+Additions.m in Sources */,
+				4FF08E352EAAC57E00BBE492 /* MFTextField.m in Sources */,
 				4FF447A62DF6BC6F008F2D74 /* TableView.m in Sources */,
 				4FC6FA652E6A365E00459F13 /* MFUI.m in Sources */,
 				4F4CFDBF2EA8D4F30047E5E8 /* MFQLPreviewItem.m in Sources */,

@@ -50,6 +50,30 @@
             </connections>
             <point key="canvasLocation" x="-505" y="-137"/>
         </tableCellView>
+        <tableCellView identifier="theReusableCell_TableTarget" verticalCompressionResistancePriority="1000" id="H4q-qs-abq" userLabel="Table Cell - Target">
+            <rect key="frame" x="0.0" y="0.0" width="173" height="31"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+            <subviews>
+                <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" verticalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="Jbv-3j-llD" customClass="MFTextField">
+                    <rect key="frame" x="0.0" y="8" width="173" height="15"/>
+                    <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="Table View Cell - Target" id="U33-PF-BoI">
+                        <font key="font" metaFont="cellTitle"/>
+                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
+            </subviews>
+            <constraints>
+                <constraint firstItem="Jbv-3j-llD" firstAttribute="top" secondItem="H4q-qs-abq" secondAttribute="top" constant="8" id="Dg4-O6-5Eg"/>
+                <constraint firstAttribute="trailing" secondItem="Jbv-3j-llD" secondAttribute="trailing" constant="2" id="Zkg-Ms-jCA"/>
+                <constraint firstItem="Jbv-3j-llD" firstAttribute="leading" secondItem="H4q-qs-abq" secondAttribute="leading" constant="2" id="gn2-6J-gl9"/>
+                <constraint firstAttribute="bottom" secondItem="Jbv-3j-llD" secondAttribute="bottom" constant="8" id="w1R-Fh-Vcd"/>
+            </constraints>
+            <connections>
+                <outlet property="textField" destination="Jbv-3j-llD" id="bQp-hC-sWG"/>
+            </connections>
+            <point key="canvasLocation" x="-696" y="-77"/>
+        </tableCellView>
         <tableCellView identifier="theReusableCell_TableID" verticalCompressionResistancePriority="1000" id="JTE-ER-1V4" userLabel="Table Cell - ID">
             <rect key="frame" x="0.0" y="0.0" width="168" height="62"/>
             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>

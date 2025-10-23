@@ -728,6 +728,8 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
                 
                 if (iscol(@"id"))
                     cell = [tableView makeViewWithIdentifier: @"theReusableCell_TableID" owner: self]; /// [Jun 2025] What to pass as owner here? Will this lead to retain cycle?
+                else if (iscol(@"target"))
+                    cell = [tableView makeViewWithIdentifier: @"theReusableCell_TableTarget" owner: self]; /// This contains an `MFTextField`
                 else
                     cell = [tableView makeViewWithIdentifier: @"theReusableCell_Table" owner: self];
                 
