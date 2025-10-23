@@ -5,12 +5,23 @@
 //  Created by Noah Nübling on 10/23/25.
 //
 
+///
+/// See:
+///     - PackagedDocument sample project (https://developer.apple.com/library/archive/samplecode/PackagedDocument/Introduction/Intro.html#//apple_ref/doc/uid/DTS40012955-Intro-DontLinkElementID_2)
+///     - 
+///
+
 #import "XclocDocument.h"
 #import "Utility.h"
 
 #define kMFTypeName_Xcloc @"com.apple.xcode.xcloc"
 
+@interface XclocDocument ()
+    @property NSFileWrapper *storedXclocFileWrapper;
+@end
+
 @implementation XclocDocument
+
 
 /*
 - (NSString *)windowNibName {
@@ -32,11 +43,7 @@
         [self saveDocument: nil];
     }
 
-    /// Alternative methods listed by Apple's NSDocument Xcode template
-    /// Writing:   `-dataOfType:error:,          -fileWrapperOfType:error:,         -writeToURL:ofType:error:       -writeToURL:ofType:forSaveOperation:originalContentsURL:error:`
-    /// Reading: `-readFromData:ofType:error:, -readFromFileWrapper:ofType:error: -readFromURL:ofType:error:`
-
-    - (BOOL) writeToURL: (NSURL *)url ofType: (NSString *)typeName error: (NSError *__autoreleasing  _Nullable *)outError {
+    - (BOOL) readFromFileWrapper: (NSFileWrapper *)xclocWrapper ofType: (NSString *)typeName error: (NSError *__autoreleasing  _Nullable *)outError {
         
         #define fail(msg...) ({ \
             mflog(msg); \
@@ -46,84 +53,146 @@
         })
         
         NSError *err = nil;
-        
-        {
-            /// Write xliff
-            NSString *xliffPath = [url path];
-            if ((0)) xliffPath = getXliffPath(self->xclocPath); /// TESTING
-            
-            [[self.xliffDoc XMLStringWithOptions: NSXMLNodePrettyPrint] writeToFile: xliffPath atomically: YES encoding: NSUTF8StringEncoding error: &err];
-            if (err) mflog(@"An error occured while writing to the xliff file: %@", err);
-            
-            mflog(@"Wrote to xliff file: %@", xliffPath);
-            
-        }
-        return YES;
-        #undef fail
-    }
-
-    - (BOOL) readFromURL: (NSURL *)url ofType: (NSString *)typeName error: (NSError *__autoreleasing  _Nullable *)outError {
-        
-        #define fail(msg...) ({ \
-            mflog(msg); \
-            if (outError) *outError = mferror(NSCocoaErrorDomain, 0, msg); \
-            assert(false); \
-            return NO; \
-        })
-        
-        NSError *err = nil;
-        
-        self->xclocPath = [url path];
         
         {
             /// Load xliff
             NSXMLDocument *doc = nil;
             {
                 
-                auto xliffPath = getXliffPath(xclocPath);
+                auto xliffWrapper = fw_readPath(xclocWrapper, fw_getXliffPath(xclocWrapper));
+                doc = [[NSXMLDocument alloc] initWithData:  xliffWrapper.regularFileContents options: NSXMLNodeOptionsNone error: &err];
+                if (err) fail(@"Loading XMLDocument from wrapper '%@' failed with error: '%@'", xliffWrapper, err);
                 
-                doc = [[NSXMLDocument alloc] initWithContentsOfURL: [NSURL fileURLWithPath: xliffPath] options: NSXMLNodeOptionsNone error: &err];
-                if (err) fail(@"Loading XMLDocument from path '%@' failed with error: '%@'", xliffPath, err);
-                
-                mflog(@"Loaded xliff at %@", xliffPath);
+                mflog(@"Loaded xliff from fileWrapper %@", xliffWrapper);
             }
             
             /// Load localizedStringData.plist
             NSArray *localizedStringsDataPlist = nil;
             {
-                auto stringsDataPaths = findPaths(xclocPath, ^BOOL (NSString *p) {
+                auto stringsDataPaths = fw_findPaths(xclocWrapper, ^BOOL (NSFileWrapper *w, NSString *p) {
                     return [p hasSuffix: @"localizedStringData.plist"];
                 });
+                
                 if (stringsDataPaths.count) { /// .xloc files with no screenshots don't have `localizedStringData.plist` [Oct 2025]
-                    auto stringsDataPath = stringsDataPaths[0];
                     
-                    localizedStringsDataPlist = [[NSArray alloc] initWithContentsOfURL: [NSURL fileURLWithPath: stringsDataPath] error: &err];
-                    if (err) fail(@"Loading localizedStringsData.plist failed with error: %@", err);
+                    localizedStringsDataPlist = [NSPropertyListSerialization
+                        propertyListWithData: fw_readPath(xclocWrapper, stringsDataPaths[0]).regularFileContents
+                        options: 0
+                        format: NULL
+                        error: &err
+                    ];
+                    if (err) fail(@"Loading localizedStringsData.plist from fileWrapper failed with error: %@", err);
                     
-                    mflog(@"Loaded localizedStringsData.plist at %@", stringsDataPath);
+                    mflog(@"Loaded localizedStringsData.plist from fileWrapper: %@", xclocWrapper);
                 }
             }
             
-            /// Store xliff
+            /// Store deserialized data
             self.xliffDoc = doc;
-            
-            /// Store localizedStringsDataPlist
             self.localizedStringsDataPlist = localizedStringsDataPlist;
+            
+            /// Store the xcloc fileWrapper directly
+            self.storedXclocFileWrapper = xclocWrapper;
         }
         
         return YES;
-        #undef fail
     }
+    
+    - (NSFileWrapper *) fileWrapperOfType: (NSString *)typeName error: (NSError *__autoreleasing  _Nullable *)outError {
+        
+        fw_writePath(self.storedXclocFileWrapper, fw_getXliffPath(self.storedXclocFileWrapper), [[self.xliffDoc XMLStringWithOptions: NSXMLNodePrettyPrint] dataUsingEncoding: NSUTF8StringEncoding]);
+        
+        mflog(@"Returning fileWrapper for saving document: %@", self.storedXclocFileWrapper);
+        
+        return self.storedXclocFileWrapper;
+    }
+    
+    #if 0
+
+        /// Old `-writeToURL`-based implementation
+        ///     Moved to fileWrapper-based APIs instead cause it seems those are indented for folders (.xcloc files are folders)
+        ///         (The `url` arg that you're supposed to write to is in some weird temp dir, not the original URL, and you'd have to write the entire bundle there including all the screenshots and other data we never wanna manipulate.)
+        ///         (Modifying the .xcloc file in-place would be by far the simplest, but it seems the NSDocument APIs aren't designed around that. Not sure why – maybe using NSDocument was a mistake) [Oct 2025]
+        
+        - (BOOL) writeToURL: (NSURL *)url ofType: (NSString *)typeName error: (NSError *__autoreleasing  _Nullable *)outError {
+            
+            NSError *err = nil;
+            
+            {
+                /// Write xliff
+                NSString *xliffPath = getXliffPath([url path]); /// Don't use `self.fileURL`!
+
+                [[self.xliffDoc XMLStringWithOptions: NSXMLNodePrettyPrint] writeToFile: xliffPath atomically: YES encoding: NSUTF8StringEncoding error: &err];
+                if (err) fail(@"An error occured while writing to the xliff file: %@", err);
+
+                mflog(@"Wrote to xliff file: %@", xliffPath);
+
+                /// Update bundle modification date so NSDocument knows save succeeded
+                [[NSFileManager defaultManager] setAttributes: @{NSFileModificationDate: [NSDate date]} ofItemAtPath: [url path] error: &err];
+                if (err) fail(@"Failed to update bundle modification date: %@", err);
+            }
+            return YES;
+            #undef fail
+        }
+
+        - (BOOL) readFromURL: (NSURL *)url ofType: (NSString *)typeName error: (NSError *__autoreleasing  _Nullable *)outError {
+            
+            NSError *err = nil;
+            
+            if ((0)) self.fileURL = url; /// Do we have to do this manually? [Oct 2025]
+            
+            {
+                /// Load xliff
+                NSXMLDocument *doc = nil;
+                {
+                    
+                    auto xliffPath = getXliffPath([url path]); /// Don't use `self.fileURL`!
+                    
+                    doc = [[NSXMLDocument alloc] initWithContentsOfURL: [NSURL fileURLWithPath: xliffPath] options: NSXMLNodeOptionsNone error: &err];
+                    if (err) fail(@"Loading XMLDocument from path '%@' failed with error: '%@'", xliffPath, err);
+                    
+                    mflog(@"Loaded xliff at %@", xliffPath);
+                }
+                
+                /// Load localizedStringData.plist
+                NSArray *localizedStringsDataPlist = nil;
+                {
+                    auto stringsDataPaths = findPaths([url path], ^BOOL (NSString *p) {
+                        return [p hasSuffix: @"localizedStringData.plist"];
+                    });
+                    if (stringsDataPaths.count) { /// .xloc files with no screenshots don't have `localizedStringData.plist` [Oct 2025]
+                        auto stringsDataPath = stringsDataPaths[0];
+                        
+                        localizedStringsDataPlist = [[NSArray alloc] initWithContentsOfURL: [NSURL fileURLWithPath: stringsDataPath] error: &err];
+                        if (err) fail(@"Loading localizedStringsData.plist failed with error: %@", err);
+                        
+                        mflog(@"Loaded localizedStringsData.plist at %@", stringsDataPath);
+                    }
+                }
+                
+                /// Store xliff
+                self.xliffDoc = doc;
+                
+                /// Store localizedStringsDataPlist
+                self.localizedStringsDataPlist = localizedStringsDataPlist;
+            }
+            
+            return YES;
+            #undef fail
+        }
+    #endif
 
 #pragma mark - Stuff
 
 + (BOOL)autosavesInPlace {
+    // This gives us autosave and versioning for free in 10.7 and later.
     return YES;
 }
 
 + (BOOL) canConcurrentlyReadDocumentsOfType: (NSString *)typeName {
-    if ([typeName isEqual: kMFTypeName_Xcloc]) return YES;
-    return NO;
+    //  Turn this on for async saving allowing saving to be asynchronous, making all our
+    //  save methods (dataOfType, saveToURL) to be called on a background thread.
+    return YES;
 }
 
 - (void) makeWindowControllers {
@@ -150,10 +219,19 @@
     if ((0)) [self->ctrl.window makeKeyAndOrderFront: nil];
 }
 NSString *getXliffPath(NSString *xclocPath) {
-    NSString *xliffPath = findPaths(xclocPath, ^BOOL (NSString *p){
+    auto xliff = findPaths(xclocPath, ^BOOL (NSString *p){
         return [p hasSuffix: @".xliff"];
     })[0];
-    return xliffPath;
+    return xliff;
+}
+
+NSString *fw_getXliffPath(NSFileWrapper *xclocWrapper) {
+    
+    auto xliff = fw_findPaths(xclocWrapper, ^BOOL (NSFileWrapper *w, NSString *p) {
+        return [p hasSuffix: @".xliff"];
+    })[0];
+    
+    return xliff;
 }
 
 @end

@@ -28,7 +28,7 @@
             openDocumentWithContentsOfURL: [NSURL fileURLWithPath: xclocPath]
             display: YES
             completionHandler: ^void (NSDocument * _Nullable document, BOOL documentWasAlreadyOpen, NSError * _Nullable error) {
-                
+                mflog(@"Open document result: %@ | %@ | %@", document, @(documentWasAlreadyOpen), error);
             }
         ];
     }

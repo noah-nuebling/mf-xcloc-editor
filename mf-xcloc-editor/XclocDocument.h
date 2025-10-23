@@ -16,7 +16,6 @@
     {
         @public
         MainWindowController *ctrl;
-        NSString *xclocPath;
     }
     @property(nonatomic) NSXMLDocument *xliffDoc;
     @property(nonatomic) NSArray *localizedStringsDataPlist; /// Plist mapping localizedStrings to screenshots [Oct 2025]

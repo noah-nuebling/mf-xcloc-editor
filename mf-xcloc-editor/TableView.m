@@ -488,7 +488,7 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
                 NSRect frame = NSRectFromString(screenshotEntry[@"frame"]);
                 NSString *name = screenshotEntry[@"name"];
                 
-                NSString *imagePath = findPaths([stringf(@"%@%@", getdoc(self)->xclocPath, @"/Notes/Screenshots/") stringByStandardizingPath], ^BOOL(NSString *path) {
+                NSString *imagePath = findPaths([stringf(@"%@%@", [getdoc(self).fileURL path], @"/Notes/Screenshots/") stringByStandardizingPath], ^BOOL(NSString *path) {
                     return [[path lastPathComponent] isEqual: name];
                 })[0];
                 
@@ -539,7 +539,7 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
                     ///     I'm not sure what's the proper way to do this.
                     ///         (Tried `representationOfImageRepsInArray:` and it didn't work)
                     err = nil;
-                    auto jpegData = [[NSBitmapImageRep imageRepWithData: [annotatedImage TIFFRepresentation]] representationUsingType: NSBitmapImageFileTypeJPEG properties: @{}];
+                    auto jpegData = imageData(annotatedImage, NSBitmapImageFileTypeJPEG, @{});
                     [jpegData writeToFile: annotatedImagePath options: NSDataWritingAtomic error: &err];
                     if (err) assert(false);
                 }
