@@ -109,6 +109,9 @@ NSString *getXliffPath(NSString *xclocPath) {
 
 - (BOOL) validateMenuItem: (NSMenuItem *)menuItem {
     
+    /// TODO: Maybe delete some of the default menuItems we don't need.
+    /// TODO: Make kMFStr_MarkAsTranslated item grayed out when pluralizable string is selected.
+    
     if (menuItem.action == @selector(filterMenuItemSelected:)) {
         return YES;
     }

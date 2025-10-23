@@ -643,6 +643,7 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
         bool targetCellShouldBeEditable = true;
         
         /// Handle pluralizable strings
+        ///         TODO: Fix pluralizable strings getting 'split up' when sorting / filtering
         {
             if ([xml_childnamed(transUnit, @"source").objectValue containsString: @"%#@"]) { /// Detects the `%#@formatSstring@`
                 if      (iscol(@"id"))       {}
