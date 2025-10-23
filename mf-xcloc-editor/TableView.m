@@ -16,7 +16,7 @@
 #import "AppDelegate.h"
 #import "MFQLPreviewItem.h"
 #import "Constants.h"
-
+#import "XclocDocument.h"
 
 #define kMFTransUnitState_Translated      @"translated"
 #define kMFTransUnitState_DontTranslate   @"mf_dont_translate"
@@ -39,7 +39,9 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
 
 @implementation TableView
     {
-        
+        NSString *_filterString;
+        NSMutableArray<NSXMLElement *> *_displayedTransUnits; /// Main dataModel displayed by this table.
+        id _lastQLPanelDisplayState;
     }
 
     #pragma mark - Lifecycle
@@ -135,7 +137,7 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
             }
             else {
                 if (eventIsKey(theEvent, NSLeftArrowFunctionKey))   /// Select the sourceList
-                    [appdel->sourceList.window makeFirstResponder: appdel->sourceList];
+                    [getdoc(self)->ctrl->out_sourceList.window makeFirstResponder: getdoc(self)->ctrl->out_sourceList];
                 else if (eventIsKey(theEvent, ' '))	/// Space key opens the preview panel. || TODO: Also support Command-Y (using Menu Item)
                     [self togglePreviewPanel: self];
                 else
@@ -149,7 +151,7 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
                 return;
             }
             
-            [appdel->sourceList.window makeFirstResponder: appdel->sourceList]; /// Return focus to sidebar when user hits escape while editing transUnits. Also see other `cancelOperation:` overrides. [Oct 2025]
+            [getdoc(self)->ctrl->out_sourceList.window makeFirstResponder: getdoc(self)->ctrl->out_sourceList]; /// Return focus to sidebar when user hits escape while editing transUnits. Also see other `cancelOperation:` overrides. [Oct 2025]
         }
     
     #pragma mark - Sorting
@@ -165,8 +167,6 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
     }
 
     #pragma mark - Filtering
-    
-    static NSString *_filterString = nil;
     - (void) updateFilter: (NSString *)filterString {
         
         _filterString = filterString;
@@ -174,8 +174,6 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
     }
 
     #pragma mark - Data
-
-    static NSMutableArray<NSXMLElement *> *_displayedTransUnits = nil; /// Main dataModel displayed by this table.
     
     - (NSXMLElement *) rowModel: (NSInteger)row {
         if (row == -1) return nil; /// `self.selectedRow` can return -1 if no row is selected
@@ -349,7 +347,7 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
             */
             
             NSDictionary *matchingPlistEntry = nil;
-            for (NSDictionary *entry in self->_localizedStringsDataPlist) {
+            for (NSDictionary *entry in getdoc(self).localizedStringsDataPlist) {
                 if ([entry[@"stringKey"] isEqual: rowModel_getCellModel(transUnit, @"id")]) {
                     if (matchingPlistEntry) assert(false); /// Multiple entries for this key
                     matchingPlistEntry = entry;
@@ -359,8 +357,6 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
             
             return matchingPlistEntry;
         };
-        
-        static id _lastQLPanelDisplayState = nil;
         
         - (IBAction) quickLookButtonPressed: (id)quickLookButton {
             NSInteger row = [[quickLookButton mf_associatedObjectForKey: @"rowOfQuickLookButton"] integerValue];
@@ -375,8 +371,10 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
             ) {
                 [[QLPreviewPanel sharedPreviewPanel] orderOut: nil];
             }
-            else
+            else {
+                [self returnFocus];
                 [[QLPreviewPanel sharedPreviewPanel] makeKeyAndOrderFront: nil];
+            }
         }
         
         - (void) _incrementCurrentPreviewItem: (int)increment {
@@ -490,7 +488,7 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
                 NSRect frame = NSRectFromString(screenshotEntry[@"frame"]);
                 NSString *name = screenshotEntry[@"name"];
                 
-                NSString *imagePath = findPaths([stringf(@"%@%@", appdel->xclocPath, @"/Notes/Screenshots/") stringByStandardizingPath], ^BOOL(NSString *path) {
+                NSString *imagePath = findPaths([stringf(@"%@%@", getdoc(self)->xclocPath, @"/Notes/Screenshots/") stringByStandardizingPath], ^BOOL(NSString *path) {
                     return [[path lastPathComponent] isEqual: name];
                 })[0];
                 
@@ -591,7 +589,7 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
             reloadDataForRowIndexes:    [NSIndexSet indexSetWithIndex: row]
             columnIndexes:              [NSIndexSet indexSetWithIndex: [self indexOfColumnWithIdentifier: @"state"]]
         ];
-        [appdel writeTranslationDataToFile];
+        [getdoc(self) writeTranslationDataToFile];
     }
     
     - (BOOL) rowIsTranslated: (NSInteger)row {
@@ -738,7 +736,7 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
                         rowModel_setCellModel(transUnit, @"target", newString);
                         if (![oldString isEqual: newString])
                             rowModel_setCellModel(transUnit, @"state", kMFTransUnitState_Translated);
-                        [appdel writeTranslationDataToFile];
+                        [getdoc(self) writeTranslationDataToFile];
                         [self /// Don't call `-[reloadData]` since that looses the current selection.
                             reloadDataForRowIndexes: [NSIndexSet indexSetWithIndex: row]
                             columnIndexes: [NSIndexSet indexSetWithIndex: [self indexOfColumnWithIdentifier: @"state"]]

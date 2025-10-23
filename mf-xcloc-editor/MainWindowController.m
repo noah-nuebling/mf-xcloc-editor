@@ -15,6 +15,8 @@
 
 #import <Carbon/Carbon.h>
 
+#import "XclocDocument.h"
+
 @interface TitlbarAccessoryViewController : NSTitlebarAccessoryViewController @end
 @implementation TitlbarAccessoryViewController { @public NSView *_theView; }
     - (void)loadView { self.view = _theView; }
@@ -23,32 +25,32 @@
 @interface FilterField : NSTextField <NSTextFieldDelegate, NSControlTextEditingDelegate> @end
 @implementation FilterField
 
-- (instancetype) initWithFrame: (NSRect)frame {
-    self = [super initWithFrame:frame];
-    if (self) {
-        self.delegate = self;
+    - (instancetype) initWithFrame: (NSRect)frame {
+        self = [super initWithFrame:frame];
+        if (self) {
+            self.delegate = self;
+        }
+        return self;
     }
-    return self;
-}
 
     - (void) cancelOperation: (id)sender { /// escape
         [self setStringValue: @""];
-        [appdel->tableView updateFilter: @""];  /// Can't get our `NSControlTextDidChangeNotification` callback to trigger 'naturally' [Oct 2025]
-        [appdel->tableView returnFocus];        /// Return focus to the TableView when the user hits escape.
+        [getdoc(self)->ctrl->out_tableView updateFilter: @""];  /// Can't get our `NSControlTextDidChangeNotification` callback to trigger 'naturally' [Oct 2025]
+        [getdoc(self)->ctrl->out_tableView returnFocus];        /// Return focus to the TableView when the user hits escape.
     }
     
     - (BOOL) control: (NSControl *)control textView: (NSTextView *)textView doCommandBySelector: (SEL)commandSelector {
         
         if      (commandSelector == @selector(moveUp:)) { /// upArrow || Disabling upArrow and downArrow since it can be error prone when you're browsing the rows and hitting enter and then changing the filter instead of opening quickLook [Oct 2025]
-            [appdel->tableView returnFocus];
-            [appdel->tableView keyDown: makeKeyDown(NSUpArrowFunctionKey, kVK_UpArrow)];
+            [getdoc(self)->ctrl->out_tableView returnFocus];
+            [getdoc(self)->ctrl->out_tableView keyDown: makeKeyDown(NSUpArrowFunctionKey, kVK_UpArrow)];
         }
         else if (commandSelector == @selector(moveDown:)) { /// downArrow
-            [appdel->tableView returnFocus];
-            [appdel->tableView keyDown: makeKeyDown(NSDownArrowFunctionKey, kVK_DownArrow)];
+            [getdoc(self)->ctrl->out_tableView returnFocus];
+            [getdoc(self)->ctrl->out_tableView keyDown: makeKeyDown(NSDownArrowFunctionKey, kVK_DownArrow)];
         }
         else if (commandSelector == @selector(insertNewline:)) /// return
-            [appdel->tableView returnFocus];
+            [getdoc(self)->ctrl->out_tableView returnFocus];
         else
             return NO;
         
@@ -58,6 +60,10 @@
 @end
 
 @implementation MainWindowController
+
+    {
+        NSWindow *window; /// Without storing after creation in -loadWindow, this started crashing somewhere in AppKit on Tahoe  after adding `windowShouldClose:` [Oct 2025]
+    }
     
     NSSplitView *mfsplitview(NSArray<NSView *> *arrangedSubviews) {
         
@@ -73,15 +79,13 @@
         return splitView;
     }
     
-    - (Outlets) makeMainWindow {
-        
-        /// Init result
-        Outlets result = {0};
+    
+    
+    - (void) loadWindow { /// Replaces `- (Outlets) makeMainWindow` I think [Oct 2025]
         
         /// Set up window
-        
-        static NSWindow *window; /// Without making static, this started crashing somewhere in AppKit on Tahoe  after adding `windowShouldClose:` [Oct 2025]
-        mfonce(mfoncet, ^{
+        assert(!self.window);
+        {
             
             window = [NSWindow new];
             window.styleMask = 0
@@ -89,19 +93,20 @@
                 | NSWindowStyleMaskResizable
                 | NSWindowStyleMaskTitled
             ;
-            window.title = @"Xcloc Editor";
+            if ((0)) window.title = @"Xcloc Editor";
             
             window.delegate = self;
+            window.windowController = self; /// Used by `getdoc()` [Oct 2025]
             
             if ((0)) window.toolbar = [NSToolbar new]; /// Adding to change titlebar height
             
-        });
+        };
         
         /// Define view hierarchy & get outlets
         NSSplitView *out_splitView = nil;
         mfinsert(window.contentView, mfmargin(0,0,0,0), mfoutlet(&out_splitView, mfsplitview(@[ /// Hack: Have to use autolayout around the NSSplitView to give the viewHierarchy a `_layoutEngine`. Otherwise `[NSSplitView setHoldingPriority:forSubviewAtIndex:]` doesn't work. HACKS ON HACKS ON HACK ON HACKS
-            mfscrollview(mfoutlet(&result.sourceList, [SourceList new])),
-            mfscrollview(mfoutlet(&result.tableView,  [TableView new]))
+            mfscrollview(mfoutlet(&self->out_sourceList, [SourceList new])),
+            mfscrollview(mfoutlet(&self->out_tableView,  [TableView new]))
         ])));
         
         /// Add accessory view
@@ -109,7 +114,7 @@
             
             auto viewController = [TitlbarAccessoryViewController new];
             viewController->_theView = ({
-                auto w = mfwrap(mfmargin(5, 5, 5, 5), mfoutlet(&result.filterField, ({
+                auto w = mfwrap(mfmargin(5, 5, 5, 5), mfoutlet(&self->out_filterField, ({
                     auto v = mfview(FilterField);
                     v.editable = YES;
                     v.placeholderString = @"Filter Translations";
@@ -142,16 +147,16 @@
             
             /// Give the SourceList a minWidth
             ///     Otherwise the NSSplitView crushes it to width 0
-            [result.sourceList.enclosingScrollView.widthAnchor constraintGreaterThanOrEqualToConstant: 200].active = YES;
+            [self->out_sourceList.enclosingScrollView.widthAnchor constraintGreaterThanOrEqualToConstant: 200].active = YES;
             
             /// Also give TableView a minWidth
-            [result.tableView.enclosingScrollView.widthAnchor constraintGreaterThanOrEqualToConstant: 200].active = YES;
+            [self->out_tableView.enclosingScrollView.widthAnchor constraintGreaterThanOrEqualToConstant: 200].active = YES;
         }
         
         /// Set up `result.filterField` callback
-        [[NSNotificationCenter defaultCenter] addObserverForName: NSControlTextDidChangeNotification object: result.filterField queue: nil usingBlock: ^(NSNotification * _Nonnull notification) {
-            mflog(@"filter fiellddd: %@", result.filterField.stringValue);
-            [appdel->tableView updateFilter: result.filterField.stringValue];
+        [[NSNotificationCenter defaultCenter] addObserverForName: NSControlTextDidChangeNotification object: self->out_filterField queue: nil usingBlock: ^(NSNotification * _Nonnull notification) {
+            mflog(@"filter fiellddd: %@", self->out_filterField.stringValue);
+            [self->out_tableView updateFilter: self->out_filterField.stringValue];
         }];
         
         /// Set window size/position
@@ -163,9 +168,6 @@
         
         /// Open window
         [window makeKeyAndOrderFront: nil];
-        
-        /// Return
-        return result;
     }
     
     - (void) windowWillClose: (NSNotification *)notification { /// Note: We force this to be called in `applicationShouldTerminate:` [Oct 2025]

@@ -9,14 +9,13 @@
 #import "SourceList.h"
 #import "TableView.h"
 
-@interface MainWindowController : NSObject <NSWindowDelegate>
-
-    typedef struct {
-        SourceList *sourceList;
-        TableView *tableView;
-        NSTextField *filterField;
-    } Outlets;
-    
-    - (Outlets) makeMainWindow;
-
+@interface MainWindowController : NSWindowController <NSWindowDelegate>
+    {
+        /// Outlets
+        ///     Get filled by -loadWindow [Oct 2025]
+        @public
+        SourceList  *out_sourceList;
+        TableView   *out_tableView;
+        NSTextField *out_filterField;
+    }
 @end

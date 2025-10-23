@@ -8,5 +8,7 @@
 #import <Cocoa/Cocoa.h>
 
 @interface SourceList : NSOutlineView <NSOutlineViewDataSource, NSOutlineViewDelegate>
-    @property(nonatomic) NSXMLDocument *xliffDoc;
+
+- (void) setXliffDoc: (NSXMLDocument *)xliffDoc;
+
 @end

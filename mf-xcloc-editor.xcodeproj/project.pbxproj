@@ -19,6 +19,7 @@
 		4FF447A32DF6467E008F2D74 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 4FF447A22DF6467E008F2D74 /* README.md */; };
 		4FF447A62DF6BC6F008F2D74 /* TableView.m in Sources */ = {isa = PBXBuildFile; fileRef = 4FF447A52DF6BC6E008F2D74 /* TableView.m */; };
 		4FF447AA2DF701EE008F2D74 /* SourceList.m in Sources */ = {isa = PBXBuildFile; fileRef = 4FF447A92DF701EE008F2D74 /* SourceList.m */; };
+		4FFBA6B52EAA14AF00CF1A71 /* XclocDocument.m in Sources */ = {isa = PBXBuildFile; fileRef = 4FFBA6B42EAA14AF00CF1A71 /* XclocDocument.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -60,6 +61,9 @@
 		4FF447A92DF701EE008F2D74 /* SourceList.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SourceList.m; sourceTree = "<group>"; };
 		4FF4FA1D2DF6270F008F2D74 /* mf-xcloc-editor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "mf-xcloc-editor.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4FFBA6B22EA9A1FF00CF1A71 /* Constants.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Constants.h; sourceTree = "<group>"; };
+		4FFBA6B32EAA14AF00CF1A71 /* XclocDocument.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XclocDocument.h; sourceTree = "<group>"; };
+		4FFBA6B42EAA14AF00CF1A71 /* XclocDocument.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = XclocDocument.m; sourceTree = "<group>"; };
+		4FFBA6F42EAA337A00CF1A71 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -96,18 +100,21 @@
 		4FF4286A2DF63AB2008F2D74 /* mf-xcloc-editor */ = {
 			isa = PBXGroup;
 			children = (
+				4FFBA6F42EAA337A00CF1A71 /* Info.plist */,
 				4FFBA6B22EA9A1FF00CF1A71 /* Constants.h */,
+				4FF447A72DF6CB3A008F2D74 /* Utility.h */,
 				4FF428612DF63AB2008F2D74 /* AppDelegate.h */,
 				4FF428622DF63AB2008F2D74 /* AppDelegate.m */,
-				4FF447A72DF6CB3A008F2D74 /* Utility.h */,
+				4FFBA6B32EAA14AF00CF1A71 /* XclocDocument.h */,
+				4FFBA6B42EAA14AF00CF1A71 /* XclocDocument.m */,
+				4FAD64772E69D1DD00643726 /* MainWindowController.h */,
+				4FAD64782E69D1DD00643726 /* MainWindowController.m */,
 				4FC6FA662E6A367400459F13 /* MFUI.h */,
 				4FC6FA642E6A365E00459F13 /* MFUI.m */,
 				4F7E02CF2EA7758700C2F693 /* NSObject+Additions.h */,
 				4F7E02D02EA7758700C2F693 /* NSObject+Additions.m */,
 				4FF428662DF63AB2008F2D74 /* MainMenu.xib */,
 				4FC6FA622E6A0BA700459F13 /* ReusableViews.xib */,
-				4FAD64772E69D1DD00643726 /* MainWindowController.h */,
-				4FAD64782E69D1DD00643726 /* MainWindowController.m */,
 				4FF447A82DF701EE008F2D74 /* SourceList.h */,
 				4FF447A92DF701EE008F2D74 /* SourceList.m */,
 				4FF447A42DF6BC6E008F2D74 /* TableView.h */,
@@ -226,6 +233,7 @@
 				4FC6FA652E6A365E00459F13 /* MFUI.m in Sources */,
 				4F4CFDBF2EA8D4F30047E5E8 /* MFQLPreviewItem.m in Sources */,
 				4FF447AA2DF701EE008F2D74 /* SourceList.m in Sources */,
+				4FFBA6B52EAA14AF00CF1A71 /* XclocDocument.m in Sources */,
 				4F7E02D12EA7758800C2F693 /* NSObject+Additions.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -371,6 +379,7 @@
 				DEVELOPMENT_TEAM = LM5Z78756B;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "mf-xcloc-editor/Info.plist";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSMainNibFile = MainMenu;
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
@@ -401,6 +410,7 @@
 				DEVELOPMENT_TEAM = LM5Z78756B;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "mf-xcloc-editor/Info.plist";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSMainNibFile = MainMenu;
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;

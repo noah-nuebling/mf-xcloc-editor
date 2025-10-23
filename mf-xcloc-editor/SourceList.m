@@ -11,6 +11,7 @@
 #import "SourceList.h"
 #import "Utility.h"
 #import "AppDelegate.h"
+#import "XclocDocument.h"
 
 @interface File : NSObject
     {
@@ -161,9 +162,6 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
             }
         }
         [self->files insertObject: File_Make(transUnitsFromAllFiles, @"All Documents") atIndex: 0];
-        
-        /// Store xliff doc
-        self->_xliffDoc = xliffDoc;
     }
     
     #pragma mark - Keyboard Control
@@ -176,7 +174,7 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
                 eventIsKey(event, '\r') ||
                 eventIsKey(event, NSRightArrowFunctionKey)
             ) {
-                [appdel->tableView returnFocus];
+                [getdoc(self)->ctrl->out_tableView returnFocus];
             }
             else
                 [super keyDown: event];
@@ -229,7 +227,7 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
 
     - (void) outlineViewSelectionDidChange: (NSNotification *)notification {
         File *file = self->files[self.selectedRow];
-        [appdel->tableView reloadWithNewData: file->transUnits];
+        [getdoc(self)->ctrl->out_tableView reloadWithNewData: file->transUnits];
     }
 
 @end

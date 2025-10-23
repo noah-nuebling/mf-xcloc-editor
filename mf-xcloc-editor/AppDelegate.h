@@ -10,23 +10,7 @@
 #import "SourceList.h"
 #import "MainWindowController.h"
 
-#define appdel ((AppDelegate *)NSApp.delegate) /// Use this to access global state around the app
-
-typedef struct {
-
-} GlobalOutlets; /// Objects that we want to be available everywhere in the app
-
 @interface AppDelegate : NSObject <NSApplicationDelegate, NSMenuItemValidation>
-    {
-        @public
-        MainWindowController *mainController;
-        SourceList *sourceList;
-        TableView *tableView;
-        NSTextField *filterField;
-        NSString *xclocPath;
-    }
-    
-    - (void) writeTranslationDataToFile; /// Little weird for this to be on AppDelegate [Oct 2025]
 
 @end
 

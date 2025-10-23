@@ -9,80 +9,30 @@
 #import "Utility.h"
 #import "MainWindowController.h"
 #import "Constants.h"
+#import "XclocDocument.h"
 
 @implementation AppDelegate
 
 #pragma mark - Lifecycle
 
-NSString *getXclocPath(void) {
-    NSString *xclocPath;
-    if ((0)) xclocPath = @"/Users/noah/mmf-stuff/xcode-localization-screenshot-fix/CustomImplForLocalizationScreenshotTest/Notes/Examples/example-da.xcloc";
-    if ((0)) xclocPath = @"/Users/noah/mmf-stuff/mf-xcloc-editor/mf-xcloc-editor/example-docs/da.xcloc";
-    else     xclocPath = @"/Users/noah/Downloads/Mac Mouse Fix Translations (German)/Mac Mouse Fix.xcloc";
-    return xclocPath;
-}
-
-NSString *getXliffPath(NSString *xclocPath) {
-    NSString *xliffPath = findPaths(xclocPath, ^BOOL (NSString *p){
-        return [p hasSuffix: @".xliff"];
-    })[0];
-    return xliffPath;
-}
-
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
     
-    self->mainController = [MainWindowController new];
-    Outlets outlets = [self->mainController makeMainWindow];
+    if ((1)) { /// TESTING
     
-    self->tableView = outlets.tableView;
-    self->sourceList = outlets.sourceList;
-    self->filterField = outlets.filterField;
+        NSString *xclocPath;
+        if ((0)) xclocPath = @"/Users/noah/mmf-stuff/xcode-localization-screenshot-fix/CustomImplForLocalizationScreenshotTest/Notes/Examples/example-da.xcloc";
+        if ((0)) xclocPath = @"/Users/noah/mmf-stuff/mf-xcloc-editor/mf-xcloc-editor/example-docs/da.xcloc";
+        else     xclocPath = @"/Users/noah/Downloads/Mac Mouse Fix Translations (German)/Mac Mouse Fix.xcloc";
     
-    /// Get xcloc path
-    auto xclocPath = getXclocPath();
-    self->xclocPath = xclocPath;
-    
-    
-    #define fail(msg...) ({ \
-        mflog(msg); /** TODO: Maybe show an NSAlert. */\
-        exit(1); \
-    })
-    
-    
-    {
-        /// Load xliff
-        NSXMLDocument *doc = nil;
-        {
-            auto xliffPath = getXliffPath(xclocPath);
-        
-            NSError *err = nil;
-            doc = [[NSXMLDocument alloc] initWithContentsOfURL: [NSURL fileURLWithPath: xliffPath] options: NSXMLNodeOptionsNone error: &err];
-            if (err) fail(@"Loading XMLDocument from path '%@' failed with error: '%@'", xliffPath, err);
-        }
-        
-        /// Load localizedStringData.plist
-        NSArray *localizedStringsDataPlist = nil;
-        {
-            auto stringsDataPath = findPaths(xclocPath, ^BOOL (NSString *p) {
-                return [p hasSuffix: @"localizedStringData.plist"];
-            })[0];
-            
-            
-            NSError *err = nil;
-            localizedStringsDataPlist = [[NSArray alloc] initWithContentsOfURL: [NSURL fileURLWithPath: stringsDataPath] error: &err];
-            if (err) fail(@"Loading localizedStringsData.plist failed with error: %@", err);
-            
-            /// TESTING
-            mflog(@"Loaded localizedStringsData.plist: %@", localizedStringsDataPlist);
-        }
-        
-        /// Store localizedStringsDataPlist
-        self->tableView.localizedStringsDataPlist = localizedStringsDataPlist;
-        
-        /// Update SourceList
-        self->sourceList.xliffDoc = doc;
-        [self->sourceList reloadData];
+        [NSDocumentController.sharedDocumentController
+            openDocumentWithContentsOfURL: [NSURL fileURLWithPath: xclocPath]
+            display: YES
+            completionHandler: ^void (NSDocument * _Nullable document, BOOL documentWasAlreadyOpen, NSError * _Nullable error) {
+                
+            }
+        ];
     }
+    
 }
 
 - (void) applicationWillFinishLaunching: (NSNotification *)notification {
@@ -120,13 +70,13 @@ NSString *getXliffPath(NSString *xclocPath) {
     }
     else if (menuItem.action == @selector(markAsTranslatedMenuItemSelected:)) {
         
-        NSInteger selectedRow = appdel->tableView.selectedRow;
+        NSInteger selectedRow = getdoc_frontmost()->ctrl->out_tableView.selectedRow;
         if (selectedRow == -1) {
             menuItem.title = kMFStr_MarkAsTranslated; /// Setting the image/title here as well so they are not 'unitialized' raw values from the IB. [Oct 2025]
             menuItem.image = [NSImage imageWithSystemSymbolName: kMFStr_MarkAsTranslated_Symbol accessibilityDescription: nil];
             return NO;
         }
-        else if ([appdel->tableView rowIsTranslated: selectedRow]) {
+        else if ([getdoc_frontmost()->ctrl->out_tableView rowIsTranslated: selectedRow]) {
             menuItem.title = kMFStr_MarkForReview;
             menuItem.image = [NSImage imageWithSystemSymbolName: kMFStr_MarkForReview_Symbol accessibilityDescription: nil];
             return YES;
@@ -144,34 +94,15 @@ NSString *getXliffPath(NSString *xclocPath) {
 }
 
 - (IBAction) filterMenuItemSelected: (id)sender {
-    [self->filterField.window makeFirstResponder: self->filterField];
+    [getdoc_frontmost()->ctrl->out_filterField.window makeFirstResponder: getdoc_frontmost()->ctrl->out_filterField];
 }
 
 - (IBAction) quickLookMenuItemSelected: (id)sender {
-    [self->tableView togglePreviewPanel: sender];
+    [getdoc_frontmost()->ctrl->out_tableView togglePreviewPanel: sender];
 }
 
 - (IBAction) markAsTranslatedMenuItemSelected: (id)sender {
-    [appdel->tableView toggleIsTranslatedState: appdel->tableView.selectedRow];
-}
-
-
-- (void) writeTranslationDataToFile {
-    
-    /// Write to file
-    NSError *err = nil;
-    NSString *xliffPath = getXliffPath(getXclocPath());
-    
-    [[self->sourceList.xliffDoc XMLStringWithOptions: NSXMLNodePrettyPrint] writeToFile: xliffPath atomically: YES encoding: NSUTF8StringEncoding error: &err];
-    if (err) {
-        assert(false);
-        mflog(@"An error occured while writing to the xliff file: %@", err);
-    }
-    mflog(@"Wrote to xliff file: %@", xliffPath);
-    
-    /// Reload UI (Probably unnecessary) [Oct 2025]
-    if ((0)) [self->sourceList reloadData];
-
+    [getdoc_frontmost()->ctrl->out_tableView toggleIsTranslatedState: getdoc_frontmost()->ctrl->out_tableView.selectedRow];
 }
 
 - (BOOL) applicationSupportsSecureRestorableState: (NSApplication *)app { return YES; }

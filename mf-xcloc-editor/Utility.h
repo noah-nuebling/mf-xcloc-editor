@@ -14,7 +14,9 @@
 #define isclass(obj, classname)        ({ [[(obj) class] isSubclassOfClass: [classname class]]; })
 #define stringf(format, args...)        [NSString stringWithFormat: (format), ## args]
 
-
+        
+#define mferror(domain, code_, msg_and_args...) \
+    [NSError errorWithDomain: (domain) code: (code_) userInfo: @{ NSDebugDescriptionErrorKey: stringf(msg_and_args) }] /** Should we use `NSLocalizedFailureReasonErrorKey`? [Oct 2025] */
 
 #define loopc(varname, count) for (int64_t varname = 0; varname < (count); varname++)
 
@@ -72,11 +74,13 @@ static NSMutableDictionary<NSString *, NSXMLNode *> *xml_attrdict(NSXMLElement *
 
 static NSArray<NSString *> *findPaths(NSString *dirPath, BOOL (^condition)(NSString *path)) {
     
+    /// Like shell globbing but more cumbersome. I guess we could also use zsh for globbing. [Oct 2025]
+    
     auto result = [NSMutableArray new];
     
     for (NSString *p in [[NSFileManager defaultManager] enumeratorAtPath: dirPath])
         if (condition(p))
-            [result addObject: [dirPath stringByAppendingPathComponent: p]]; /// Make path absolute, (So when it's passed into `condition()` it's still relative – hope that's not confusing [Oct 2025]
+            [result addObject: [dirPath stringByAppendingPathComponent: p]]; /// Make path absolute, (When it's passed into `condition()` it's still relative – hope that's not confusing [Oct 2025])
 
     return result;
 }
@@ -101,3 +105,4 @@ static NSEvent *makeKeyDown(unichar keyEquivalent, int keyCode) {
 static BOOL eventIsKey(NSEvent *event, unichar key) {
     return [stringf(@"%C", (unichar)key) isEqual: [event charactersIgnoringModifiers]];
 }
+
