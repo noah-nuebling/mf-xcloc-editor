@@ -48,7 +48,7 @@
         else assert(false);
         return nil;
     }
-     static void rowModel_setCellModel(NSXMLElement *transUnit, NSString *columnID, NSString *newValue) {
+     static void _rowModel_setCellModel(NSXMLElement *transUnit, NSString *columnID, NSString *newValue) { /// This is only called from wrapper functions which use `NSUndoManager` [Oct 2025]
         if ((0)) {}
             else if ([columnID isEqual: @"id"])        xml_attr(transUnit, @"id")          .objectValue = newValue;
             else if ([columnID isEqual: @"source"])    xml_childnamed(transUnit, @"source").objectValue = newValue;

@@ -25,6 +25,7 @@
         NSString *_filterString;
         NSMutableArray<NSXMLElement *> *_displayedTransUnits; /// Main dataModel displayed by this table.
         id _lastQLPanelDisplayState;
+        NSString *_lastTargetCellString;
     }
 
     #pragma mark - Lifecycle
@@ -271,24 +272,24 @@
     }
 
 
-- (void) restoreSelectionWithPreviouslySelectedRowID: (NSString *)previouslySelectedRowID {
-    /// Restore the selection after reloadData resets it.
-    NSInteger newIndex = -1;
-    NSInteger i = 0;
-    for (NSXMLElement *transUnit in _displayedTransUnits) {
-        if ([rowModel_getCellModel(transUnit, @"id") isEqual: previouslySelectedRowID]) {
-            newIndex = i;
-            break;
+    - (void) restoreSelectionWithPreviouslySelectedRowID: (NSString *)previouslySelectedRowID {
+        /// Restore the selection after reloadData resets it.
+        NSInteger newIndex = -1;
+        NSInteger i = 0;
+        for (NSXMLElement *transUnit in _displayedTransUnits) {
+            if ([rowModel_getCellModel(transUnit, @"id") isEqual: previouslySelectedRowID]) {
+                newIndex = i;
+                break;
+            }
+            i++;
         }
-        i++;
+        if (newIndex != -1) {
+            [self selectRowIndexes: [NSIndexSet indexSetWithIndex: newIndex] byExtendingSelection: NO];
+            [self scrollRowToVisible: newIndex]; /// Tried to do a better job of keeping the row in the same position than `scrollRowToVisible:` but can't get it to work. Coordinates flip and `rectOfRow:` result seems inconsistent. [Oct 2025] || ... update: This still fails sometimes, though rarely. Maybe the APIs are broken? How do they even know how tall all the rows are?
+        }
     }
-    if (newIndex != -1) {
-        [self selectRowIndexes: [NSIndexSet indexSetWithIndex: newIndex] byExtendingSelection: NO];
-        [self scrollRowToVisible: newIndex]; /// Tried to do a better job of keeping the row in the same position than `scrollRowToVisible:` but can't get it to work. Coordinates flip and `rectOfRow:` result seems inconsistent. [Oct 2025] || ... update: This still fails sometimes, though rarely. Maybe the APIs are broken? How do they even know how tall all the rows are?
-    }
-}
 
-- (void) bigUpdateAndStuff {
+    - (void) bigUpdateAndStuff {
         
         /// Fully update the table with new rows, but try to preserve the selection.
         ///     Not sure this is a good abstraction to have, I don't really understand it [Oct 2025]
@@ -306,6 +307,111 @@
         self->_transUnits = transUnits;
         [self bigUpdateAndStuff];
 
+    }
+    
+    #pragma mark - Editing
+    
+    - (void) toggleIsTranslatedState: (NSXMLElement *)transUnit {
+        [self setIsTranslatedState: ![self rowIsTranslated: transUnit] onRowModel: transUnit];
+    }
+    
+    - (void) setIsTranslatedState: (BOOL)newIsTranslatedState onRowModel:(NSXMLElement *)transUnit {
+        
+        /// Register undo / redo
+        {
+            auto undoManager = [getdoc(self) undoManager];
+            [[undoManager prepareWithInvocationTarget: self] setIsTranslatedState: !newIsTranslatedState onRowModel: transUnit];
+            [undoManager setActionName: (!newIsTranslatedState ^ [undoManager isUndoing]) ? kMFStr_MarkForReview : kMFStr_MarkAsTranslated];
+        }
+        
+        /// Update datamodel
+        if (newIsTranslatedState)
+            _rowModel_setCellModel(transUnit, @"state", kMFTransUnitState_Translated);
+        else
+            _rowModel_setCellModel(transUnit, @"state", kMFTransUnitState_NeedsReview);
+        
+        /// Save to disk
+        [getdoc(self) writeTranslationDataToFile];
+        
+        /// Update progress UI
+        [getdoc(self)->ctrl->out_sourceList progressHasChanged]; /// Update the progress percentage indicators
+        
+        /// Show edited row to user
+        [self _revealTransUnit: transUnit];
+        
+        /// Reload state cell
+        ///     - (Don't think this is necessary if we called `updateFilter:` or `showAllTransUnits`, cause those will already have reloaded the whole table [Oct 2025]
+        [self /// Specifying rows and colums  to updatefor speedup, but I think the delay is just built in to NSMenu  (macOS Tahoe, [Oct 2025])
+            reloadDataForRowIndexes:    indexset(self.selectedRow) /// `_revealTransUnit:` selects the desired row [Oct 2025]
+            columnIndexes:              indexset([self indexOfColumnWithIdentifier: @"state"])
+        ];
+        
+    }
+    - (void) setTranslation: (NSString *)newString andIsTranslated: (BOOL)isTranslated onRowModel: (NSXMLElement *)transUnit {
+        
+        /// Log
+        mflog(@"setTranslation: %@", newString);
+        
+        /// Prepare undo
+        {
+            auto undoManager = [getdoc(self) undoManager];
+            auto oldString = rowModel_getCellModel(transUnit, @"target");
+            auto oldIsTranslated = [rowModel_getCellModel(transUnit, @"state") isEqual: kMFTransUnitState_Translated];
+            [[undoManager prepareWithInvocationTarget: self] setTranslation: oldString andIsTranslated: oldIsTranslated onRowModel: transUnit];
+            [undoManager setActionName: @"Edit Translation"];
+        }
+        
+        /// Update datamodel
+        _rowModel_setCellModel(transUnit, @"target", newString);
+        _rowModel_setCellModel(transUnit, @"state", isTranslated ? kMFTransUnitState_Translated : kMFTransUnitState_NeedsReview);
+        
+        /// Save to disk
+        [getdoc(self) writeTranslationDataToFile];
+        
+        /// Update progress UI
+        [getdoc(self)->ctrl->out_sourceList progressHasChanged]; /// Only necessary if the state actually changed [Oct 2025]
+        
+        /// Show edited row to user
+         [self _revealTransUnit: transUnit];
+             
+        /// Reload cells
+        [self
+            reloadDataForRowIndexes:    indexset(self.selectedRow)
+            columnIndexes:              indexset(
+                [self indexOfColumnWithIdentifier: @"target"], /// This is only needed in case this is called by the undoManager [Oct 2025]
+                [self indexOfColumnWithIdentifier: @"state"]
+            )
+        ];
+    }
+    
+    - (void) _revealTransUnit: (NSXMLElement *)transUnit {
+    
+        /// Made for when our editing methods are called by undoManager [Oct 2025]
+    
+        /// `Find transUnit in UI`
+        ///     I think this is only necessary if we're undoing. Otherwise the row we're toggling will already be on-screen and selected
+        NSInteger row = [_displayedTransUnits indexOfObject: transUnit];
+        if (row == NSNotFound) {
+            /// Remove the filter
+            [getdoc(self)->ctrl->out_filterField setStringValue: @""];
+            [self updateFilter: @""]; /// Maybe be unnecessary – Updating `out_filterField` may call this automatically
+            /// Try again
+            row = [_displayedTransUnits indexOfObject: transUnit];
+        }
+        if (row == NSNotFound) {
+            /// Navigate to AllDocuments
+            [getdoc(self)->ctrl->out_sourceList showAllTransUnits];
+            row = [_displayedTransUnits indexOfObject: transUnit];
+        }
+        if (row == NSNotFound) {
+            assert(false); /// Give up – don't think this can happen.
+        }
+        
+        /// Show transUnit row
+        ///     Should only be necessary if we're undoing. See `Find transUnit in UI` above [Oct 2025]
+        [self selectRowIndexes: [NSIndexSet indexSetWithIndex: row] byExtendingSelection: NO];
+        [self scrollRowToVisible: row];
+    
     }
     
     #pragma mark - Quick Look
@@ -576,60 +682,6 @@
         [self toggleIsTranslatedState: self.selectedRowModel]; /// All our menuItems are for toggling and `validateMenuItem:` makes it so we can only toggle [Oct 2025]
     }
     
-    - (void) toggleIsTranslatedState: (NSXMLElement *)transUnit {
-        
-        BOOL isTranslated = [self rowIsTranslated: transUnit];
-        
-        /// Register undo / redo
-        {
-            auto undoManager = [getdoc(self) undoManager];
-            [[undoManager prepareWithInvocationTarget: self] toggleIsTranslatedState: transUnit]; /// Just calling toggle to undo could become incorrect if anything else except this method updates the state.
-            [undoManager setActionName: (isTranslated ^ [undoManager isUndoing]) ? kMFStr_MarkForReview : kMFStr_MarkAsTranslated];
-        }
-        
-        /// Update datamodel
-        if (!isTranslated)
-            rowModel_setCellModel(transUnit, @"state", kMFTransUnitState_Translated);
-        else
-            rowModel_setCellModel(transUnit, @"state", kMFTransUnitState_NeedsReview);
-        
-        /// Save to disk
-        [getdoc(self) writeTranslationDataToFile];
-        [getdoc(self)->ctrl->out_sourceList progressHasChanged]; /// Update the progress percentage indicators
-        
-        /// `Find transUnit in UI`
-        ///     I think this is only necessary if we're undoing. Otherwise the row we're toggling will already be on-screen and selected
-        NSInteger row = [_displayedTransUnits indexOfObject: transUnit];
-        if (row == NSNotFound) {
-            /// Remove the filter
-            [getdoc(self)->ctrl->out_filterField setStringValue: @""];
-            [self updateFilter: @""]; /// Maybe be unnecessary – Updating `out_filterField` may call this automatically
-            /// Try again
-            row = [_displayedTransUnits indexOfObject: transUnit];
-        }
-        if (row == NSNotFound) {
-            /// Navigate to AllDocuments
-            [getdoc(self)->ctrl->out_sourceList showAllTransUnits];
-            row = [_displayedTransUnits indexOfObject: transUnit];
-        }
-        if (row == NSNotFound) {
-            assert(false); /// Give up – don't think this can happen.
-        }
-        
-        /// Reload transUnit UI
-        ///     (Don't think this is necessary if we called `updateFilter:` or `showAllTransUnits`, cause those will already have reloaded the whole table[Oct 2025]
-        [self /// Specifying rows and colums  to updatefor speedup, but I think the delay is just built in to NSMenu  (macOS Tahoe, [Oct 2025])
-            reloadDataForRowIndexes:    [NSIndexSet indexSetWithIndex: row]
-            columnIndexes:              [NSIndexSet indexSetWithIndex: [self indexOfColumnWithIdentifier: @"state"]]
-        ];
-        
-        /// Show transUnit row
-        ///     Should only be necessary if we're undoing. See `Find transUnit in UI` above [Oct 2025]
-        [self selectRowIndexes: [NSIndexSet indexSetWithIndex: row] byExtendingSelection: NO];
-        [self scrollRowToVisible: row];
-        
-    }
-    
     - (BOOL) rowIsTranslated: (NSXMLElement *)transUnit {
         auto state = rowModel_getCellModel(transUnit, @"state");
         return [state isEqual: kMFTransUnitState_Translated];
@@ -808,21 +860,6 @@
                 cell.textField.selectable = YES;
                 
                 if (iscol(@"target")) {
-                    __block NSString *oldString = uiString;
-                    auto editingCallback = ^void (NSString *newString) {
-                        mflog(@"<target> edited: %@", newString);
-                        rowModel_setCellModel(transUnit, @"target", newString);
-                        if (![oldString isEqual: newString])
-                            rowModel_setCellModel(transUnit, @"state", kMFTransUnitState_Translated);
-                        [getdoc(self) writeTranslationDataToFile];
-                        [self /// Don't call `-[reloadData]` since that looses the current selection.
-                            reloadDataForRowIndexes: [NSIndexSet indexSetWithIndex: row]
-                            columnIndexes: [NSIndexSet indexSetWithIndex: [self indexOfColumnWithIdentifier: @"state"]]
-                        ];
-                        oldString = newString;
-                        
-                    };
-                    [cell.textField mf_setAssociatedObject: editingCallback forKey: @"editingCallback"];
                     [cell.textField setEditable: targetCellShouldBeEditable]; /// FIxme: Editable disables the intrinsic height, causing content to be truncated. [Oct 2025]
                 }
                 else if (iscol(@"id")) {
@@ -855,21 +892,22 @@
     }
 
     #pragma mark - NSTableViewDelegate
-
-    - (void) tableView:(NSTableView *) tableView didClickTableColumn:(NSTableColumn *) tableColumn {
-        mflog(@"Table column '%@' clicked!", tableColumn.title);
-    }
     
     #pragma mark - NSControlTextEditingDelegate (Callbacks for the NSTextField)
     
-    - (void) controlTextDidEndEditing: (NSNotification *)notification {
-        
-        /// Call the editing callback with the new stringValue
+
+    - (void) controlTextDidBeginEditing: (NSNotification *)notification {
         NSTextField *textField = notification.object;
-        if (!textField.editable) return; /// This is also called for selectable textFields.
-        ((void (^)(NSString *))[textField mf_associatedObjectForKey: @"editingCallback"])(textField.stringValue);
+        _lastTargetCellString = textField.stringValue; /// Track whether textField content was actually changed inside `controlTextDidEndEditing:`. Would be nicer if we could use callbacks instead of ivars. [Oct 2025]
     }
-    
+
+    - (void) controlTextDidEndEditing: (NSNotification *)notification {
+            
+        NSTextField *textField = notification.object;
+        if (textField.editable) /// This is also called for selectable textFields.
+            if (![_lastTargetCellString isEqual: textField.stringValue])
+                [self setTranslation: textField.stringValue andIsTranslated: YES onRowModel: [self rowModel: self.selectedRow]];
+    }
 
 
 @end

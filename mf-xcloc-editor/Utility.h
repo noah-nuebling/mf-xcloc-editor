@@ -14,11 +14,10 @@
 #define isclass(obj, classname)        ({ [[(obj) class] isSubclassOfClass: [classname class]]; })
 #define stringf(format, args...)        [NSString stringWithFormat: (format), ## args]
 
+#define arrcount(x...) (sizeof ((x)) / sizeof (x)[0])
         
 #define mferror(domain, code_, msg_and_args...) \
     [NSError errorWithDomain: (domain) code: (code_) userInfo: @{ NSDebugDescriptionErrorKey: stringf(msg_and_args) }] /** Should we use `NSLocalizedFailureReasonErrorKey`? [Oct 2025] */
-
-#define loopc(varname, count) for (int64_t varname = 0; varname < (count); varname++)
 
 #define mfonce dispatch_once
 #define mfoncet ({ static dispatch_once_t onceToken; &onceToken; })
@@ -48,8 +47,19 @@
     _result;                                                \
 })
 
-
 #define toset(arr...) [NSSet setWithArray: (arr)]
+
+#define indexset(indexes...) ({ \
+    NSInteger _arr[] = { indexes }; \
+    indexSetWithIndexArray(_arr, arrcount(_arr)); \
+})
+static NSIndexSet *indexSetWithIndexArray(NSInteger arr[], int len) {
+    auto set = [NSMutableIndexSet new];
+    for (int i = 0; i < len; i++)
+        [set addIndex: arr[i]];
+    
+    return set;
+}
 
 ///
 /// NSXML convenience.
