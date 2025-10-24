@@ -70,7 +70,7 @@
     }
     else if (menuItem.action == @selector(markAsTranslatedMenuItemSelected:)) {
         
-        NSXMLElement *selectedRow = [getdoc_frontmost()->ctrl->out_tableView selectedRowModel];
+        NSXMLElement *selectedRow = [getdoc_frontmost()->ctrl->out_tableView selectedItem];
         if (selectedRow == nil) {
             menuItem.title = kMFStr_MarkAsTranslated; /// Setting the image/title here as well so they are not 'unitialized' raw values from the IB. [Oct 2025]
             menuItem.image = [NSImage imageWithSystemSymbolName: kMFStr_MarkAsTranslated_Symbol accessibilityDescription: nil];
@@ -103,7 +103,7 @@
 
 - (IBAction) markAsTranslatedMenuItemSelected: (id)sender {
     auto tableView = getdoc_frontmost()->ctrl->out_tableView;
-    [tableView toggleIsTranslatedState: [tableView selectedRowModel]];
+    [tableView toggleIsTranslatedState: [tableView selectedItem]];
 }
 
 - (BOOL) applicationSupportsSecureRestorableState: (NSApplication *)app { return YES; }

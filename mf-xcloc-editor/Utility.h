@@ -53,10 +53,11 @@
     NSInteger _arr[] = { indexes }; \
     indexSetWithIndexArray(_arr, arrcount(_arr)); \
 })
-static NSIndexSet *indexSetWithIndexArray(NSInteger arr[], int len) {
+static NSMutableIndexSet *indexSetWithIndexArray(NSInteger arr[], int len) {
     auto set = [NSMutableIndexSet new];
     for (int i = 0; i < len; i++)
-        [set addIndex: arr[i]];
+        if (arr[i] > 0 && arr[i] != NSNotFound) /// outlineView row-getter methods sometimes return -1 if the row-search failed, but when you pass these to `reloadDataForRowIndexes:` it silently fails, so we filter these 'nil' indexes out. [Oct 2025]
+            [set addIndex: arr[i]];
     
     return set;
 }
@@ -193,6 +194,16 @@ static NSEvent *makeKeyDown(unichar keyEquivalent, int keyCode) {
 
 static BOOL eventIsKey(NSEvent *event, unichar key) {
     return [stringf(@"%C", (unichar)key) isEqual: [event charactersIgnoringModifiers]];
+}
+
+static void runOnMain(double delay, void (^workload)(void)) {
+    
+    /// Delayed run on main for UI code [Oct 2025]
+    
+    auto t = [NSTimer timerWithTimeInterval: delay repeats: NO block:^(NSTimer * _Nonnull timer) {
+        workload();
+    }];
+    [[NSRunLoop mainRunLoop] addTimer: t forMode: NSRunLoopCommonModes];
 }
 
 static NSData *imageData(NSImage *image, NSBitmapImageFileType type, NSDictionary *properties) {

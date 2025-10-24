@@ -48,7 +48,7 @@
 
             if (self.frame.size.width != self->lastWidth) {
                 self->lastWidth = self.frame.size.width;
-                [self setNeedsUpdateConstraints: YES]; /// Call `intrinsicContentSize` again || Sidenote: Could maybe also do this in `setFrame:` instead of `layout` – that called at around the same times.[Oct 2025]
+                [self setNeedsUpdateConstraints: YES]; /// Call `intrinsicContentSize` again || Sidenote: Could maybe also do this in `setFrame:` instead of `layout` - that called at around the same times.[Oct 2025]
             }
         }
         

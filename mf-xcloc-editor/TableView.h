@@ -9,10 +9,10 @@
 #import <AppKit/AppKit.h>
 #import "QuickLookUI/QuickLookUI.h"
 
-@interface TableView : NSTableView
+@interface TableView : NSOutlineView
     <
-        NSTableViewDataSource,
-        NSTableViewDelegate,
+        NSOutlineViewDataSource,
+        NSOutlineViewDelegate,
         NSControlTextEditingDelegate,
         NSMenuItemValidation,
         QLPreviewPanelDelegate,
@@ -25,5 +25,5 @@
     - (void) returnFocus;
     - (void) toggleIsTranslatedState: (NSXMLElement *)transUnit;
     - (BOOL) rowIsTranslated: (NSXMLElement *)transUnit;
-    - (NSXMLElement *) selectedRowModel;
+    - (NSXMLElement *) selectedItem;
 @end

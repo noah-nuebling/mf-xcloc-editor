@@ -23,7 +23,8 @@
 @implementation TableView
     {
         NSString *_filterString;
-        NSMutableArray<NSXMLElement *> *_displayedTransUnits; /// Main dataModel displayed by this table.
+        NSMutableArray<NSXMLElement *> *_displayedTopLevelTransUnits; /// Main dataModel displayed by this table. Does not contain transUnits which are children || Terminology: We call these rowModels, OutlineView-Items, or transUnits – All these terms refer to the same thing [Oct 2025]
+        NSMutableDictionary<NSXMLElement *, NSArray<NSXMLElement *> *> *_childrenMap; /// Maps topLevel transUnits to their pluralizable variant children
         id _lastQLPanelDisplayState;
         NSString *_lastTargetCellString;
     }
@@ -42,6 +43,8 @@
         self.gridStyleMask = /*NSTableViewSolidVerticalGridLineMask |*/ NSTableViewSolidHorizontalGridLineMask;
         self.style = NSTableViewStyleFullWidth;
         self.usesAutomaticRowHeights = YES;
+        self.indentationPerLevel = 20.0;
+        self.autoresizesOutlineColumn = NO; /// TODO: Does this make sense?
         
         /// Register ReusableViews
         ///     Not sure this is necesssary / correct. What about `theReusableCell_TableState` [Oct 2025]
@@ -55,11 +58,15 @@
                 v.title = title;
                 return v;
             };
-            [self addTableColumn: mfui_tablecol(@"id",     @"ID")];
+            NSTableColumn *idCol = mfui_tablecol(@"id", @"ID");
+            [self addTableColumn: idCol];
             [self addTableColumn: mfui_tablecol(@"state",  @"State")];
             [self addTableColumn: mfui_tablecol(@"source", @"Source")];
             [self addTableColumn: mfui_tablecol(@"target", @"Target")];
             [self addTableColumn: mfui_tablecol(@"note",   @"Note")];
+
+            /// Set the ID column as the outline column (shows disclosure triangles)
+            [self setOutlineTableColumn: idCol];
         }
         
         /// Add right-click menu
@@ -101,8 +108,10 @@
                 NSInteger row = [self rowAtPoint: NSMakePoint(0, self.visibleRect.origin.y + self.headerView.frame.size.height)]; /// Get first displayed row on screen. || On `self.headerView` usage: Currently seeing `self.visibleRect.origin.y` be `-28`. The visibleRect is 28 taller than the frame. `self.headerView` is 28 tall, so we're using that to compensate[Oct 2025]
                 [self selectRowIndexes: [NSIndexSet indexSetWithIndex: row] byExtendingSelection: NO];
             }
+            runOnMain(0.0, ^{ /// See other uses of `scrollRowToVisible:` || I'm not sure it helps here since we don't call this after reloading the data [Oct 2025] ... No I think it does help
+                [self scrollRowToVisible: self.selectedRow];
+            });
             
-            [self scrollRowToVisible: self.selectedRow];
             
         }
     
@@ -175,15 +184,15 @@
         }
     
     #pragma mark - Sorting
-    
-    - (void) tableView: (NSTableView *)tableView sortDescriptorsDidChange: (NSArray<NSSortDescriptor *> *)oldDescriptors { /// This is called when the user clicks the column headers to sort them.
+
+    - (void) outlineView: (NSOutlineView *)outlineView sortDescriptorsDidChange: (NSArray<NSSortDescriptor *> *)oldDescriptors { /// This is called when the user clicks the column headers to sort them.
         
-        auto previouslySelectedRowID = rowModel_getCellModel([self rowModel: [self selectedRow]], @"id");
+        auto previouslySelectedItem = [self selectedItem];
         
         [self update_rowModelSorting];
         [self reloadData];
         
-        [self restoreSelectionWithPreviouslySelectedRowID: previouslySelectedRowID];
+        [self restoreSelectionWithPreviouslySelectedItem: previouslySelectedItem];
     }
 
     #pragma mark - Filtering
@@ -196,48 +205,85 @@
     #pragma mark - Data
     
     
-    - (NSXMLElement *) selectedRowModel {
-        return [self rowModel: self.selectedRow];
-    }
-    
-    - (NSXMLElement *) rowModel: (NSInteger)row {
-        if (row == -1) return nil; /// `self.selectedRow` can return -1 if no row is selected
-        return _displayedTransUnits[row];
+    - (NSXMLElement *) selectedItem {
+        return [self itemAtRow: self.selectedRow];
     }
 
     - (void) update_rowModels {
-        
-        /// Filter
-        _displayedTransUnits = [NSMutableArray new];
+
+        /// Build parent-child map for pluralizable strings
+        _childrenMap = [NSMutableDictionary new];
+        NSMutableSet<NSXMLElement *> *allChildTransUnits = [NSMutableSet new];
+
         for (NSXMLElement *transUnit in self.transUnits) {
-            
-            
+            NSString *idStr = xml_attr(transUnit, @"id").objectValue;
+            if ([idStr containsString: @"|==|"]) {
+                /// This is a child variant
+                NSArray *parts = [idStr componentsSeparatedByString: @"|==|"];
+                NSString *baseKey = parts[0];
+
+                /// Find parent with matching baseKey
+                for (NSXMLElement *potentialParent in self.transUnits) {
+                    NSString *parentId = xml_attr(potentialParent, @"id").objectValue;
+                    if ([parentId isEqual: baseKey]) { /// Found parent
+                    
+                        assert([xml_childnamed(potentialParent, @"source").objectValue containsString: @"%#@"]);
+                        
+                        NSMutableArray *children = (NSMutableArray *)_childrenMap[potentialParent];
+                        if (!children) {
+                             children = [NSMutableArray new];
+                             _childrenMap[potentialParent] = children;
+                        }
+                        [children addObject: transUnit];
+                        [allChildTransUnits addObject: transUnit];
+                        break;
+                    }
+                }
+            }
+        }
+
+        /// Filter
+        _displayedTopLevelTransUnits = [NSMutableArray new];
+        for (NSXMLElement *transUnit in self.transUnits) {
+
             { /// Validate
                 assert(isclass(transUnit, NSXMLElement));
                 assert([transUnit.name isEqual: @"trans-unit"]);
             }
-            
-            if (![_filterString length]) { [_displayedTransUnits addObject: transUnit]; }
+
+            if ([allChildTransUnits containsObject: transUnit])
+                continue; /// Skip child variants - they'll be shown as children of their parent
+
+            if (![_filterString length])
+                [_displayedTopLevelTransUnits addObject: transUnit];
             else {
-                auto combinedRowString = stringf(@"%@\n%@\n%@\n%@\n%@",
-                    rowModel_getCellModel(transUnit, @"id"),
-                    rowModel_getCellModel(transUnit, @"source"),
-                    rowModel_getCellModel(transUnit, @"target"),
-                    rowModel_getCellModel(transUnit, @"note"),
-                    rowModel_getCellModel(transUnit, @"state")
-                );
+                #define combinedRowString(transUnit) stringf(@"%@\n%@\n%@\n%@\n%@", /** Fixme: search actual UIStrings instead of cellModel strings. */\
+                    rowModel_getCellModel(transUnit, @"id"), \
+                    rowModel_getCellModel(transUnit, @"source"), \
+                    rowModel_getCellModel(transUnit, @"target"), \
+                    rowModel_getCellModel(transUnit, @"note"), \
+                    rowModel_getCellModel(transUnit, @"state") \
+                )
+                
+                auto combinedTransUnitString = [NSMutableString new];
+                [combinedTransUnitString appendString: combinedRowString(transUnit)];
+                for (NSXMLElement *childTransUnit in _childrenMap[transUnit]) {
+                    [combinedTransUnitString appendString: @"\n"];
+                    [combinedTransUnitString appendString: combinedRowString(childTransUnit)];
+                }
+                
                 if (
-                    [combinedRowString /// Fixme: search actual UIStrings instead of cellModel strings.
+                    [combinedTransUnitString
                         rangeOfString: _filterString
                         options: (/*NSRegularExpressionSearch |*/ NSCaseInsensitiveSearch)
                     ]
                     .location != NSNotFound
                 ) {
-                    [(NSMutableArray *)_displayedTransUnits addObject: transUnit];
+                    [(NSMutableArray *)_displayedTopLevelTransUnits addObject: transUnit];
                 }
             }
         }
-        
+
         /// Sort
         [self update_rowModelSorting];
     }
@@ -249,13 +295,13 @@
         NSSortDescriptor *desc = self.sortDescriptors.firstObject;
         if (!desc) { return; }
         
-        if ((0)) {
+        #if 0
             NSInteger rowCount = [self numberOfRowsInTableView: self]; /// -[numberOfRows] gives wrong results while swtiching files not sure what's going on [Oct 2025]
-        }
+        #endif
         
-        [_displayedTransUnits sortUsingComparator: ^NSComparisonResult(NSXMLElement *i, NSXMLElement *j) {
+        [_displayedTopLevelTransUnits sortUsingComparator: ^NSComparisonResult(NSXMLElement *i, NSXMLElement *j) {
             NSComparisonResult comp;
-            if ([desc.key isEqual: @"state"]) {
+            if ([desc.key isEqual: @"state"]) { /// TODO: Sort (and display) parent rowState based on children.
                 comp = (
                     [_stateOrder indexOfObject: rowModel_getCellModel(i, @"state")] -
                     [_stateOrder indexOfObject: rowModel_getCellModel(j, @"state")]
@@ -271,21 +317,31 @@
         }];
     }
 
-
-    - (void) restoreSelectionWithPreviouslySelectedRowID: (NSString *)previouslySelectedRowID {
-        /// Restore the selection after reloadData resets it.
-        NSInteger newIndex = -1;
-        NSInteger i = 0;
-        for (NSXMLElement *transUnit in _displayedTransUnits) {
-            if ([rowModel_getCellModel(transUnit, @"id") isEqual: previouslySelectedRowID]) {
-                newIndex = i;
-                break;
-            }
-            i++;
+    - (NSXMLElement *) topLevelItemContainingItem: (NSXMLElement *)searchedItem {
+        if ((0))
+            return [self parentForItem: searchedItem] ?: searchedItem; /// This would probably also work
+        
+        for (NSXMLElement *u in self->_displayedTopLevelTransUnits) { /// Returns the searchedItem if it is topLevel itself
+            if ([u isEqual: searchedItem])
+                return u;
+            if ([self->_childrenMap[u] containsObject: searchedItem])
+                return u;
         }
+        return nil;
+    };
+
+    - (void) restoreSelectionWithPreviouslySelectedItem: (NSXMLElement *)previouslySelectedItem {
+        
+        /// Restore the selection after reloadData resets it.
+        
+        [self expandItem: [self parentForItem: previouslySelectedItem]]; /// Not sure if necessary [Oct 2025]
+        
+        NSInteger newIndex = [self rowForItem: previouslySelectedItem];
         if (newIndex != -1) {
             [self selectRowIndexes: [NSIndexSet indexSetWithIndex: newIndex] byExtendingSelection: NO];
-            [self scrollRowToVisible: newIndex]; /// Tried to do a better job of keeping the row in the same position than `scrollRowToVisible:` but can't get it to work. Coordinates flip and `rectOfRow:` result seems inconsistent. [Oct 2025] || ... update: This still fails sometimes, though rarely. Maybe the APIs are broken? How do they even know how tall all the rows are?
+            runOnMain(0.0, ^{ /// Delay helps with reliability [Oct 2025]
+                [self scrollRowToVisible: newIndex]; /// Tried to do a better job of keeping the row in the same position than `scrollRowToVisible:` but can't get it to work. Coordinates flip and `rectOfRow:` result seems inconsistent. [Oct 2025] || ... update: This still fails sometimes, though rarely. Maybe the APIs are broken? How do they even know how tall all the rows are? || Update: After switching to NSOutlineView, it seems to fail almost always. ... using NSTimer helps [Oct 2025]
+            });
         }
     }
 
@@ -294,12 +350,12 @@
         /// Fully update the table with new rows, but try to preserve the selection.
         ///     Not sure this is a good abstraction to have, I don't really understand it [Oct 2025]
         
-        auto previouslySelectedRowID = rowModel_getCellModel([self rowModel: [self selectedRow]], @"id");
+        auto previouslySelectedItem = [self selectedItem];
         
         [self update_rowModels];;
         [self reloadData];
         
-        [self restoreSelectionWithPreviouslySelectedRowID: previouslySelectedRowID];
+        [self restoreSelectionWithPreviouslySelectedItem:  previouslySelectedItem];
     }
 
     - (void) reloadWithNewData: (NSArray <NSXMLElement *> *)transUnits {
@@ -340,10 +396,15 @@
         [self _revealTransUnit: transUnit];
         
         /// Reload state cell
-        ///     - (Don't think this is necessary if we called `updateFilter:` or `showAllTransUnits`, cause those will already have reloaded the whole table [Oct 2025]
-        [self /// Specifying rows and colums  to updatefor speedup, but I think the delay is just built in to NSMenu  (macOS Tahoe, [Oct 2025])
-            reloadDataForRowIndexes:    indexset(self.selectedRow) /// `_revealTransUnit:` selects the desired row [Oct 2025]
-            columnIndexes:              indexset([self indexOfColumnWithIdentifier: @"state"])
+        ///     - (Don't think this is necessary if we called `updateFilter:` or `showAllTransUnits` in `_revealTransUnit:`, cause those will already have reloaded the whole table [Oct 2025]
+        [self /// Specifying rows and colums  to update for speedup, but I think the delay is just built in to NSMenu  (macOS Tahoe, [Oct 2025])
+            reloadDataForRowIndexes: indexset(
+                self.selectedRow,    /// `_revealTransUnit:` selects the desired row [Oct 2025]
+                [self rowForItem: [self parentForItem: [self selectedItem]]] /// Update the parent as well – the state it displays depends on its children.
+            )
+            columnIndexes: indexset(
+                [self indexOfColumnWithIdentifier: @"state"]
+            )
         ];
         
     }
@@ -376,8 +437,11 @@
              
         /// Reload cells
         [self
-            reloadDataForRowIndexes:    indexset(self.selectedRow)
-            columnIndexes:              indexset(
+            reloadDataForRowIndexes: indexset(
+                self.selectedRow,
+                [self rowForItem: [self parentForItem: [self selectedItem]]] /// See `setIsTranslatedState:`
+            )
+            columnIndexes: indexset(
                 [self indexOfColumnWithIdentifier: @"target"], /// This is only needed in case this is called by the undoManager [Oct 2025]
                 [self indexOfColumnWithIdentifier: @"state"]
             )
@@ -386,32 +450,46 @@
     
     - (void) _revealTransUnit: (NSXMLElement *)transUnit {
     
-        /// Made for when our editing methods are called by undoManager [Oct 2025]
+        /// Helper made for when our editing methods are called by undoManager [Oct 2025]
     
-        /// `Find transUnit in UI`
-        ///     I think this is only necessary if we're undoing. Otherwise the row we're toggling will already be on-screen and selected
-        NSInteger row = [_displayedTransUnits indexOfObject: transUnit];
-        if (row == NSNotFound) {
-            /// Remove the filter
-            [getdoc(self)->ctrl->out_filterField setStringValue: @""];
-            [self updateFilter: @""]; /// Maybe be unnecessary – Updating `out_filterField` may call this automatically
-            /// Try again
-            row = [_displayedTransUnits indexOfObject: transUnit];
-        }
-        if (row == NSNotFound) {
-            /// Navigate to AllDocuments
-            [getdoc(self)->ctrl->out_sourceList showAllTransUnits];
-            row = [_displayedTransUnits indexOfObject: transUnit];
-        }
-        if (row == NSNotFound) {
-            assert(false); /// Give up – don't think this can happen.
+        /// `Navigate UI` to make transUnit displayed by the TableView
+        ///     I think this is only necessary if we're undoing. Otherwise the transUnit we're manipulating will already be on-screen and selected
+        NSXMLElement *topLevel;
+        {
+        
+            topLevel = [self topLevelItemContainingItem: transUnit];
+            if (!topLevel) {
+                /// Remove the filter
+                [getdoc(self)->ctrl->out_filterField setStringValue: @""];
+                [self updateFilter: @""]; /// Maybe be unnecessary - Updating `out_filterField` may call this automatically
+                /// Try again
+                topLevel = [self topLevelItemContainingItem: transUnit];
+            }
+            if (!topLevel) {
+                /// Navigate to AllDocuments
+                [getdoc(self)->ctrl->out_sourceList showAllTransUnits];
+                /// Try again
+                topLevel = [self topLevelItemContainingItem: transUnit];
+            }
+            if (!topLevel) {
+                assert(false); /// Give up - don't think this can happen.
+            }
         }
         
+        /// Expand the parent in case the row we wanna reveal is a child (not sure if necessary)
+        [self expandItem: topLevel];
+        
         /// Show transUnit row
-        ///     Should only be necessary if we're undoing. See `Find transUnit in UI` above [Oct 2025]
-        [self selectRowIndexes: [NSIndexSet indexSetWithIndex: row] byExtendingSelection: NO];
-        [self scrollRowToVisible: row];
-    
+        ///     Should only be necessary if we're undoing. See `Navigate UI` above [Oct 2025]
+        [self
+            selectRowIndexes: indexset([self rowForItem: transUnit])
+            byExtendingSelection: NO
+        ];
+        runOnMain(0.0, ^{ /// See other uses of `scrollRowToVisible:` [Oct 2025]
+            [self scrollRowToVisible: [self rowForItem: transUnit]];
+        });
+        
+
     }
     
     #pragma mark - Quick Look
@@ -498,10 +576,7 @@
         
             QLPreviewPanel.sharedPreviewPanel.currentPreviewItemIndex = newIndex;
         }
-        - (void)tableViewSelectionDidChange:(NSNotification *)notification {
-            [QLPreviewPanel.sharedPreviewPanel reloadData];
-        }
-        
+
         #pragma mark QLPreviewPanelController
         
             /// These are from an NSObject category not a protocol. Not mentioned in any docs. All hail the lord Claude 4.5.
@@ -580,7 +655,7 @@
 
             - (NSInteger) numberOfPreviewItemsInPreviewPanel: (QLPreviewPanel *)panel {
                 
-                NSDictionary *plistEntry = [self _localizedStringsDataPlist_GetEntryForRowModel: [self rowModel: self.selectedRow]];
+                NSDictionary *plistEntry = [self _localizedStringsDataPlist_GetEntryForRowModel: [self selectedItem]];
                 return [plistEntry[@"screenshots"] count];
             };
 
@@ -588,7 +663,7 @@
                 
                 mflog(@"previewItemAtIndex: called with index: %ld", index);
                 
-                NSDictionary *plistEntry = [self _localizedStringsDataPlist_GetEntryForRowModel: [self rowModel: self.selectedRow]];
+                NSDictionary *plistEntry = [self _localizedStringsDataPlist_GetEntryForRowModel: [self selectedItem]];
                 NSDictionary *screenshotEntry = plistEntry[@"screenshots"][index];
                 
                 NSRect frame = NSRectFromString(screenshotEntry[@"frame"]);
@@ -679,7 +754,7 @@
         return -1;
     }
     - (void) tableMenuItemClicked: (NSMenuItem *)menuItem {
-        [self toggleIsTranslatedState: self.selectedRowModel]; /// All our menuItems are for toggling and `validateMenuItem:` makes it so we can only toggle [Oct 2025]
+        [self toggleIsTranslatedState: [self selectedItem]]; /// All our menuItems are for toggling and `validateMenuItem:` makes it so we can only toggle [Oct 2025]
     }
     
     - (BOOL) rowIsTranslated: (NSXMLElement *)transUnit {
@@ -689,7 +764,7 @@
     
     - (BOOL) validateMenuItem: (NSMenuItem *)menuItem {
         
-        auto transUnit = [self rowModel: self.clickedRow];
+        NSXMLElement *transUnit = [self selectedItem];
         
         if ([rowModel_getCellModel(transUnit, @"state") isEqual: @"mf_dont_translate"])
             return NO;
@@ -709,19 +784,29 @@
         return YES;
     }
 
-    #pragma mark - NSTableView
+    #pragma mark - NSOutlineView
 
-    #pragma mark - NSTableViewDataSource
+    #pragma mark - NSOutlineViewDataSource
 
-    - (NSInteger) numberOfRowsInTableView: (NSTableView *)tableView {
-        return [_displayedTransUnits count];
+    - (NSInteger) outlineView: (NSOutlineView *)outlineView numberOfChildrenOfItem: (id)item {
+        if (!item) return [_displayedTopLevelTransUnits count]; /// Root level
+        else       return [_childrenMap[item] count];           /// Child level
     }
-    
-    - (NSView *) tableView: (NSTableView *)tableView viewForTableColumn: (NSTableColumn *)tableColumn row: (NSInteger)row {
-    
+
+    - (id) outlineView: (NSOutlineView *)outlineView child: (NSInteger)index ofItem: (id)item {
+        if (!item)  return _displayedTopLevelTransUnits[index]; /// Root level
+        else        return _childrenMap[item][index];           /// Child level
+    }
+
+    - (BOOL) outlineView: (NSOutlineView *)outlineView isItemExpandable: (id)item {
+        return [_childrenMap[item] count];
+    }
+
+    - (NSView *) outlineView: (NSOutlineView *)outlineView viewForTableColumn: (NSTableColumn *)tableColumn item: (id)item {
+
         #define iscol(colid) [[tableColumn identifier] isEqual: (colid)]
-        
-        NSXMLElement *transUnit = [self rowModel: row];
+
+        NSXMLElement *transUnit = item;
         
         /// Get model value
         NSString *uiString = rowModel_getCellModel(transUnit, [tableColumn identifier]);
@@ -774,28 +859,26 @@
         bool targetCellShouldBeEditable = true;
         
         /// Handle pluralizable strings
-        ///         TODO: Fix pluralizable strings getting 'split up' when sorting / filtering
         {
-            if ([xml_childnamed(transUnit, @"source").objectValue containsString: @"%#@"]) { /// Detects the `%#@formatSstring@`
+            if ([xml_childnamed(transUnit, @"source").objectValue containsString: @"%#@"]) { /// Detects the `%#@formatSstring@` (parent row)
                 if      (iscol(@"id"))       {}
                 else if (iscol(@"source"))   uiString = @"(pluralizable)";
-                else if (iscol(@"target")) { uiString = @"(pluralizable)"; targetCellShouldBeEditable = false; } /// We never want the `%#@formatSstring@` to be changed by the translators, so we override it. We don't hide it cause 1.  it holds the comment and 2. we like having a 1-to-1 relationship between transUnits and rows in the table.
+                else if (iscol(@"target")) { uiString = @"(pluralizable)"; targetCellShouldBeEditable = false; } /// We never want the `%#@formatSstring@` to be changed by the translators, so we override it.
                 else if (iscol(@"state"))    { if ((0)) uiString = @"(pluralizable)"; }
                 else if (iscol(@"note"))     {}
                 else                         assert(false);
             }
-            
-            if ([xml_attr(transUnit, @"id").objectValue containsString: @"|==|"]) { /// This detects the pluralizable variants.
-                
+
+            if ([xml_attr(transUnit, @"id").objectValue containsString: @"|==|"]) { /// This detects the pluralizable variants (child rows).
+
                 if (iscol(@"id")) {
                     NSArray *a = [xml_attr(transUnit, @"id").objectValue componentsSeparatedByString: @"|==|"]; assert(a.count == 2);
-                    NSString *baseKey = a[0];
                     NSString *substitutionPath = a[1];
                     assert([substitutionPath hasPrefix: @"substitutions.pluralizable.plural."]);
                     NSString *pluralVariant = [substitutionPath substringFromIndex: @"substitutions.pluralizable.plural.".length];
-                    uiString = stringf(@"%@ (%@)", baseKey, pluralVariant);
+                    uiString = pluralVariant; /// Just show the variant name (e.g. "one", "other") since it's a child row
                 }
-                else if (iscol(@"note")) uiString = @""; /// Delete the note cause the `%#@` string already has it. (We assume that the `%#@` always appears in the row right above [Oct 2025])
+                else if (iscol(@"note")) uiString = @""; /// Delete the note cause the parent row already has it.
             }
         }
         
@@ -836,29 +919,29 @@
         NSTableCellView *cell;
         {
             if (stateCellBackgroundColor) {
-                cell = [tableView makeViewWithIdentifier: @"theReusableCell_TableState" owner: self];
+                cell = [outlineView makeViewWithIdentifier: @"theReusableCell_TableState" owner: self];
                 { /// Style copies Xcode xcloc editor. Rest of the style defined in IB.
                     cell.nextKeyView.wantsLayer = YES;
                     cell.nextKeyView.layer.cornerRadius = 3;
                     cell.nextKeyView.layer.borderWidth  = 1;
                 }
-                
+
                 cell.nextKeyView.layer.borderColor     = [stateCellBackgroundColor CGColor];
                 cell.nextKeyView.layer.backgroundColor = [[stateCellBackgroundColor colorWithAlphaComponent: 0.15] CGColor];
             }
             else {
-                
+
                 if (iscol(@"id"))
-                    cell = [tableView makeViewWithIdentifier: @"theReusableCell_TableID" owner: self]; /// [Jun 2025] What to pass as owner here? Will this lead to retain cycle?
+                    cell = [outlineView makeViewWithIdentifier: @"theReusableCell_TableID" owner: self]; /// [Jun 2025] What to pass as owner here? Will this lead to retain cycle?
                 else if (iscol(@"target"))
-                    cell = [tableView makeViewWithIdentifier: @"theReusableCell_TableTarget" owner: self]; /// This contains an `MFTextField`
+                    cell = [outlineView makeViewWithIdentifier: @"theReusableCell_TableTarget" owner: self]; /// This contains an `MFTextField`
                 else
-                    cell = [tableView makeViewWithIdentifier: @"theReusableCell_Table" owner: self];
-                
+                    cell = [outlineView makeViewWithIdentifier: @"theReusableCell_Table" owner: self];
+
                 cell.textField.delegate = (id)self; /// Optimization: Could prolly set this once in IB [Oct 2025]
                 cell.textField.lineBreakMode = NSLineBreakByWordWrapping;
                 cell.textField.selectable = YES;
-                
+
                 if (iscol(@"target")) {
                     [cell.textField setEditable: targetCellShouldBeEditable];
                 }
@@ -866,22 +949,25 @@
                     auto matchingPlistEntry = [self _localizedStringsDataPlist_GetEntryForRowModel: transUnit];
                     if (!matchingPlistEntry) {
                         /// Remove the quicklook button from IB
-                        cell = [tableView makeViewWithIdentifier: @"theReusableCell_Table" owner: self]; /// Go back to default cell (Fixme: refactor) (We don't modify cause that affects future calls to `makeViewWithIdentifier:`)
+                        cell = [outlineView makeViewWithIdentifier: @"theReusableCell_Table" owner: self]; /// Go back to default cell (Fixme: refactor) (We don't modify cause that affects future calls to `makeViewWithIdentifier:`)
                     }
                     else {
                         NSButton *quickLookButton = firstmatch(cell.subviews, cell.subviews.count, nil, sv, [sv.identifier isEqual: @"quick-look-button"]);
                         [quickLookButton setAction: @selector(quickLookButtonPressed:)];
                         [quickLookButton setTarget: self];
-                        [quickLookButton mf_setAssociatedObject: @(row) forKey: @"rowOfQuickLookButton"];
-                        
+                        [quickLookButton mf_setAssociatedObject: @([outlineView rowForItem: item]) forKey: @"rowOfQuickLookButton"];
+
+
+
+
                         /// Set up things ...
                     }
-                    
-                    
-                    
+
+
+
                 }
             }
-            
+
             [cell.textField setAttributedStringValue: uiStringAttributed];
         }
         
@@ -891,7 +977,11 @@
         #undef iscol
     }
 
-    #pragma mark - NSTableViewDelegate
+    #pragma mark - NSOutlineViewDelegate
+
+    - (void) outlineViewSelectionDidChange: (NSNotification *)notification {
+        [QLPreviewPanel.sharedPreviewPanel reloadData];
+    }
     
     #pragma mark - NSControlTextEditingDelegate (Callbacks for the NSTextField)
     
@@ -906,7 +996,7 @@
         NSTextField *textField = notification.object;
         if (textField.editable) /// This is also called for selectable textFields.
             if (![_lastTargetCellString isEqual: textField.stringValue])
-                [self setTranslation: textField.stringValue andIsTranslated: YES onRowModel: [self rowModel: self.selectedRow]];
+                [self setTranslation: textField.stringValue andIsTranslated: YES onRowModel: [self selectedItem]];
     }
 
 

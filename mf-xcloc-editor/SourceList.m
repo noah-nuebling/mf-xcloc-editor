@@ -182,7 +182,7 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
     
     - (void) progressHasChanged {
 
-        /// This seems to complicated for what we're doing – why two methods for this? [Oct 2025]
+        /// This seems to complicated for what we're doing - why two methods for this? [Oct 2025]
         for (NSInteger row = 0; row < self.numberOfRows; row++) {
             auto cell = [self viewAtColumn: 0 row: row makeIfNecessary: NO];
             [self updateProgressInCell: cell withFile: files[row]];

@@ -95,6 +95,7 @@
             /// TODO: Disable lines behind empty rows
             /// TODO: Update App Name
             /// TODO: Update App Icon (?)
+            /// TODO: Remove fat underline under TableColumns
             
             window = [NSWindow new];
             window.styleMask = 0
