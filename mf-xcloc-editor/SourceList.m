@@ -200,6 +200,7 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
                 NSInteger count_translated = 0;
                 NSInteger count_all = 0;
                 for  (NSXMLElement *transUnit in file->transUnits) {
+                    if (isParentTransUnit(transUnit)) continue; /// Ignore the isTranslated state of parentRows see `stateOfRowModel:`
                     if ([rowModel_getCellModel(transUnit, @"state") isEqual: kMFTransUnitState_Translated])
                         count_translated += 1;
                     count_all += 1;

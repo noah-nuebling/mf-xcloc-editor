@@ -62,6 +62,10 @@
             }
         else assert(false);
     };
+    
+    static BOOL isParentTransUnit(NSXMLElement *transUnit) { /// Detects the `%#@formatSstring@` of pluralizable strings (parent row)
+        return [rowModel_getCellModel(transUnit, @"source") containsString: @"%#@"];
+    }
 
 #pragma mark - Other utils shared between TableView.m and SourceList.m
 

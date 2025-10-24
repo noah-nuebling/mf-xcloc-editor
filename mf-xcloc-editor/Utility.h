@@ -56,7 +56,7 @@
 static NSMutableIndexSet *indexSetWithIndexArray(NSInteger arr[], int len) {
     auto set = [NSMutableIndexSet new];
     for (int i = 0; i < len; i++)
-        if (arr[i] > 0 && arr[i] != NSNotFound) /// outlineView row-getter methods sometimes return -1 if the row-search failed, but when you pass these to `reloadDataForRowIndexes:` it silently fails, so we filter these 'nil' indexes out. [Oct 2025]
+        if (arr[i] >= 0 && arr[i] != NSNotFound) /// outlineView row-getter methods sometimes return -1 if the row-search failed, but when you pass these to `reloadDataForRowIndexes:` it silently fails, so we filter these 'nil' indexes out. [Oct 2025]
             [set addIndex: arr[i]];
     
     return set;

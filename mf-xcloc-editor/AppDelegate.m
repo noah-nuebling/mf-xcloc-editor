@@ -10,6 +10,7 @@
 #import "MainWindowController.h"
 #import "Constants.h"
 #import "XclocDocument.h"
+#import "RowUtils.h"
 
 @implementation AppDelegate
 
@@ -70,13 +71,21 @@
     }
     else if (menuItem.action == @selector(markAsTranslatedMenuItemSelected:)) {
         
-        NSXMLElement *selectedRow = [getdoc_frontmost()->ctrl->out_tableView selectedItem];
-        if (selectedRow == nil) {
+        TableView *tableView = getdoc_frontmost()->ctrl->out_tableView;
+        
+        if (![[tableView.window firstResponder] isEqual: tableView]) /// Ignore input when tableView is not firstResponder to prevent accidental input [Oct 2025]
+            return NO;
+        
+        NSXMLElement *selectedTransUnit = [tableView selectedItem];
+        if (
+            selectedTransUnit == nil ||
+            isParentTransUnit(selectedTransUnit)
+        ) {
             menuItem.title = kMFStr_MarkAsTranslated; /// Setting the image/title here as well so they are not 'unitialized' raw values from the IB. [Oct 2025]
             menuItem.image = [NSImage imageWithSystemSymbolName: kMFStr_MarkAsTranslated_Symbol accessibilityDescription: nil];
             return NO;
         }
-        else if ([getdoc_frontmost()->ctrl->out_tableView rowIsTranslated: selectedRow]) {
+        else if ([tableView rowIsTranslated: selectedTransUnit]) {
             menuItem.title = kMFStr_MarkForReview;
             menuItem.image = [NSImage imageWithSystemSymbolName: kMFStr_MarkForReview_Symbol accessibilityDescription: nil];
             return YES;

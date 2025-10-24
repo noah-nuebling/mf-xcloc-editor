@@ -227,7 +227,7 @@
                     NSString *parentId = xml_attr(potentialParent, @"id").objectValue;
                     if ([parentId isEqual: baseKey]) { /// Found parent
                     
-                        assert([xml_childnamed(potentialParent, @"source").objectValue containsString: @"%#@"]);
+                        assert(isParentTransUnit(potentialParent)); /// Make sure our utility function works.
                         
                         NSMutableArray *children = (NSMutableArray *)_childrenMap[potentialParent];
                         if (!children) {
@@ -257,12 +257,11 @@
             if (![_filterString length])
                 [_displayedTopLevelTransUnits addObject: transUnit];
             else {
-                #define combinedRowString(transUnit) stringf(@"%@\n%@\n%@\n%@\n%@", /** Fixme: search actual UIStrings instead of cellModel strings. */\
+                #define combinedRowString(transUnit) stringf(@"%@\n%@\n%@\n%@", /** Note that we're searching cellModel strings which are a bit different than uiStrings. But this works fine. */\
                     rowModel_getCellModel(transUnit, @"id"), \
                     rowModel_getCellModel(transUnit, @"source"), \
                     rowModel_getCellModel(transUnit, @"target"), \
-                    rowModel_getCellModel(transUnit, @"note"), \
-                    rowModel_getCellModel(transUnit, @"state") \
+                    rowModel_getCellModel(transUnit, @"note") /** Note how we're omitting @"state" */\
                 )
                 
                 auto combinedTransUnitString = [NSMutableString new];
@@ -301,10 +300,10 @@
         
         [_displayedTopLevelTransUnits sortUsingComparator: ^NSComparisonResult(NSXMLElement *i, NSXMLElement *j) {
             NSComparisonResult comp;
-            if ([desc.key isEqual: @"state"]) { /// TODO: Sort (and display) parent rowState based on children.
+            if ([desc.key isEqual: @"state"]) {
                 comp = (
-                    [_stateOrder indexOfObject: rowModel_getCellModel(i, @"state")] -
-                    [_stateOrder indexOfObject: rowModel_getCellModel(j, @"state")]
+                    [_stateOrder indexOfObject: [self stateOfRowModel: i]] -
+                    [_stateOrder indexOfObject: [self stateOfRowModel: j]]
                 );
             }
             else {
@@ -365,6 +364,23 @@
 
     }
     
+    - (NSString *) stateOfRowModel: (NSXMLElement *)transUnit {
+        
+        /// Define parent node state in terms of their children
+        ///     don't call `rowModel_getCellModel(..., @"state")`, directly
+        
+        if (_childrenMap[transUnit].count) {
+            for (NSXMLElement *ch in _childrenMap[transUnit]) {
+                if (![rowModel_getCellModel(ch, @"state") isEqual: kMFTransUnitState_Translated])
+                    return kMFTransUnitState_NeedsReview;
+            }
+            return kMFTransUnitState_Translated;
+        }
+        else {
+            return rowModel_getCellModel(transUnit, @"state");
+        }
+    }
+    
     #pragma mark - Editing
     
     - (void) toggleIsTranslatedState: (NSXMLElement *)transUnit {
@@ -417,7 +433,7 @@
         {
             auto undoManager = [getdoc(self) undoManager];
             auto oldString = rowModel_getCellModel(transUnit, @"target");
-            auto oldIsTranslated = [rowModel_getCellModel(transUnit, @"state") isEqual: kMFTransUnitState_Translated];
+            auto oldIsTranslated = [[self stateOfRowModel: transUnit] isEqual: kMFTransUnitState_Translated];
             [[undoManager prepareWithInvocationTarget: self] setTranslation: oldString andIsTranslated: oldIsTranslated onRowModel: transUnit];
             [undoManager setActionName: @"Edit Translation"];
         }
@@ -758,24 +774,26 @@
     }
     
     - (BOOL) rowIsTranslated: (NSXMLElement *)transUnit {
-        auto state = rowModel_getCellModel(transUnit, @"state");
+        auto state = [self stateOfRowModel: transUnit];
         return [state isEqual: kMFTransUnitState_Translated];
     }
     
     - (BOOL) validateMenuItem: (NSMenuItem *)menuItem {
         
-        NSXMLElement *transUnit = [self selectedItem];
+        NSXMLElement *transUnit = [self itemAtRow: [self clickedRow]]; /// This is a right-click menu so we use `clickedRow` instead of `selectedItem`
         
-        if ([rowModel_getCellModel(transUnit, @"state") isEqual: @"mf_dont_translate"])
+        if ([[self stateOfRowModel: transUnit] isEqual: @"mf_dont_translate"])
+            return NO;
+        if (isParentTransUnit(transUnit))
             return NO;
         if (
-            [rowModel_getCellModel(transUnit, @"state") isEqual: kMFTransUnitState_Translated] &&
+            [[self stateOfRowModel: transUnit] isEqual: kMFTransUnitState_Translated] &&
             [menuItem.identifier isEqual: @"mark_as_translated"]
         ) {
             return NO;
         }
         if (
-            ![rowModel_getCellModel(transUnit, @"state") isEqual: kMFTransUnitState_Translated] && /// `tableMenuItemClicked:` expects us to only allow toggling (only one of the two items may be active) [Oct 2025]. (This may be stupid)
+            ![[self stateOfRowModel: transUnit] isEqual: kMFTransUnitState_Translated] && /// `tableMenuItemClicked:` expects us to only allow toggling (only one of the two items may be active) [Oct 2025]. (This may be stupid)
             [menuItem.identifier isEqual: @"mark_for_review"]
         ) {
             return NO;
@@ -810,6 +828,11 @@
         
         /// Get model value
         NSString *uiString = rowModel_getCellModel(transUnit, [tableColumn identifier]);
+        
+        /// Get propery model value for @"state"
+        ///     This is a bit hacky
+        if (iscol(@"state"))
+            uiString = [self stateOfRowModel: transUnit];
         
         /// Remove redundant stuff from IB-generated notes
         if (iscol(@"note")) {
@@ -860,7 +883,7 @@
         
         /// Handle pluralizable strings
         {
-            if ([xml_childnamed(transUnit, @"source").objectValue containsString: @"%#@"]) { /// Detects the `%#@formatSstring@` (parent row)
+            if (isParentTransUnit(transUnit)) {
                 if      (iscol(@"id"))       {}
                 else if (iscol(@"source"))   uiString = @"(pluralizable)";
                 else if (iscol(@"target")) { uiString = @"(pluralizable)"; targetCellShouldBeEditable = false; } /// We never want the `%#@formatSstring@` to be changed by the translators, so we override it.
@@ -910,10 +933,6 @@
                 }
             else assert(false);
         }
-        
-        /// Turn off editing for `mf_dont_translate`
-        if (iscol(@"target") && [rowModel_getCellModel(transUnit, @"state") isEqual: @"mf_dont_translate"])
-            targetCellShouldBeEditable = false;
         
         /// Create cell
         NSTableCellView *cell;
@@ -982,6 +1001,11 @@
     - (void) reloadData {
         [super reloadData];
         [self expandItem: nil expandChildren: YES]; /// mfunexpand – Expand all items by default. || We're also using `reloadDataForRowIndexes:` additionally to `reloadData`, but overriding that doesn't seem necessary to keep the items expanded [Oct 2025]
+    }
+    
+    - (void)reloadDataForRowIndexes:(NSIndexSet *)rowIndexes columnIndexes:(NSIndexSet *)columnIndexes {
+        mflog(@"ReloadData with indexes: %@ %@", rowIndexes, columnIndexes);
+        [super reloadDataForRowIndexes: rowIndexes columnIndexes: columnIndexes];
     }
 
     #pragma mark - NSOutlineViewDelegate
