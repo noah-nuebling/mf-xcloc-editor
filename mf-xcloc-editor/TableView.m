@@ -87,7 +87,7 @@
             };
             
             self.menu = mfui_menu(@[
-                mfui_item(@"mark_as_translated", kMFStr_MarkAsTranslated_Symbol, kMFStr_MarkAsTranslated), /// validateMenuItem: in AppDelegate.m [Oct 2025]
+                mfui_item(@"mark_as_translated", kMFStr_MarkAsTranslated_Symbol, kMFStr_MarkAsTranslated),
                 mfui_item(@"mark_for_review",    kMFStr_MarkForReview_Symbol, kMFStr_MarkForReview),
             ]);
         }
@@ -95,6 +95,44 @@
         
         /// Return
         return self;
+    }
+    
+    #pragma mark - Menu Items
+    
+    - (NSInteger) indexOfColumnWithIdentifier: (NSUserInterfaceItemIdentifier)identifier {
+        NSInteger i = 0;
+        for (NSTableColumn *col in self.tableColumns) {
+            if ([col.identifier isEqual: identifier]) return i;
+            i++;
+        }
+        return -1;
+    }
+    - (void) tableMenuItemClicked: (NSMenuItem *)menuItem {
+        [self toggleIsTranslatedState: [self selectedItem]]; /// All our menuItems are for toggling and `validateMenuItem:` makes it so we can only toggle [Oct 2025]
+    }
+    
+    - (BOOL) validateMenuItem: (NSMenuItem *)menuItem {
+        
+        NSXMLElement *transUnit = [self itemAtRow: [self clickedRow]]; /// This is a right-click menu so we use `clickedRow` instead of `selectedItem`
+        
+        if ([[self stateOfRowModel: transUnit] isEqual: @"mf_dont_translate"])
+            return NO;
+        if (isParentTransUnit(transUnit))
+            return NO;
+        if (
+            [[self stateOfRowModel: transUnit] isEqual: kMFTransUnitState_Translated] &&
+            [menuItem.identifier isEqual: @"mark_as_translated"]
+        ) {
+            return NO;
+        }
+        if (
+            ![[self stateOfRowModel: transUnit] isEqual: kMFTransUnitState_Translated] && /// `tableMenuItemClicked:` expects us to only allow toggling (only one of the two items may be active) [Oct 2025]. (This may be stupid)
+            [menuItem.identifier isEqual: @"mark_for_review"]
+        ) {
+            return NO;
+        }
+        
+        return YES;
     }
     
     #pragma mark - Keyboard control
@@ -318,7 +356,7 @@
 
     - (NSXMLElement *) topLevelItemContainingItem: (NSXMLElement *)searchedItem {
         if ((0))
-            return [self parentForItem: searchedItem] ?: searchedItem; /// This would probably also work
+            return [self parentForItem: searchedItem] ?: searchedItem; /// This would probably also work. But maybe `self->_displayedTopLevelTransUnits` works better in some edge-cases where the table hasn't loaded the items, yet? Not sure that's relevant. [Oct 2025]
         
         for (NSXMLElement *u in self->_displayedTopLevelTransUnits) { /// Returns the searchedItem if it is topLevel itself
             if ([u isEqual: searchedItem])
@@ -385,6 +423,11 @@
     
     - (void) toggleIsTranslatedState: (NSXMLElement *)transUnit {
         [self setIsTranslatedState: ![self rowIsTranslated: transUnit] onRowModel: transUnit];
+    }
+    
+    - (BOOL) rowIsTranslated: (NSXMLElement *)transUnit {
+        auto state = [self stateOfRowModel: transUnit];
+        return [state isEqual: kMFTransUnitState_Translated];
     }
     
     - (void) setIsTranslatedState: (BOOL)newIsTranslatedState onRowModel:(NSXMLElement *)transUnit {
@@ -477,7 +520,7 @@
             if (!topLevel) {
                 /// Remove the filter
                 [getdoc(self)->ctrl->out_filterField setStringValue: @""];
-                [self updateFilter: @""]; /// Maybe be unnecessary - Updating `out_filterField` may call this automatically
+                [self updateFilter: @""]; /// Maybe unnecessary - Updating `out_filterField` may call this automatically
                 /// Try again
                 topLevel = [self topLevelItemContainingItem: transUnit];
             }
@@ -508,6 +551,242 @@
 
     }
     
+    #pragma mark - Selection
+    
+    #if 0
+        - (NSTableViewSelectionHighlightStyle)selectionHighlightStyle {
+            return NSTableViewSelectionHighlightStyleNone;
+        }
+    #endif
+
+    #pragma mark - NSOutlineViewDataSource
+
+    - (NSInteger) outlineView: (NSOutlineView *)outlineView numberOfChildrenOfItem: (id)item {
+        if (!item) return [_displayedTopLevelTransUnits count]; /// Root level
+        else       return [_childrenMap[item] count];           /// Child level
+    }
+
+    - (id) outlineView: (NSOutlineView *)outlineView child: (NSInteger)index ofItem: (id)item {
+        if (!item)  return _displayedTopLevelTransUnits[index]; /// Root level
+        else        return _childrenMap[item][index];           /// Child level
+    }
+
+    - (BOOL) outlineView: (NSOutlineView *)outlineView isItemExpandable: (id)item {
+        return [_childrenMap[item] count];
+    }
+
+    - (NSView *) outlineView: (NSOutlineView *)outlineView viewForTableColumn: (NSTableColumn *)tableColumn item: (id)item {
+
+        #define iscol(colid) [[tableColumn identifier] isEqual: (colid)]
+
+        NSXMLElement *transUnit = item;
+        
+        /// Get model value
+        NSString *uiString = rowModel_getCellModel(transUnit, [tableColumn identifier]);
+        
+        /// Get propery model value for @"state"
+        ///     This is a bit hacky
+        if (iscol(@"state"))
+            uiString = [self stateOfRowModel: transUnit];
+        
+        /// Remove redundant stuff from IB-generated notes
+        if (iscol(@"note")) {
+            
+            NSDictionary *notesDict = [NSPropertyListSerialization /// The Notes generated by IB are old-style plists with the keys directly at the root. Old Xcode .strings files had the same format IIRC. [Oct 2025]
+                propertyListWithData: [uiString dataUsingEncoding: NSUTF8StringEncoding]
+                options: 0
+                format: NULL
+                error: nil
+            ];
+            if (!isclass(notesDict, NSDictionary)) {
+                if (notesDict) mflog(@"Found non-NSDictionary plist notes: %@", notesDict); /// If the comment is a plain string without quotes, that is also a valid plist [Oct 2025]
+            }
+            else {
+                
+                if
+                (
+                    (
+                        notesDict.allKeys.count == 3 && /// Complex validation is just a sanity check [Oct 2025]
+                        (
+                            [toset(notesDict.allKeys) isEqual: toset(@[         @"Class", @"ObjectID", @"title"])] ||
+                            [toset(notesDict.allKeys) isEqual: toset(@[         @"Class", @"ObjectID", @"ibShadowedToolTip"])] ||
+                            [toset(notesDict.allKeys) isEqual: toset(@[         @"Class", @"ObjectID", @"placeholderString"])] ||
+                            [toset(notesDict.allKeys) isEqual: toset(@[         @"Class", @"ObjectID", @"label"])]
+                        )
+                    )
+                    ||
+                    (
+                        notesDict.allKeys.count == 4 &&
+                        (
+                            [toset(notesDict.allKeys) isEqual: toset(@[@"Note", @"Class", @"ObjectID", @"title"])] ||
+                            [toset(notesDict.allKeys) isEqual: toset(@[@"Note", @"Class", @"ObjectID", @"ibShadowedToolTip"])] ||
+                            [toset(notesDict.allKeys) isEqual: toset(@[@"Note", @"Class", @"ObjectID", @"placeholderString"])] ||
+                            [toset(notesDict.allKeys) isEqual: toset(@[@"Note", @"Class", @"ObjectID", @"label"])]
+                            
+                        )
+                    )
+                ) {
+                    uiString = notesDict[@"Note"] ?: @"";
+                }
+                else
+                    assert(false);
+            }
+        }
+        
+        /// Special stuff for `<target>` column
+        bool targetCellShouldBeEditable = true;
+        
+        /// Handle pluralizable strings
+        {
+            if (isParentTransUnit(transUnit)) {
+                if      (iscol(@"id"))       {}
+                else if (iscol(@"source"))   uiString = @"(pluralizable)";
+                else if (iscol(@"target")) { uiString = @"(pluralizable)"; targetCellShouldBeEditable = false; } /// We never want the `%#@formatSstring@` to be changed by the translators, so we override it.
+                else if (iscol(@"state"))    { if ((0)) uiString = @"(pluralizable)"; }
+                else if (iscol(@"note"))     {}
+                else                         assert(false);
+            }
+
+            if ([xml_attr(transUnit, @"id").objectValue containsString: @"|==|"]) { /// This detects the pluralizable variants (child rows).
+
+                if (iscol(@"id")) {
+                    NSArray *a = [xml_attr(transUnit, @"id").objectValue componentsSeparatedByString: @"|==|"];
+                    assert(a.count == 2);
+                    NSString *substitutionPath = a[1];
+                    assert([substitutionPath hasPrefix: @"substitutions.pluralizable.plural."]);
+                    NSString *pluralVariant = [substitutionPath substringFromIndex: @"substitutions.pluralizable.plural.".length];
+                    uiString = pluralVariant; /// Just show the variant name (e.g. "one", "other") since it's a child row
+                }
+                else if (iscol(@"note")) uiString = @""; /// Delete the note cause the parent row already has it.
+            }
+        }
+        
+        /// Override raw state string with colorful symbols / badges
+        
+        NSAttributedString *uiStringAttributed  = [[NSAttributedString alloc] initWithString: (uiString ?: @"")];
+        #define attributed(str) [[NSAttributedString alloc] initWithString: (str)]
+        NSColor *stateCellBackgroundColor = nil;
+        if (iscol(@"state")) {
+            if ((0)) {}
+                else if ([uiString isEqual: kMFTransUnitState_Translated]) {
+                    uiStringAttributed = make_green_checkmark(uiString);
+                    
+                }
+                else if ([uiString isEqual: kMFTransUnitState_DontTranslate]) {
+                    uiStringAttributed = attributed(@"DON'T TRANSLATE");
+                    stateCellBackgroundColor = [NSColor systemGrayColor];
+                }
+                else if ([uiString isEqual: kMFTransUnitState_New]) {
+                    uiStringAttributed = attributed(@"NEW");
+                    stateCellBackgroundColor = [NSColor systemBlueColor];
+                }
+                else if ([uiString isEqual: kMFTransUnitState_NeedsReview]) {
+                    uiStringAttributed = attributed(@"NEEDS REVIEW");
+                    stateCellBackgroundColor = [NSColor systemOrangeColor];
+                }
+                else if ([uiString isEqual: @"(pluralizable)"]) { /// Unused now [Oct 2025]
+                    uiStringAttributed = attributed(@"");
+                }
+            else assert(false);
+        }
+        
+        /// Create cell
+        NSTableCellView *cell;
+        {
+            if (stateCellBackgroundColor) {
+                cell = [outlineView makeViewWithIdentifier: @"theReusableCell_TableState" owner: self];
+                { /// Style copies Xcode xcloc editor. Rest of the style defined in IB.
+                    cell.nextKeyView.wantsLayer = YES;
+                    cell.nextKeyView.layer.cornerRadius = 3;
+                    cell.nextKeyView.layer.borderWidth  = 1;
+                }
+
+                cell.nextKeyView.layer.borderColor     = [stateCellBackgroundColor CGColor];
+                cell.nextKeyView.layer.backgroundColor = [[stateCellBackgroundColor colorWithAlphaComponent: 0.15] CGColor];
+            }
+            else {
+
+                if (iscol(@"id"))
+                    cell = [outlineView makeViewWithIdentifier: @"theReusableCell_TableID" owner: self]; /// [Jun 2025] What to pass as owner here? Will this lead to retain cycle?
+                else if (iscol(@"target"))
+                    cell = [outlineView makeViewWithIdentifier: @"theReusableCell_TableTarget" owner: self]; /// This contains an `MFTextField`
+                else
+                    cell = [outlineView makeViewWithIdentifier: @"theReusableCell_Table" owner: self];
+
+                cell.textField.delegate = (id)self; /// Optimization: Could prolly set this once in IB [Oct 2025]
+                cell.textField.lineBreakMode = NSLineBreakByWordWrapping;
+                cell.textField.selectable = YES;
+
+                if (iscol(@"target")) {
+                    [cell.textField setEditable: targetCellShouldBeEditable];
+                }
+                else if (iscol(@"id")) {
+                    auto matchingPlistEntry = [self _localizedStringsDataPlist_GetEntryForRowModel: transUnit];
+                    if (!matchingPlistEntry) {
+                        /// Remove the quicklook button from IB
+                        cell = [outlineView makeViewWithIdentifier: @"theReusableCell_Table" owner: self]; /// Go back to default cell (TODO: refactor) (We don't modify cause that affects future calls to `makeViewWithIdentifier:`)
+                    }
+                    else {
+                        NSButton *quickLookButton = firstmatch(cell.subviews, cell.subviews.count, nil, sv, [sv.identifier isEqual: @"quick-look-button"]);
+                        [quickLookButton setAction: @selector(quickLookButtonPressed:)];
+                        [quickLookButton setTarget: self];
+                        [quickLookButton mf_setAssociatedObject: @([outlineView rowForItem: item]) forKey: @"rowOfQuickLookButton"];
+
+
+
+
+                        /// Set up things ...
+                    }
+
+
+
+                }
+            }
+
+            [cell.textField setAttributedStringValue: uiStringAttributed];
+        }
+        
+        
+        /// Return
+        return cell;
+        #undef iscol
+    }
+
+    #pragma mark - NSOutlineView subclass
+    
+    - (void) reloadData {
+        [super reloadData];
+        [self expandItem: nil expandChildren: YES]; /// mfunexpand – Expand all items by default. || We're also using `reloadDataForRowIndexes:` additionally to `reloadData`, but overriding that doesn't seem necessary to keep the items expanded [Oct 2025]
+    }
+    
+    - (void)reloadDataForRowIndexes:(NSIndexSet *)rowIndexes columnIndexes:(NSIndexSet *)columnIndexes {
+        mflog(@"ReloadData with indexes: %@ %@", rowIndexes, columnIndexes);
+        [super reloadDataForRowIndexes: rowIndexes columnIndexes: columnIndexes];
+    }
+
+    #pragma mark - NSOutlineViewDelegate
+
+    - (void) outlineViewSelectionDidChange: (NSNotification *)notification {
+        [QLPreviewPanel.sharedPreviewPanel reloadData];
+    }
+    
+    #pragma mark - NSControlTextEditingDelegate (Callbacks for the NSTextField)
+    
+
+    - (void) controlTextDidBeginEditing: (NSNotification *)notification {
+        NSTextField *textField = notification.object;
+        _lastTargetCellString = textField.stringValue; /// Track whether textField content was actually changed inside `controlTextDidEndEditing:`. Would be nicer if we could use callbacks instead of ivars. [Oct 2025]
+    }
+
+    - (void) controlTextDidEndEditing: (NSNotification *)notification {
+            
+        NSTextField *textField = notification.object;
+        if (textField.editable) /// This is also called for selectable textFields.
+            if (![_lastTargetCellString isEqual: textField.stringValue])
+                [self setTranslation: textField.stringValue andIsTranslated: YES onRowModel: [self selectedItem]];
+    }
+
+
     #pragma mark - Quick Look
     
         /// See Apple `QuickLookDownloader` sample project: https://developer.apple.com/library/archive/samplecode/QuickLookDownloader/Introduction/Intro.html
@@ -720,7 +999,7 @@
                 
                 /// Check if annotatedImage already exists
                 /// This is how we cache. Makes things noticably more responsive. `-[NSImage drawInRect:]` is apparently reallyyyy slow. (Cache shaves off like half a second on my M1 MBA on a single run – which seems strange) [Oct 2025]
-                ///     Idea: Claude suggests this may be because the image is compressed? We did choose compressed jpegs to reduce file size IIRC, due to the Xcode bug that forced us to duplicate the images. Compression may no longer be beneficial when switching from Xcode -> mf-xcloc editor. [Oct 2025]
+                ///     Idea: Claude suggests this may be because the image is compressed? We did choose compressed jpegs to reduce file size IIRC, due to the Xcode bug that forced us to duplicate the images. Compression may no longer be beneficial when switching from Xcode -> mf-xcloc-editor. [Oct 2025]
                 if ([[NSFileManager defaultManager] fileExistsAtPath: annotatedImagePath]) {
                     mflog(@"Using cached annotatedImage file at: %@", annotatedImagePath);
                 }
@@ -750,285 +1029,6 @@
                 
                 return item;
             };
-    
-    #pragma mark - Selection
-    
-    #if 0
-        - (NSTableViewSelectionHighlightStyle)selectionHighlightStyle {
-            return NSTableViewSelectionHighlightStyleNone;
-        }
-    #endif
-    
-    #pragma mark - Menu Items
-    
-    - (NSInteger) indexOfColumnWithIdentifier: (NSUserInterfaceItemIdentifier)identifier {
-        NSInteger i = 0;
-        for (NSTableColumn *col in self.tableColumns) {
-            if ([col.identifier isEqual: identifier]) return i;
-            i++;
-        }
-        return -1;
-    }
-    - (void) tableMenuItemClicked: (NSMenuItem *)menuItem {
-        [self toggleIsTranslatedState: [self selectedItem]]; /// All our menuItems are for toggling and `validateMenuItem:` makes it so we can only toggle [Oct 2025]
-    }
-    
-    - (BOOL) rowIsTranslated: (NSXMLElement *)transUnit {
-        auto state = [self stateOfRowModel: transUnit];
-        return [state isEqual: kMFTransUnitState_Translated];
-    }
-    
-    - (BOOL) validateMenuItem: (NSMenuItem *)menuItem {
-        
-        NSXMLElement *transUnit = [self itemAtRow: [self clickedRow]]; /// This is a right-click menu so we use `clickedRow` instead of `selectedItem`
-        
-        if ([[self stateOfRowModel: transUnit] isEqual: @"mf_dont_translate"])
-            return NO;
-        if (isParentTransUnit(transUnit))
-            return NO;
-        if (
-            [[self stateOfRowModel: transUnit] isEqual: kMFTransUnitState_Translated] &&
-            [menuItem.identifier isEqual: @"mark_as_translated"]
-        ) {
-            return NO;
-        }
-        if (
-            ![[self stateOfRowModel: transUnit] isEqual: kMFTransUnitState_Translated] && /// `tableMenuItemClicked:` expects us to only allow toggling (only one of the two items may be active) [Oct 2025]. (This may be stupid)
-            [menuItem.identifier isEqual: @"mark_for_review"]
-        ) {
-            return NO;
-        }
-        
-        return YES;
-    }
-
-    #pragma mark - NSOutlineView
-
-    #pragma mark - NSOutlineViewDataSource
-
-    - (NSInteger) outlineView: (NSOutlineView *)outlineView numberOfChildrenOfItem: (id)item {
-        if (!item) return [_displayedTopLevelTransUnits count]; /// Root level
-        else       return [_childrenMap[item] count];           /// Child level
-    }
-
-    - (id) outlineView: (NSOutlineView *)outlineView child: (NSInteger)index ofItem: (id)item {
-        if (!item)  return _displayedTopLevelTransUnits[index]; /// Root level
-        else        return _childrenMap[item][index];           /// Child level
-    }
-
-    - (BOOL) outlineView: (NSOutlineView *)outlineView isItemExpandable: (id)item {
-        return [_childrenMap[item] count];
-    }
-
-    - (NSView *) outlineView: (NSOutlineView *)outlineView viewForTableColumn: (NSTableColumn *)tableColumn item: (id)item {
-
-        #define iscol(colid) [[tableColumn identifier] isEqual: (colid)]
-
-        NSXMLElement *transUnit = item;
-        
-        /// Get model value
-        NSString *uiString = rowModel_getCellModel(transUnit, [tableColumn identifier]);
-        
-        /// Get propery model value for @"state"
-        ///     This is a bit hacky
-        if (iscol(@"state"))
-            uiString = [self stateOfRowModel: transUnit];
-        
-        /// Remove redundant stuff from IB-generated notes
-        if (iscol(@"note")) {
-            
-            NSDictionary *notesDict = [NSPropertyListSerialization /// The Notes generated by IB are old-style plists with the keys directly at the root. Old Xcode .strings files had the same format IIRC. [Oct 2025]
-                propertyListWithData: [uiString dataUsingEncoding: NSUTF8StringEncoding]
-                options: 0
-                format: NULL
-                error: nil
-            ];
-            if (!isclass(notesDict, NSDictionary)) {
-                if (notesDict) mflog(@"Found non-NSDictionary plist notes: %@", notesDict); /// If the comment is a plain string without quotes, that is also a valid plist [Oct 2025]
-            }
-            else {
-                
-                if
-                (
-                    (
-                        notesDict.allKeys.count == 3 && /// Complex validation is just a sanity check [Oct 2025]
-                        (
-                            [toset(notesDict.allKeys) isEqual: toset(@[         @"Class", @"ObjectID", @"title"])] ||
-                            [toset(notesDict.allKeys) isEqual: toset(@[         @"Class", @"ObjectID", @"ibShadowedToolTip"])] ||
-                            [toset(notesDict.allKeys) isEqual: toset(@[         @"Class", @"ObjectID", @"placeholderString"])] ||
-                            [toset(notesDict.allKeys) isEqual: toset(@[         @"Class", @"ObjectID", @"label"])]
-                        )
-                    )
-                    ||
-                    (
-                        notesDict.allKeys.count == 4 &&
-                        (
-                            [toset(notesDict.allKeys) isEqual: toset(@[@"Note", @"Class", @"ObjectID", @"title"])] ||
-                            [toset(notesDict.allKeys) isEqual: toset(@[@"Note", @"Class", @"ObjectID", @"ibShadowedToolTip"])] ||
-                            [toset(notesDict.allKeys) isEqual: toset(@[@"Note", @"Class", @"ObjectID", @"placeholderString"])] ||
-                            [toset(notesDict.allKeys) isEqual: toset(@[@"Note", @"Class", @"ObjectID", @"label"])]
-                            
-                        )
-                    )
-                ) {
-                    uiString = notesDict[@"Note"] ?: @"";
-                }
-                else
-                    assert(false);
-            }
-        }
-        
-        /// Special stuff for `<target>` column
-        bool targetCellShouldBeEditable = true;
-        
-        /// Handle pluralizable strings
-        {
-            if (isParentTransUnit(transUnit)) {
-                if      (iscol(@"id"))       {}
-                else if (iscol(@"source"))   uiString = @"(pluralizable)";
-                else if (iscol(@"target")) { uiString = @"(pluralizable)"; targetCellShouldBeEditable = false; } /// We never want the `%#@formatSstring@` to be changed by the translators, so we override it.
-                else if (iscol(@"state"))    { if ((0)) uiString = @"(pluralizable)"; }
-                else if (iscol(@"note"))     {}
-                else                         assert(false);
-            }
-
-            if ([xml_attr(transUnit, @"id").objectValue containsString: @"|==|"]) { /// This detects the pluralizable variants (child rows).
-
-                if (iscol(@"id")) {
-                    NSArray *a = [xml_attr(transUnit, @"id").objectValue componentsSeparatedByString: @"|==|"]; assert(a.count == 2);
-                    NSString *substitutionPath = a[1];
-                    assert([substitutionPath hasPrefix: @"substitutions.pluralizable.plural."]);
-                    NSString *pluralVariant = [substitutionPath substringFromIndex: @"substitutions.pluralizable.plural.".length];
-                    uiString = pluralVariant; /// Just show the variant name (e.g. "one", "other") since it's a child row
-                }
-                else if (iscol(@"note")) uiString = @""; /// Delete the note cause the parent row already has it.
-            }
-        }
-        
-        /// Override raw state string with colorful symbols / badges
-        
-        NSAttributedString *uiStringAttributed  = [[NSAttributedString alloc] initWithString: (uiString ?: @"")];
-        #define attributed(str) [[NSAttributedString alloc] initWithString: (str)]
-        NSColor *stateCellBackgroundColor = nil;
-        if (iscol(@"state")) {
-            if ((0)) {}
-                else if ([uiString isEqual: kMFTransUnitState_Translated]) {
-                    uiStringAttributed = make_green_checkmark(uiString);
-                    
-                }
-                else if ([uiString isEqual: kMFTransUnitState_DontTranslate]) {
-                    uiStringAttributed = attributed(@"DON'T TRANSLATE");
-                    stateCellBackgroundColor = [NSColor systemGrayColor];
-                }
-                else if ([uiString isEqual: kMFTransUnitState_New]) {
-                    uiStringAttributed = attributed(@"NEW");
-                    stateCellBackgroundColor = [NSColor systemBlueColor];
-                }
-                else if ([uiString isEqual: kMFTransUnitState_NeedsReview]) {
-                    uiStringAttributed = attributed(@"NEEDS REVIEW");
-                    stateCellBackgroundColor = [NSColor systemOrangeColor];
-                }
-                else if ([uiString isEqual: @"(pluralizable)"]) { /// Unused now [Oct 2025]
-                    uiStringAttributed = attributed(@"");
-                }
-            else assert(false);
-        }
-        
-        /// Create cell
-        NSTableCellView *cell;
-        {
-            if (stateCellBackgroundColor) {
-                cell = [outlineView makeViewWithIdentifier: @"theReusableCell_TableState" owner: self];
-                { /// Style copies Xcode xcloc editor. Rest of the style defined in IB.
-                    cell.nextKeyView.wantsLayer = YES;
-                    cell.nextKeyView.layer.cornerRadius = 3;
-                    cell.nextKeyView.layer.borderWidth  = 1;
-                }
-
-                cell.nextKeyView.layer.borderColor     = [stateCellBackgroundColor CGColor];
-                cell.nextKeyView.layer.backgroundColor = [[stateCellBackgroundColor colorWithAlphaComponent: 0.15] CGColor];
-            }
-            else {
-
-                if (iscol(@"id"))
-                    cell = [outlineView makeViewWithIdentifier: @"theReusableCell_TableID" owner: self]; /// [Jun 2025] What to pass as owner here? Will this lead to retain cycle?
-                else if (iscol(@"target"))
-                    cell = [outlineView makeViewWithIdentifier: @"theReusableCell_TableTarget" owner: self]; /// This contains an `MFTextField`
-                else
-                    cell = [outlineView makeViewWithIdentifier: @"theReusableCell_Table" owner: self];
-
-                cell.textField.delegate = (id)self; /// Optimization: Could prolly set this once in IB [Oct 2025]
-                cell.textField.lineBreakMode = NSLineBreakByWordWrapping;
-                cell.textField.selectable = YES;
-
-                if (iscol(@"target")) {
-                    [cell.textField setEditable: targetCellShouldBeEditable];
-                }
-                else if (iscol(@"id")) {
-                    auto matchingPlistEntry = [self _localizedStringsDataPlist_GetEntryForRowModel: transUnit];
-                    if (!matchingPlistEntry) {
-                        /// Remove the quicklook button from IB
-                        cell = [outlineView makeViewWithIdentifier: @"theReusableCell_Table" owner: self]; /// Go back to default cell (TODO: refactor) (We don't modify cause that affects future calls to `makeViewWithIdentifier:`)
-                    }
-                    else {
-                        NSButton *quickLookButton = firstmatch(cell.subviews, cell.subviews.count, nil, sv, [sv.identifier isEqual: @"quick-look-button"]);
-                        [quickLookButton setAction: @selector(quickLookButtonPressed:)];
-                        [quickLookButton setTarget: self];
-                        [quickLookButton mf_setAssociatedObject: @([outlineView rowForItem: item]) forKey: @"rowOfQuickLookButton"];
-
-
-
-
-                        /// Set up things ...
-                    }
-
-
-
-                }
-            }
-
-            [cell.textField setAttributedStringValue: uiStringAttributed];
-        }
-        
-        
-        /// Return
-        return cell;
-        #undef iscol
-    }
-
-    #pragma mark - NSOutlineView subclass
-    
-    - (void) reloadData {
-        [super reloadData];
-        [self expandItem: nil expandChildren: YES]; /// mfunexpand – Expand all items by default. || We're also using `reloadDataForRowIndexes:` additionally to `reloadData`, but overriding that doesn't seem necessary to keep the items expanded [Oct 2025]
-    }
-    
-    - (void)reloadDataForRowIndexes:(NSIndexSet *)rowIndexes columnIndexes:(NSIndexSet *)columnIndexes {
-        mflog(@"ReloadData with indexes: %@ %@", rowIndexes, columnIndexes);
-        [super reloadDataForRowIndexes: rowIndexes columnIndexes: columnIndexes];
-    }
-
-    #pragma mark - NSOutlineViewDelegate
-
-    - (void) outlineViewSelectionDidChange: (NSNotification *)notification {
-        [QLPreviewPanel.sharedPreviewPanel reloadData];
-    }
-    
-    #pragma mark - NSControlTextEditingDelegate (Callbacks for the NSTextField)
-    
-
-    - (void) controlTextDidBeginEditing: (NSNotification *)notification {
-        NSTextField *textField = notification.object;
-        _lastTargetCellString = textField.stringValue; /// Track whether textField content was actually changed inside `controlTextDidEndEditing:`. Would be nicer if we could use callbacks instead of ivars. [Oct 2025]
-    }
-
-    - (void) controlTextDidEndEditing: (NSNotification *)notification {
-            
-        NSTextField *textField = notification.object;
-        if (textField.editable) /// This is also called for selectable textFields.
-            if (![_lastTargetCellString isEqual: textField.stringValue])
-                [self setTranslation: textField.stringValue andIsTranslated: YES onRowModel: [self selectedItem]];
-    }
 
 
 @end
