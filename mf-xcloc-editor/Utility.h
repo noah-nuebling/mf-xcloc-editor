@@ -49,6 +49,8 @@
 })
 
 
+#define toset(arr...) [NSSet setWithArray: (arr)]
+
 ///
 /// NSXML convenience.
 ///
