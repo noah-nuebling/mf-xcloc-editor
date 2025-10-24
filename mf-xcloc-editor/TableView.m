@@ -44,7 +44,7 @@
         self.style = NSTableViewStyleFullWidth;
         self.usesAutomaticRowHeights = YES;
         self.indentationPerLevel = 20.0;
-        self.autoresizesOutlineColumn = NO; /// TODO: Does this make sense?
+        self.autoresizesOutlineColumn = NO; /// This makes the column-width be auto-resized according to Claude - we don't want that I think
         
         /// Register ReusableViews
         ///     Not sure this is necesssary / correct. What about `theReusableCell_TableState` [Oct 2025]
@@ -968,7 +968,7 @@
                     auto matchingPlistEntry = [self _localizedStringsDataPlist_GetEntryForRowModel: transUnit];
                     if (!matchingPlistEntry) {
                         /// Remove the quicklook button from IB
-                        cell = [outlineView makeViewWithIdentifier: @"theReusableCell_Table" owner: self]; /// Go back to default cell (Fixme: refactor) (We don't modify cause that affects future calls to `makeViewWithIdentifier:`)
+                        cell = [outlineView makeViewWithIdentifier: @"theReusableCell_Table" owner: self]; /// Go back to default cell (TODO: refactor) (We don't modify cause that affects future calls to `makeViewWithIdentifier:`)
                     }
                     else {
                         NSButton *quickLookButton = firstmatch(cell.subviews, cell.subviews.count, nil, sv, [sv.identifier isEqual: @"quick-look-button"]);

@@ -61,7 +61,6 @@
 - (BOOL) validateMenuItem: (NSMenuItem *)menuItem {
     
     /// TODO: Maybe delete some of the default menuItems we don't need.
-    /// TODO: Make kMFStr_MarkAsTranslated item grayed out when pluralizable string is selected.
     
     if (menuItem.action == @selector(filterMenuItemSelected:)) {
         return YES;
@@ -79,7 +78,7 @@
         NSXMLElement *selectedTransUnit = [tableView selectedItem];
         if (
             selectedTransUnit == nil ||
-            isParentTransUnit(selectedTransUnit)
+            isParentTransUnit(selectedTransUnit) /// Pluralizable string is selected
         ) {
             menuItem.title = kMFStr_MarkAsTranslated; /// Setting the image/title here as well so they are not 'unitialized' raw values from the IB. [Oct 2025]
             menuItem.image = [NSImage imageWithSystemSymbolName: kMFStr_MarkAsTranslated_Symbol accessibilityDescription: nil];

@@ -70,7 +70,7 @@
 #pragma mark - Other utils shared between TableView.m and SourceList.m
 
     static NSMutableAttributedString *make_green_checkmark(NSString *axDescription) {
-        auto image = [NSImage imageWithSystemSymbolName: @"checkmark.circle" accessibilityDescription: axDescription]; /// Fixme: This disappears when you double-click it.
+        auto image = [NSImage imageWithSystemSymbolName: @"checkmark.circle" accessibilityDescription: axDescription]; /// TODO: This disappears when you double-click it.
         auto textAttachment = [NSTextAttachment new]; {
             [textAttachment setImage: image];
         }

@@ -39,7 +39,7 @@
 #pragma mark - Read & Write
 
     - (void) writeTranslationDataToFile {
-        /// TODO: Remove (old AppDelegate interface)
+        /// old AppDelegate interface
         [self saveDocument: nil];
     }
 
