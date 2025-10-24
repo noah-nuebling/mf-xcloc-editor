@@ -18,6 +18,7 @@
 #import "Constants.h"
 #import "XclocDocument.h"
 #import "RowUtils.h"
+#import "MFTextField.h"
 
 @implementation TableView
     {
@@ -134,6 +135,42 @@
             }
             
             [getdoc(self)->ctrl->out_sourceList.window makeFirstResponder: getdoc(self)->ctrl->out_sourceList]; /// Return focus to sidebar when user hits escape while editing transUnits. Also see other `cancelOperation:` overrides. [Oct 2025]
+        }
+    
+        - (BOOL) control: (NSControl*)control textView: (NSTextView*)textView doCommandBySelector: (SEL)commandSelector {
+            
+            BOOL didHandle = NO;
+         
+            if (isclass(control, MFTextField)) {
+                
+                /// Let users enter newlines in the `@"target"` cells' (without holding Option – which may not be discoverable)
+                ///     Src: https://developer.apple.com/library/archive/qa/qa1454/_index.html
+                ///     Implementing this in TableView cause TableView is the delegate of `MFTextField`. Not sure if that's good. [Oct 2025]
+                ///     Idea: Could also instead add shift-return for newline to make it more discoverable for LLM users.
+                
+                {
+                    if (commandSelector == @selector(insertNewline:)) { /// Map Return -> newline
+                        [textView insertNewlineIgnoringFieldEditor: self];
+                        didHandle = YES;
+                    }
+                    else if (commandSelector == @selector(insertNewlineIgnoringFieldEditor:)) { /// Map Option-Return -> end-editing (So we can still navigate everything with the keyboard)
+                        [textView insertNewline: self];
+                        didHandle = YES;
+                    }
+                }
+                
+                /// Let users enter tabs (without holding Option)
+                ///     Not actually sure this is a good idea? (If I used indentation in any MMF UIStrings, I mustve used spaces not tabs) [Oct 2025]
+                if ((1))
+                {
+                    if (commandSelector == @selector(insertTab:)) {
+                        [textView insertTabIgnoringFieldEditor: self];
+                        didHandle = YES;
+                    }
+                }
+            }
+         
+            return didHandle;
         }
     
     #pragma mark - Sorting
