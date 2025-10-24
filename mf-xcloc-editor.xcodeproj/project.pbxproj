@@ -53,6 +53,7 @@
 		4FF08E302EAAA7DC00BBE492 /* NSAttributedString+Additions.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSAttributedString+Additions.m"; sourceTree = "<group>"; };
 		4FF08E332EAAC57E00BBE492 /* MFTextField.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MFTextField.h; sourceTree = "<group>"; };
 		4FF08E342EAAC57E00BBE492 /* MFTextField.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MFTextField.m; sourceTree = "<group>"; };
+		4FF08EEB2EAB685600BBE492 /* RowUtils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RowUtils.h; sourceTree = "<group>"; };
 		4FF428612DF63AB2008F2D74 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		4FF428622DF63AB2008F2D74 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		4FF428632DF63AB2008F2D74 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -130,6 +131,7 @@
 				4F7E02D02EA7758700C2F693 /* NSObject+Additions.m */,
 				4FF428662DF63AB2008F2D74 /* MainMenu.xib */,
 				4FC6FA622E6A0BA700459F13 /* ReusableViews.xib */,
+				4FF08EEB2EAB685600BBE492 /* RowUtils.h */,
 				4FF447A82DF701EE008F2D74 /* SourceList.h */,
 				4FF447A92DF701EE008F2D74 /* SourceList.m */,
 				4FF447A42DF6BC6E008F2D74 /* TableView.h */,

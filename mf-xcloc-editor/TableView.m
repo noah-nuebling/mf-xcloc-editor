@@ -17,25 +17,7 @@
 #import "MFQLPreviewItem.h"
 #import "Constants.h"
 #import "XclocDocument.h"
-
-#define kMFTransUnitState_Translated      @"translated"
-#define kMFTransUnitState_DontTranslate   @"mf_dont_translate"
-#define kMFTransUnitState_New             @"new"
-#define kMFTransUnitState_NeedsReview     @"needs-review-l10n"
-static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct 2025]
-    kMFTransUnitState_New,
-    kMFTransUnitState_NeedsReview,
-    kMFTransUnitState_Translated,
-    kMFTransUnitState_DontTranslate
-];
-
-/// Column-ids
-///     ... Actually feels fine just using the strings directly [Oct 2025]
-#define kColID_ID       @"id"
-#define kColID_State    @"state"
-#define kColID_Source   @"source"
-#define kColID_Target   @"target"
-#define kColID_Note     @"note"
+#import "RowUtils.h"
 
 @implementation TableView
     {
@@ -245,36 +227,6 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
             return desc.ascending ? comp : -comp;
         }];
     }
-
-     NSString *rowModel_getCellModel(NSXMLElement *transUnit, NSString *columnID) {
-        if ((0)) {}
-            else if ([columnID isEqual: @"id"])        return xml_attr(transUnit, @"id")           .objectValue;
-            else if ([columnID isEqual: @"source"])    return xml_childnamed(transUnit, @"source") .objectValue;
-            else if ([columnID isEqual: @"target"])    return xml_childnamed(transUnit, @"target") .objectValue ?: @""; /// ?: cause `<target>` sometimes doesnt' exist. [Oct 2025]
-            else if ([columnID isEqual: @"note"])      return xml_childnamed(transUnit, @"note")   .objectValue;
-            else if ([columnID isEqual: @"state"]) {
-                if ([xml_attr(transUnit, @"translate").objectValue isEqual: @"no"])
-                    return kMFTransUnitState_DontTranslate;
-                else
-                    return xml_attr((NSXMLElement *)xml_childnamed(transUnit, @"target"), @"state").objectValue ?: @""; /// ?: cause `<target>` sometimes doesnt' exist. [Oct 2025]
-            }
-        else assert(false);
-        return nil;
-    }
-     void rowModel_setCellModel(NSXMLElement *transUnit, NSString *columnID, NSString *newValue) {
-        if ((0)) {}
-            else if ([columnID isEqual: @"id"])        xml_attr(transUnit, @"id")          .objectValue = newValue;
-            else if ([columnID isEqual: @"source"])    xml_childnamed(transUnit, @"source").objectValue = newValue;
-            else if ([columnID isEqual: @"target"])    xml_childnamed(transUnit, @"target").objectValue = newValue;
-            else if ([columnID isEqual: @"note"])      xml_childnamed(transUnit, @"note")  .objectValue = newValue;
-            else if ([columnID isEqual: @"state"]) {
-                if ([newValue isEqual: kMFTransUnitState_DontTranslate])
-                    xml_attr(transUnit, @"translate").objectValue = @"no";
-                else
-                    xml_attr((NSXMLElement *)xml_childnamed(transUnit, @"target"), @"state").objectValue = newValue;
-            }
-        else assert(false);
-    };
 
 
 - (void) restoreSelectionWithPreviouslySelectedRowID: (NSString *)previouslySelectedRowID {
@@ -596,6 +548,7 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
             columnIndexes:              [NSIndexSet indexSetWithIndex: [self indexOfColumnWithIdentifier: @"state"]]
         ];
         [getdoc(self) writeTranslationDataToFile];
+        [getdoc(self)->ctrl->out_sourceList progressHasChanged]; /// Update the progress percentage indicators
     }
     
     - (BOOL) rowIsTranslated: (NSInteger)row {
@@ -653,7 +606,7 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
                 if      (iscol(@"id"))       {}
                 else if (iscol(@"source"))   uiString = @"(pluralizable)";
                 else if (iscol(@"target")) { uiString = @"(pluralizable)"; targetCellShouldBeEditable = false; } /// We never want the `%#@formatSstring@` to be changed by the translators, so we override it. We don't hide it cause 1.  it holds the comment and 2. we like having a 1-to-1 relationship between transUnits and rows in the table.
-                else if (iscol(@"state"))    uiString = @"(pluralizable)";
+                else if (iscol(@"state"))    { if ((0)) uiString = @"(pluralizable)"; }
                 else if (iscol(@"note"))     {}
                 else                         assert(false);
             }
@@ -680,13 +633,8 @@ static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct
         if (iscol(@"state")) {
             if ((0)) {}
                 else if ([uiString isEqual: kMFTransUnitState_Translated]) {
-                    auto image = [NSImage imageWithSystemSymbolName: @"checkmark.circle" accessibilityDescription: uiString]; /// Fixme: This disappears when you double-click it.
-                    auto textAttachment = [NSTextAttachment new]; {
-                        [textAttachment setImage: image];
-                    }
-                    uiStringAttributed = [NSAttributedString attributedStringWithAttachment: textAttachment attributes: @{
-                        NSForegroundColorAttributeName: [NSColor systemGreenColor]
-                    }];
+                    uiStringAttributed = make_green_checkmark(uiString);
+                    
                 }
                 else if ([uiString isEqual: kMFTransUnitState_DontTranslate]) {
                     uiStringAttributed = attributed(@"DON'T TRANSLATE");

@@ -12,6 +12,7 @@
 #import "Utility.h"
 #import "AppDelegate.h"
 #import "XclocDocument.h"
+#import "RowUtils.h"
 
 @interface File : NSObject
     {
@@ -164,6 +165,56 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
         [self->files insertObject: File_Make(transUnitsFromAllFiles, @"All Documents") atIndex: 0];
     }
     
+    - (void) progressHasChanged {
+
+        /// This seems to complicated for what we're doing – why two methods for this? [Oct 2025]
+        for (NSInteger row = 0; row < self.numberOfRows; row++) {
+            auto cell = [self viewAtColumn: 0 row: row makeIfNecessary: NO];
+            [self updateProgressInCell: cell withFile: files[row]];
+        }
+    }
+    
+    - (void) updateProgressInCell: (NSTableCellView *)cell withFile: (File *)file {
+    
+        NSTextField *progressField = firstmatch(cell.subviews, cell.subviews.count, nil, v, [v.identifier isEqual: @"progess-field"]);
+        progressField.attributedStringValue = ({
+            
+            /// Determine progress percent
+            double progress = -1;
+            {
+                NSInteger count_translated = 0;
+                NSInteger count_all = 0;
+                for  (NSXMLElement *transUnit in file->transUnits) {
+                    if ([rowModel_getCellModel(transUnit, @"state") isEqual: kMFTransUnitState_Translated])
+                        count_translated += 1;
+                    count_all += 1;
+                }
+                progress = (double)count_translated / count_all;
+                
+                if ((0)) mflog(@"locprogress: %@ (%@), translated: %@, all: %@", @(progress), @((int)(progress * 100)), @(count_translated), @(count_all));
+            }
+            
+            /// Create string
+            auto v =  [[NSMutableAttributedString alloc] initWithString: stringf(@"%d%%", (int)(progress * 100))];
+            if (progress == 1.0) {
+                v = make_green_checkmark(@"100%");
+                [v
+                    addAttribute: NSFontAttributeName
+                    value: [NSFont systemFontOfSize: 12]
+                    range: NSMakeRange(0, v.length)
+                ];
+            }
+            else {
+                [v
+                    addAttribute: NSFontAttributeName
+                    value: [NSFont systemFontOfSize: 12]
+                    range: NSMakeRange(0, v.length)
+                ];
+            }
+            v;
+        });
+    }
+    
     #pragma mark - Keyboard Control
     
         - (void) keyDown: (NSEvent *)event {
@@ -222,6 +273,9 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
         /// There's only one column so we can ignore it.
         NSTableCellView *cell = [self makeViewWithIdentifier: @"theReusableCell_Outline" owner: self]; /// Not sure if owner=self is right. Also see TableView.m
         cell.textField.stringValue = [self uiStringForFile: file];
+        
+        [self updateProgressInCell: cell withFile: file];
+        
         return cell;
     }
 

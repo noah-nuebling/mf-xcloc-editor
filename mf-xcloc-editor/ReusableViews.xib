@@ -12,20 +12,35 @@
             <rect key="frame" x="0.0" y="0.0" width="225" height="31"/>
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
             <subviews>
-                <textField focusRingType="none" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Skj-PT-qtH">
-                    <rect key="frame" x="2" y="7" width="222" height="17"/>
-                    <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
+                <textField focusRingType="none" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Skj-PT-qtH">
+                    <rect key="frame" x="0.0" y="8" width="173" height="15"/>
                     <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" title="Outline View Cell" id="MIF-Jj-5bO">
-                        <font key="font" metaFont="system"/>
+                        <font key="font" metaFont="system" size="12"/>
                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                     </textFieldCell>
                 </textField>
+                <textField identifier="progess-field" focusRingType="none" horizontalHuggingPriority="1000" verticalHuggingPriority="750" horizontalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="Bgg-yc-Yse">
+                    <rect key="frame" x="171" y="8" width="54" height="15"/>
+                    <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" alignment="right" title="progress" id="0qK-VE-icK">
+                        <font key="font" metaFont="system" size="12"/>
+                        <color key="textColor" name="secondaryLabelColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
             </subviews>
+            <constraints>
+                <constraint firstAttribute="trailing" secondItem="Bgg-yc-Yse" secondAttribute="trailing" constant="2" id="2sh-CD-bQF"/>
+                <constraint firstItem="Bgg-yc-Yse" firstAttribute="centerY" secondItem="Skj-PT-qtH" secondAttribute="centerY" id="Hno-6C-ZYd"/>
+                <constraint firstAttribute="bottom" secondItem="Skj-PT-qtH" secondAttribute="bottom" constant="8" id="Jre-VQ-Soi"/>
+                <constraint firstItem="Skj-PT-qtH" firstAttribute="leading" secondItem="iap-cr-ptc" secondAttribute="leading" constant="2" id="coO-sS-rzh"/>
+                <constraint firstItem="Skj-PT-qtH" firstAttribute="top" secondItem="iap-cr-ptc" secondAttribute="top" constant="8" id="lrv-S0-BRB"/>
+                <constraint firstItem="Bgg-yc-Yse" firstAttribute="leading" secondItem="Skj-PT-qtH" secondAttribute="trailing" constant="2" id="wig-nj-ir8"/>
+            </constraints>
             <connections>
                 <outlet property="textField" destination="Skj-PT-qtH" id="49P-0K-5VG"/>
             </connections>
-            <point key="canvasLocation" x="-449" y="-239"/>
+            <point key="canvasLocation" x="-449.5" y="-239.5"/>
         </tableCellView>
         <tableCellView identifier="theReusableCell_Table" verticalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="Fin-0A-5dD" userLabel="Table Cell">
             <rect key="frame" x="0.0" y="0.0" width="115" height="31"/>
