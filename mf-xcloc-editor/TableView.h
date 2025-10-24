@@ -23,6 +23,7 @@
     - (void) updateFilter: (NSString *)newFilterString;
     - (IBAction)togglePreviewPanel:(id)previewPanel;
     - (void) returnFocus;
-    - (void) toggleIsTranslatedState: (NSInteger)row;
-    - (BOOL) rowIsTranslated: (NSInteger)row;
+    - (void) toggleIsTranslatedState: (NSXMLElement *)transUnit;
+    - (BOOL) rowIsTranslated: (NSXMLElement *)transUnit;
+    - (NSXMLElement *) selectedRowModel;
 @end

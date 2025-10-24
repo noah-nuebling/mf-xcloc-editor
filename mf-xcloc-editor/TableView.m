@@ -194,6 +194,11 @@
 
     #pragma mark - Data
     
+    
+    - (NSXMLElement *) selectedRowModel {
+        return [self rowModel: self.selectedRow];
+    }
+    
     - (NSXMLElement *) rowModel: (NSInteger)row {
         if (row == -1) return nil; /// `self.selectedRow` can return -1 if no row is selected
         return _displayedTransUnits[row];
@@ -567,29 +572,65 @@
         }
         return -1;
     }
-    
     - (void) tableMenuItemClicked: (NSMenuItem *)menuItem {
-        [self toggleIsTranslatedState: self.clickedRow]; /// All our menuItems are for toggling and `validateMenuItem:` makes it so we can only toggle [Oct 2025]
+        [self toggleIsTranslatedState: self.selectedRowModel]; /// All our menuItems are for toggling and `validateMenuItem:` makes it so we can only toggle [Oct 2025]
     }
     
-    - (void) toggleIsTranslatedState: (NSInteger)row {
+    - (void) toggleIsTranslatedState: (NSXMLElement *)transUnit {
         
-        auto transUnit = [self rowModel: row];
-        if (![self rowIsTranslated: row])
+        BOOL isTranslated = [self rowIsTranslated: transUnit];
+        
+        /// Register undo / redo
+        {
+            auto undoManager = [getdoc(self) undoManager];
+            [[undoManager prepareWithInvocationTarget: self] toggleIsTranslatedState: transUnit]; /// Just calling toggle to undo could become incorrect if anything else except this method updates the state.
+            [undoManager setActionName: (isTranslated ^ [undoManager isUndoing]) ? kMFStr_MarkForReview : kMFStr_MarkAsTranslated];
+        }
+        
+        /// Update datamodel
+        if (!isTranslated)
             rowModel_setCellModel(transUnit, @"state", kMFTransUnitState_Translated);
         else
             rowModel_setCellModel(transUnit, @"state", kMFTransUnitState_NeedsReview);
         
+        /// Save to disk
+        [getdoc(self) writeTranslationDataToFile];
+        [getdoc(self)->ctrl->out_sourceList progressHasChanged]; /// Update the progress percentage indicators
+        
+        /// `Find transUnit in UI`
+        ///     I think this is only necessary if we're undoing. Otherwise the row we're toggling will already be on-screen and selected
+        NSInteger row = [_displayedTransUnits indexOfObject: transUnit];
+        if (row == NSNotFound) {
+            /// Remove the filter
+            [getdoc(self)->ctrl->out_filterField setStringValue: @""];
+            [self updateFilter: @""]; /// Maybe be unnecessary – Updating `out_filterField` may call this automatically
+            /// Try again
+            row = [_displayedTransUnits indexOfObject: transUnit];
+        }
+        if (row == NSNotFound) {
+            /// Navigate to AllDocuments
+            [getdoc(self)->ctrl->out_sourceList showAllTransUnits];
+            row = [_displayedTransUnits indexOfObject: transUnit];
+        }
+        if (row == NSNotFound) {
+            assert(false); /// Give up – don't think this can happen.
+        }
+        
+        /// Reload transUnit UI
+        ///     (Don't think this is necessary if we called `updateFilter:` or `showAllTransUnits`, cause those will already have reloaded the whole table[Oct 2025]
         [self /// Specifying rows and colums  to updatefor speedup, but I think the delay is just built in to NSMenu  (macOS Tahoe, [Oct 2025])
             reloadDataForRowIndexes:    [NSIndexSet indexSetWithIndex: row]
             columnIndexes:              [NSIndexSet indexSetWithIndex: [self indexOfColumnWithIdentifier: @"state"]]
         ];
-        [getdoc(self) writeTranslationDataToFile];
-        [getdoc(self)->ctrl->out_sourceList progressHasChanged]; /// Update the progress percentage indicators
+        
+        /// Show transUnit row
+        ///     Should only be necessary if we're undoing. See `Find transUnit in UI` above [Oct 2025]
+        [self selectRowIndexes: [NSIndexSet indexSetWithIndex: row] byExtendingSelection: NO];
+        [self scrollRowToVisible: row];
+        
     }
     
-    - (BOOL) rowIsTranslated: (NSInteger)row {
-        auto transUnit = [self rowModel: row];
+    - (BOOL) rowIsTranslated: (NSXMLElement *)transUnit {
         auto state = rowModel_getCellModel(transUnit, @"state");
         return [state isEqual: kMFTransUnitState_Translated];
     }

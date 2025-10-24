@@ -29,12 +29,15 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
     return f;
 }
 
+#define kMFPath_AllDocuments @"All Documents"
+
 
 @implementation SourceList
     {
     
 
         NSMutableArray <File *> *files;
+        NSArray<NSXMLElement *> *_transUnitsFromAllFiles; /// Gives each transUnit a unique ID, which we need for undo/redo [Oct 2025]
     }
 
     #pragma mark - Lifecycle
@@ -162,8 +165,20 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
                 [transUnitsFromAllFiles addObjectsFromArray: filteredTransUnits];
             }
         }
-        [self->files insertObject: File_Make(transUnitsFromAllFiles, @"All Documents") atIndex: 0];
+        [self->files insertObject: File_Make(transUnitsFromAllFiles, kMFPath_AllDocuments) atIndex: 0];
+        self->_transUnitsFromAllFiles = transUnitsFromAllFiles;
     }
+    
+    - (void) showAllTransUnits {
+    
+        NSInteger row = NSNotFound;
+        for (NSInteger i = 0; i < self->files.count; i++)
+            if ([self->files[i]->path isEqual: kMFPath_AllDocuments])
+                { row = i; break; }
+
+        [self selectRowIndexes: [NSIndexSet indexSetWithIndex: row] byExtendingSelection: NO];
+    }
+    
     
     - (void) progressHasChanged {
 

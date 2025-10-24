@@ -12,5 +12,6 @@
     - (void) setXliffDoc: (NSXMLDocument *)xliffDoc;
 
     - (void) progressHasChanged;
+    - (void) showAllTransUnits;
 
 @end
