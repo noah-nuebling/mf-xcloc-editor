@@ -87,6 +87,15 @@
         assert(!self.window);
         {
             
+            /// TODO: Get it to show standard right-clickable document title
+            /// TODO: Make sidebar pretty
+            /// TODO: Improve table row header UI strings
+            /// TODO: Fix layout jank on @"id" and @"state" cells (sometimes disappear)
+            /// TODO: Make filterField pretty
+            /// TODO: Disable lines behind empty rows
+            /// TODO: Update App Name
+            /// TODO: Update App Icon (?)
+            
             window = [NSWindow new];
             window.styleMask = 0
                 | NSWindowStyleMaskClosable

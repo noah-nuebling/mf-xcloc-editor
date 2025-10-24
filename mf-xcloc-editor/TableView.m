@@ -122,7 +122,7 @@
             else {
                 if (eventIsKey(theEvent, NSLeftArrowFunctionKey))   /// Select the sourceList
                     [getdoc(self)->ctrl->out_sourceList.window makeFirstResponder: getdoc(self)->ctrl->out_sourceList];
-                else if (eventIsKey(theEvent, ' '))	/// Space key opens the preview panel. || TODO: Also support Command-Y (using Menu Item)
+                else if (eventIsKey(theEvent, ' '))	/// Space key opens the preview panel. Also supports Command-Y (using Menu Item)
                     [self togglePreviewPanel: self];
                 else
                     [super keyDown: theEvent]; /// Handling of UpArrow and DownArrow is built-in to `NSTableView` [Oct 2025]
@@ -525,7 +525,7 @@
                 return;
             }
             - (void) endPreviewPanelControl: (QLPreviewPanel *)panel {
-                _lastQLPanelDisplayState = [panel displayState]; /// This is always nil. || TODO: Make QLPanel window default sizes better & implement size restoration
+                _lastQLPanelDisplayState = [panel displayState];
                 return;
             }
 
@@ -860,7 +860,7 @@
                 cell.textField.selectable = YES;
                 
                 if (iscol(@"target")) {
-                    [cell.textField setEditable: targetCellShouldBeEditable]; /// FIxme: Editable disables the intrinsic height, causing content to be truncated. [Oct 2025]
+                    [cell.textField setEditable: targetCellShouldBeEditable];
                 }
                 else if (iscol(@"id")) {
                     auto matchingPlistEntry = [self _localizedStringsDataPlist_GetEntryForRowModel: transUnit];
