@@ -977,6 +977,13 @@
         #undef iscol
     }
 
+    #pragma mark - NSOutlineView subclass
+    
+    - (void) reloadData {
+        [super reloadData];
+        [self expandItem: nil expandChildren: YES]; /// mfunexpand – Expand all items by default. || We're also using `reloadDataForRowIndexes:` additionally to `reloadData`, but overriding that doesn't seem necessary to keep the items expanded [Oct 2025]
+    }
+
     #pragma mark - NSOutlineViewDelegate
 
     - (void) outlineViewSelectionDidChange: (NSNotification *)notification {
