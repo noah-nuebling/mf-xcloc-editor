@@ -200,7 +200,8 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
                 NSInteger count_translated = 0;
                 NSInteger count_all = 0;
                 for  (NSXMLElement *transUnit in file->transUnits) {
-                    if (isParentTransUnit(transUnit)) continue; /// Ignore the isTranslated state of parentRows see `stateOfRowModel:`
+                    if (rowModel_isParent(transUnit))
+                        continue; /// Ignore the isTranslated state of parentRows see `stateOfRowModel:`
                     if ([rowModel_getCellModel(transUnit, @"state") isEqual: kMFTransUnitState_Translated])
                         count_translated += 1;
                     count_all += 1;
@@ -211,23 +212,23 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
             }
             
             /// Create string
-            auto v =  [[NSMutableAttributedString alloc] initWithString: stringf(@"%d%%", (int)(progress * 100))];
+            auto s =  [[NSMutableAttributedString alloc] initWithString: stringf(@"%d%%", (int)(progress * 100))];
             if (progress == 1.0) {
-                v = make_green_checkmark(@"100%");
-                [v
+                s = make_green_checkmark(@"100%");
+                [s
                     addAttribute: NSFontAttributeName
                     value: [NSFont systemFontOfSize: 12]
-                    range: NSMakeRange(0, v.length)
+                    range: NSMakeRange(0, s.length)
                 ];
             }
             else {
-                [v
+                [s
                     addAttribute: NSFontAttributeName
                     value: [NSFont systemFontOfSize: 12]
-                    range: NSMakeRange(0, v.length)
+                    range: NSMakeRange(0, s.length)
                 ];
             }
-            v;
+            s;
         });
     }
     

@@ -117,7 +117,7 @@
         
         if ([[self stateOfRowModel: transUnit] isEqual: @"mf_dont_translate"])
             return NO;
-        if (isParentTransUnit(transUnit))
+        if (rowModel_isParent(transUnit))
             return NO;
         if (
             [[self stateOfRowModel: transUnit] isEqual: kMFTransUnitState_Translated] &&
@@ -265,7 +265,7 @@
                     NSString *parentId = xml_attr(potentialParent, @"id").objectValue;
                     if ([parentId isEqual: baseKey]) { /// Found parent
                     
-                        assert(isParentTransUnit(potentialParent)); /// Make sure our utility function works.
+                        assert(rowModel_isParent(potentialParent)); /// Make sure our utility function works.
                         
                         NSMutableArray *children = (NSMutableArray *)_childrenMap[potentialParent];
                         if (!children) {
@@ -638,7 +638,7 @@
         
         /// Handle pluralizable strings
         {
-            if (isParentTransUnit(transUnit)) {
+            if (rowModel_isParent(transUnit)) {
                 if      (iscol(@"id"))       {}
                 else if (iscol(@"source"))   uiString = @"(pluralizable)";
                 else if (iscol(@"target")) { uiString = @"(pluralizable)"; targetCellShouldBeEditable = false; } /// We never want the `%#@formatSstring@` to be changed by the translators, so we override it.

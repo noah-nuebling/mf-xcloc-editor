@@ -63,7 +63,7 @@
         else assert(false);
     };
     
-    static BOOL isParentTransUnit(NSXMLElement *transUnit) { /// Detects the `%#@formatSstring@` of pluralizable strings (parent row)
+    static BOOL rowModel_isParent(NSXMLElement *transUnit) { /// Detects the `%#@formatSstring@` of pluralizable strings (parent row)
         return [rowModel_getCellModel(transUnit, @"source") containsString: @"%#@"];
     }
 

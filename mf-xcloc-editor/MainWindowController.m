@@ -98,6 +98,7 @@
             /// TODO: Remove fat underline under TableColumns
             /// TODO: Better default column-widths
             /// TODO: Make text-selection in cells less ugly
+            /// TODO: Fix issue where double-clicking / triple-clicking /...  a row does nothing (instead of starting text-editing)
             
             window = [NSWindow new];
             window.styleMask = 0
