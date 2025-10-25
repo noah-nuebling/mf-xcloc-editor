@@ -214,9 +214,6 @@
         [self->ctrl->out_sourceList setXliffDoc: self->_xliffDoc];
         [self->ctrl->out_sourceList reloadData];
     }
-    
-    /// Open window (Does this belong here?)
-    if ((0)) [self->ctrl.window makeKeyAndOrderFront: nil];
 }
 NSString *getXliffPath(NSString *xclocPath) {
     auto xliff = findPaths(xclocPath, ^BOOL (NSString *p){

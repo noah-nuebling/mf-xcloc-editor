@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4F33326C2EACC15000055FFC /* FileProvider.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F33326B2EACC15000055FFC /* FileProvider.framework */; };
 		4F4CFDBF2EA8D4F30047E5E8 /* MFQLPreviewItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 4F4CFDBE2EA8D4F30047E5E8 /* MFQLPreviewItem.m */; };
 		4F7E02D12EA7758800C2F693 /* NSObject+Additions.m in Sources */ = {isa = PBXBuildFile; fileRef = 4F7E02D02EA7758700C2F693 /* NSObject+Additions.m */; };
 		4FAD64792E69D1DD00643726 /* MainWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4FAD64782E69D1DD00643726 /* MainWindowController.m */; };
@@ -38,6 +39,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		4F33326B2EACC15000055FFC /* FileProvider.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = FileProvider.framework; path = System/Library/PrivateFrameworks/FileProvider.framework; sourceTree = SDKROOT; };
 		4F4CFDBD2EA8D4F30047E5E8 /* MFQLPreviewItem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MFQLPreviewItem.h; sourceTree = "<group>"; };
 		4F4CFDBE2EA8D4F30047E5E8 /* MFQLPreviewItem.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MFQLPreviewItem.m; sourceTree = "<group>"; };
 		4F7E02CF2EA7758700C2F693 /* NSObject+Additions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSObject+Additions.h"; sourceTree = "<group>"; };
@@ -78,6 +80,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4F33326C2EACC15000055FFC /* FileProvider.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -150,6 +153,7 @@
 		4FF4474D2DF64197008F2D74 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				4F33326B2EACC15000055FFC /* FileProvider.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -417,6 +421,10 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.nuebling.mf-xcloc-editor";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SYSTEM_FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SDKROOT)$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks",
+				);
 			};
 			name = Debug;
 		};
@@ -448,6 +456,10 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.nuebling.mf-xcloc-editor";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SYSTEM_FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SDKROOT)$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks",
+				);
 			};
 			name = Release;
 		};

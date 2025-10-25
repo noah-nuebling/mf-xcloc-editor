@@ -17,6 +17,7 @@
 
 #import "XclocDocument.h"
 
+
 @interface TitlbarAccessoryViewController : NSTitlebarAccessoryViewController @end
 @implementation TitlbarAccessoryViewController { @public NSView *_theView; }
     - (void)loadView { self.view = _theView; }
@@ -181,6 +182,9 @@
         
         /// Open window
         [window makeKeyAndOrderFront: nil];
+        
+        /// Store window
+        [self setWindow: window];
     }
     
     - (void) windowWillClose: (NSNotification *)notification { /// Note: We force this to be called in `applicationShouldTerminate:` [Oct 2025]
