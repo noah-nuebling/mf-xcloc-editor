@@ -40,7 +40,10 @@
         self.dataSource = self;
         
         /// Configure style
-        self.gridStyleMask = /*NSTableViewSolidVerticalGridLineMask |*/ NSTableViewSolidHorizontalGridLineMask;
+        self.gridStyleMask = 0
+            | NSTableViewSolidVerticalGridLineMask
+            | NSTableViewSolidHorizontalGridLineMask
+        ;
         self.style = NSTableViewStyleFullWidth;
         self.usesAutomaticRowHeights = YES;
         self.indentationPerLevel = 20.0;
@@ -58,12 +61,13 @@
                 v.title = title;
                 return v;
             };
-            NSTableColumn *idCol = mfui_tablecol(@"id", @"ID");
+            
+            NSTableColumn *idCol = mfui_tablecol(@"id", @"Key");
             [self addTableColumn: idCol];
             [self addTableColumn: mfui_tablecol(@"state",  @"State")];
-            [self addTableColumn: mfui_tablecol(@"source", @"Source")];
-            [self addTableColumn: mfui_tablecol(@"target", @"Target")];
-            [self addTableColumn: mfui_tablecol(@"note",   @"Note")];
+            [self addTableColumn: mfui_tablecol(@"source", @"")]; /// Set in `reloadWithNewData:` [Oct 2025]
+            [self addTableColumn: mfui_tablecol(@"target", @"")];
+            [self addTableColumn: mfui_tablecol(@"note",   @"Comment")];
 
             /// Set the ID column as the outline column (shows disclosure triangles)
             [self setOutlineTableColumn: idCol];
@@ -95,6 +99,17 @@
         
         /// Return
         return self;
+    }
+    
+    #pragma mark - Drawing
+    
+    - (void) drawGridInClipRect: (NSRect)clipRect {
+        /// Src: https://stackoverflow.com/a/6844340
+        ///     Only affects horizontal grid
+        NSRect lastRowRect = [self rectOfRow:[self numberOfRows]-1];
+        NSRect myClipRect = NSMakeRect(0, 0, lastRowRect.size.width, NSMaxY(lastRowRect));
+        NSRect finalClipRect = NSIntersectionRect(clipRect, myClipRect);
+        [super drawGridInClipRect:finalClipRect];
     }
     
     #pragma mark - Menu Items
@@ -142,12 +157,19 @@
             /// After another UIElement has had keyboardFocus, it can use this method to give it back to the `TableView`
             
             [self.window makeFirstResponder: self];
-            if (self.selectedRow == -1) {
-                NSInteger row = [self rowAtPoint: NSMakePoint(0, self.visibleRect.origin.y + self.headerView.frame.size.height)]; /// Get first displayed row on screen. || On `self.headerView` usage: Currently seeing `self.visibleRect.origin.y` be `-28`. The visibleRect is 28 taller than the frame. `self.headerView` is 28 tall, so we're using that to compensate[Oct 2025]
-                [self selectRowIndexes: [NSIndexSet indexSetWithIndex: row] byExtendingSelection: NO];
+            
+            NSInteger rowToSelect = -1;
+            NSRange visibleRows = [self rowsInRect: [self visibleRect]]; /// Just using visibleRect includes area rendered behind titlebar / columnHeaders. Src: https://stackoverflow.com/a/39920483
+            if (NSLocationInRange(self.selectedRow, visibleRows))   rowToSelect = self.selectedRow;     /// Use currently selected row
+            if (rowToSelect == -1)                                  rowToSelect = visibleRows.location; /// Select first visible row
+            
+            if (rowToSelect != -1) {
+                [self selectRowIndexes: [NSIndexSet indexSetWithIndex: rowToSelect] byExtendingSelection: NO];
             }
+            else assert(false);
+            
             runOnMain(0.0, ^{ /// See other uses of `scrollRowToVisible:` || I'm not sure it helps here since we don't call this after reloading the data [Oct 2025] ... No I think it does help
-                [self scrollRowToVisible: self.selectedRow];
+                [self scrollRowToVisible: rowToSelect];
             });
             
             
@@ -220,6 +242,23 @@
          
             return didHandle;
         }
+        
+    #pragma mark - NSControlTextEditingDelegate (Callbacks for the MFTextField)
+    
+    - (void) controlTextDidBeginEditing: (NSNotification *)notification {
+        NSTextField *textField = notification.object;
+        _lastTargetCellString = textField.stringValue; /// Track whether textField content was actually changed inside `controlTextDidEndEditing:`. Would be nicer if we could use callbacks instead of ivars. [Oct 2025]
+    }
+    - (void) controlTextDidEndEditing: (NSNotification *)notification {
+            
+        NSTextField *textField = notification.object;
+        if (!textField.editable) return;  /// This is also called for selectable textFields.
+        assert(isclass(textField, MFTextField));
+        auto selectedItem = [self selectedItem];
+        assert(selectedItem);
+        if (![_lastTargetCellString isEqual: textField.stringValue])
+            [self setTranslation: textField.stringValue andIsTranslated: YES onRowModel: [self selectedItem]]; /// We also save if the user cancels editing by pressing escape – but they can always Command-Z to undo. [Oct 2025]
+    }
     
     #pragma mark - Sorting
 
@@ -399,6 +438,17 @@
         
         self->_transUnits = transUnits;
         [self bigUpdateAndStuff];
+            
+        /// Update column names (weird place to do this) [Oct 2025]
+        {
+            auto srcCol = [self tableColumnWithIdentifier: @"source"];
+            if (!srcCol.title.length)
+                srcCol.title = stringf(@"Original (%@)",    getdoc(self)->ctrl->out_sourceList->sourceLanguage);
+        
+            auto targetCol = [self tableColumnWithIdentifier: @"target"];
+            if (!targetCol.title.length)
+                targetCol.title = stringf(@"Translation (%@)",    getdoc(self)->ctrl->out_sourceList->targetLanguage);
+        }
 
     }
     
@@ -769,22 +819,6 @@
     - (void) outlineViewSelectionDidChange: (NSNotification *)notification {
         [QLPreviewPanel.sharedPreviewPanel reloadData];
     }
-    
-    #pragma mark - NSControlTextEditingDelegate (Callbacks for the NSTextField)
-    
-
-    - (void) controlTextDidBeginEditing: (NSNotification *)notification {
-        NSTextField *textField = notification.object;
-        _lastTargetCellString = textField.stringValue; /// Track whether textField content was actually changed inside `controlTextDidEndEditing:`. Would be nicer if we could use callbacks instead of ivars. [Oct 2025]
-    }
-
-    - (void) controlTextDidEndEditing: (NSNotification *)notification {
-            
-        NSTextField *textField = notification.object;
-        if (textField.editable) /// This is also called for selectable textFields.
-            if (![_lastTargetCellString isEqual: textField.stringValue])
-                [self setTranslation: textField.stringValue andIsTranslated: YES onRowModel: [self selectedItem]];
-    }
 
 
     #pragma mark - Quick Look
@@ -820,7 +854,7 @@
             */
             
             NSDictionary *matchingPlistEntry = nil;
-            for (NSDictionary *entry in getdoc(self).localizedStringsDataPlist) {
+            for (NSDictionary *entry in getdoc(self)->_localizedStringsDataPlist) {
                 if ([entry[@"stringKey"] isEqual: rowModel_getCellModel(transUnit, @"id")]) {
                     if (matchingPlistEntry) assert(false); /// Multiple entries for this key
                     matchingPlistEntry = entry;

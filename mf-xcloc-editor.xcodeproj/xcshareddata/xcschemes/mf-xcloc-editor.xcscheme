@@ -16,8 +16,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "4FF4FA1C2DF6270F008F2D74"
-               BuildableName = "mf-xcloc-editor.app"
-               BlueprintName = "mf-xcloc-editor"
+               BuildableName = "MMF Xcloc Editor.app"
+               BlueprintName = "MMF Xcloc Editor"
                ReferencedContainer = "container:mf-xcloc-editor.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -45,8 +45,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "4FF4FA1C2DF6270F008F2D74"
-            BuildableName = "mf-xcloc-editor.app"
-            BlueprintName = "mf-xcloc-editor"
+            BuildableName = "MMF Xcloc Editor.app"
+            BlueprintName = "MMF Xcloc Editor"
             ReferencedContainer = "container:mf-xcloc-editor.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -62,8 +62,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "4FF4FA1C2DF6270F008F2D74"
-            BuildableName = "mf-xcloc-editor.app"
-            BlueprintName = "mf-xcloc-editor"
+            BuildableName = "MMF Xcloc Editor.app"
+            BlueprintName = "MMF Xcloc Editor"
             ReferencedContainer = "container:mf-xcloc-editor.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

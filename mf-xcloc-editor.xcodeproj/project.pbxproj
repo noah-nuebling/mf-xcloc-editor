@@ -7,12 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4F0C649E2EAD4296008B3506 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 4F0C649D2EAD41D5008B3506 /* AppIcon.icon */; };
 		4F33326C2EACC15000055FFC /* FileProvider.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F33326B2EACC15000055FFC /* FileProvider.framework */; };
 		4F4CFDBF2EA8D4F30047E5E8 /* MFQLPreviewItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 4F4CFDBE2EA8D4F30047E5E8 /* MFQLPreviewItem.m */; };
 		4F7E02D12EA7758800C2F693 /* NSObject+Additions.m in Sources */ = {isa = PBXBuildFile; fileRef = 4F7E02D02EA7758700C2F693 /* NSObject+Additions.m */; };
 		4FAD64792E69D1DD00643726 /* MainWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4FAD64782E69D1DD00643726 /* MainWindowController.m */; };
 		4FC6FA632E6A0BA700459F13 /* ReusableViews.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4FC6FA622E6A0BA700459F13 /* ReusableViews.xib */; };
-		4FC6FA652E6A365E00459F13 /* MFUI.m in Sources */ = {isa = PBXBuildFile; fileRef = 4FC6FA642E6A365E00459F13 /* MFUI.m */; };
 		4FF08E322EAAA8A100BBE492 /* NSAttributedString+Additions.m in Sources */ = {isa = PBXBuildFile; fileRef = 4FF08E302EAAA7DC00BBE492 /* NSAttributedString+Additions.m */; };
 		4FF08E352EAAC57E00BBE492 /* MFTextField.m in Sources */ = {isa = PBXBuildFile; fileRef = 4FF08E342EAAC57E00BBE492 /* MFTextField.m */; };
 		4FF436D22DF63AB3008F2D74 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4FF428632DF63AB2008F2D74 /* Assets.xcassets */; };
@@ -39,6 +39,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		4F0C649D2EAD41D5008B3506 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		4F33326B2EACC15000055FFC /* FileProvider.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = FileProvider.framework; path = System/Library/PrivateFrameworks/FileProvider.framework; sourceTree = SDKROOT; };
 		4F4CFDBD2EA8D4F30047E5E8 /* MFQLPreviewItem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MFQLPreviewItem.h; sourceTree = "<group>"; };
 		4F4CFDBE2EA8D4F30047E5E8 /* MFQLPreviewItem.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MFQLPreviewItem.m; sourceTree = "<group>"; };
@@ -49,7 +50,6 @@
 		4FAD64772E69D1DD00643726 /* MainWindowController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MainWindowController.h; sourceTree = "<group>"; };
 		4FAD64782E69D1DD00643726 /* MainWindowController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MainWindowController.m; sourceTree = "<group>"; };
 		4FC6FA622E6A0BA700459F13 /* ReusableViews.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ReusableViews.xib; sourceTree = "<group>"; };
-		4FC6FA642E6A365E00459F13 /* MFUI.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MFUI.m; sourceTree = "<group>"; };
 		4FC6FA662E6A367400459F13 /* MFUI.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MFUI.h; sourceTree = "<group>"; };
 		4FF08E2F2EAAA7DC00BBE492 /* NSAttributedString+Additions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSAttributedString+Additions.h"; sourceTree = "<group>"; };
 		4FF08E302EAAA7DC00BBE492 /* NSAttributedString+Additions.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSAttributedString+Additions.m"; sourceTree = "<group>"; };
@@ -68,7 +68,7 @@
 		4FF447A72DF6CB3A008F2D74 /* Utility.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Utility.h; sourceTree = "<group>"; };
 		4FF447A82DF701EE008F2D74 /* SourceList.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SourceList.h; sourceTree = "<group>"; };
 		4FF447A92DF701EE008F2D74 /* SourceList.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SourceList.m; sourceTree = "<group>"; };
-		4FF4FA1D2DF6270F008F2D74 /* mf-xcloc-editor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "mf-xcloc-editor.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		4FF4FA1D2DF6270F008F2D74 /* MMF Xcloc Editor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "MMF Xcloc Editor.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4FFBA6B22EA9A1FF00CF1A71 /* Constants.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Constants.h; sourceTree = "<group>"; };
 		4FFBA6B32EAA14AF00CF1A71 /* XclocDocument.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XclocDocument.h; sourceTree = "<group>"; };
 		4FFBA6B42EAA14AF00CF1A71 /* XclocDocument.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = XclocDocument.m; sourceTree = "<group>"; };
@@ -87,9 +87,18 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		4F0C649C2EAD41C6008B3506 /* Icon Prod */ = {
+			isa = PBXGroup;
+			children = (
+				4F0C649D2EAD41D5008B3506 /* AppIcon.icon */,
+			);
+			path = "Icon Prod";
+			sourceTree = "<group>";
+		};
 		4F4D45F12DF732F300FE4CE7 /* Other */ = {
 			isa = PBXGroup;
 			children = (
+				4F0C649C2EAD41C6008B3506 /* Icon Prod */,
 				4FF447A22DF6467E008F2D74 /* README.md */,
 				4FF428672DF63AB2008F2D74 /* mf_xcloc_editor.entitlements */,
 				4FF428632DF63AB2008F2D74 /* Assets.xcassets */,
@@ -129,7 +138,6 @@
 				4FAD64772E69D1DD00643726 /* MainWindowController.h */,
 				4FAD64782E69D1DD00643726 /* MainWindowController.m */,
 				4FC6FA662E6A367400459F13 /* MFUI.h */,
-				4FC6FA642E6A365E00459F13 /* MFUI.m */,
 				4F7E02CF2EA7758700C2F693 /* NSObject+Additions.h */,
 				4F7E02D02EA7758700C2F693 /* NSObject+Additions.m */,
 				4FF428662DF63AB2008F2D74 /* MainMenu.xib */,
@@ -170,7 +178,7 @@
 		4FF4FA1E2DF6270F008F2D74 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				4FF4FA1D2DF6270F008F2D74 /* mf-xcloc-editor.app */,
+				4FF4FA1D2DF6270F008F2D74 /* MMF Xcloc Editor.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -178,9 +186,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		4FF4FA1C2DF6270F008F2D74 /* mf-xcloc-editor */ = {
+		4FF4FA1C2DF6270F008F2D74 /* MMF Xcloc Editor */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 4FF4FA2D2DF62711008F2D74 /* Build configuration list for PBXNativeTarget "mf-xcloc-editor" */;
+			buildConfigurationList = 4FF4FA2D2DF62711008F2D74 /* Build configuration list for PBXNativeTarget "MMF Xcloc Editor" */;
 			buildPhases = (
 				4FF4FA192DF6270F008F2D74 /* Sources */,
 				4FF4FA1A2DF6270F008F2D74 /* Frameworks */,
@@ -191,11 +199,11 @@
 			);
 			dependencies = (
 			);
-			name = "mf-xcloc-editor";
+			name = "MMF Xcloc Editor";
 			packageProductDependencies = (
 			);
 			productName = "mf-xcloc-editor";
-			productReference = 4FF4FA1D2DF6270F008F2D74 /* mf-xcloc-editor.app */;
+			productReference = 4FF4FA1D2DF6270F008F2D74 /* MMF Xcloc Editor.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -226,7 +234,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				4FF4FA1C2DF6270F008F2D74 /* mf-xcloc-editor */,
+				4FF4FA1C2DF6270F008F2D74 /* MMF Xcloc Editor */,
 			);
 		};
 /* End PBXProject section */
@@ -240,6 +248,7 @@
 				4FF436D22DF63AB3008F2D74 /* Assets.xcassets in Resources */,
 				4FF436D32DF63AB3008F2D74 /* MainMenu.xib in Resources */,
 				4FC6FA632E6A0BA700459F13 /* ReusableViews.xib in Resources */,
+				4F0C649E2EAD4296008B3506 /* AppIcon.icon in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -256,7 +265,6 @@
 				4FF08E322EAAA8A100BBE492 /* NSAttributedString+Additions.m in Sources */,
 				4FF08E352EAAC57E00BBE492 /* MFTextField.m in Sources */,
 				4FF447A62DF6BC6F008F2D74 /* TableView.m in Sources */,
-				4FC6FA652E6A365E00459F13 /* MFUI.m in Sources */,
 				4F4CFDBF2EA8D4F30047E5E8 /* MFQLPreviewItem.m in Sources */,
 				4FF447AA2DF701EE008F2D74 /* SourceList.m in Sources */,
 				4FFBA6B52EAA14AF00CF1A71 /* XclocDocument.m in Sources */,
@@ -398,6 +406,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_ENTITLEMENTS = "mf-xcloc-editor/Other/mf_xcloc_editor.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -406,6 +415,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "mf-xcloc-editor/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "MMF Xcloc Editor";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSMainNibFile = MainMenu;
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
@@ -433,6 +443,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_ENTITLEMENTS = "mf-xcloc-editor/Other/mf_xcloc_editor.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -441,6 +452,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "mf-xcloc-editor/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "MMF Xcloc Editor";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSMainNibFile = MainMenu;
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
@@ -475,7 +487,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		4FF4FA2D2DF62711008F2D74 /* Build configuration list for PBXNativeTarget "mf-xcloc-editor" */ = {
+		4FF4FA2D2DF62711008F2D74 /* Build configuration list for PBXNativeTarget "MMF Xcloc Editor" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				4FF4FA2E2DF62711008F2D74 /* Debug */,

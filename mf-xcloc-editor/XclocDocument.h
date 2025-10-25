@@ -16,9 +16,9 @@
     {
         @public
         MainWindowController *ctrl;
+        NSXMLDocument *_xliffDoc;
+        NSArray *_localizedStringsDataPlist; /// Plist mapping localizedStrings to screenshots [Oct 2025]
     }
-    @property(nonatomic) NSXMLDocument *xliffDoc;
-    @property(nonatomic) NSArray *localizedStringsDataPlist; /// Plist mapping localizedStrings to screenshots [Oct 2025]
     
     - (void) writeTranslationDataToFile;
 

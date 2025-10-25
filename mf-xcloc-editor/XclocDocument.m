@@ -36,12 +36,34 @@
     /// Run after windowController has loaded the document's window. (Does this work for us since we're not using a nib?) [Oct 2025]
 }
 
-#pragma mark - Read & Write
-
+    
+#pragma mark - Saving
+    
+    #define useNativeSaving 0
+    
     - (void) writeTranslationDataToFile {
-        /// old AppDelegate interface
-        [self saveDocument: nil];
+        /// Our code calls this whenever an edit is made
+        if (!useNativeSaving)
+            [self saveDocument: nil];
     }
+    #if !useNativeSaving
+        - (void)_updateDocumentEditedAndAnimate:(BOOL)flag {
+            /// Turn off 'Edited' label flashing (since we just automatically save on every edit the user makes) – Doesn't work [Oct 2025]
+            /// Works on macOS Tahoe
+            ///     Src: https://stackoverflow.com/a/11998846
+        }
+    #endif
+    
+    + (BOOL)preservesVersions {
+        return useNativeSaving;
+    }
+    + (BOOL) autosavesInPlace {
+        // "Gives us autosave and versioning for free in 10.7 and later."
+        /// Not sure we want this, since we just immediately save (`writeTranslationDataToFile`) on every edit. [Oct 2025]
+        return useNativeSaving;
+    }
+
+#pragma mark - Read & Write
 
     - (BOOL) readFromFileWrapper: (NSFileWrapper *)xclocWrapper ofType: (NSString *)typeName error: (NSError *__autoreleasing  _Nullable *)outError {
         
@@ -88,11 +110,16 @@
             }
             
             /// Store deserialized data
-            self.xliffDoc = doc;
-            self.localizedStringsDataPlist = localizedStringsDataPlist;
+            self->_xliffDoc = doc;
+            self->_localizedStringsDataPlist = localizedStringsDataPlist;
             
             /// Store the xcloc fileWrapper directly (Used in `fileWrapperOfType:`) [Oct 2025]
-            self.storedXclocFileWrapper = xclocWrapper;
+            self->_storedXclocFileWrapper = xclocWrapper;
+            
+            /// Update the UI
+            if (self->ctrl) {
+                [self refreshSourceList]; /// Usually will be called by `makeWindowControllers`. But this is needed when reverting to previous version.
+            }
         }
         
         return YES;
@@ -100,7 +127,7 @@
     
     - (NSFileWrapper *) fileWrapperOfType: (NSString *)typeName error: (NSError *__autoreleasing  _Nullable *)outError {
         
-        fw_writePath(self.storedXclocFileWrapper, fw_getXliffPath(self.storedXclocFileWrapper), [[self.xliffDoc XMLStringWithOptions: NSXMLNodePrettyPrint] dataUsingEncoding: NSUTF8StringEncoding]);
+        fw_writePath(self.storedXclocFileWrapper, fw_getXliffPath(self.storedXclocFileWrapper), [[self->_xliffDoc XMLStringWithOptions: NSXMLNodePrettyPrint] dataUsingEncoding: NSUTF8StringEncoding]);
         
         mflog(@"Returning fileWrapper for saving document: %@", self.storedXclocFileWrapper);
         
@@ -184,10 +211,6 @@
 
 #pragma mark - Stuff
 
-+ (BOOL)autosavesInPlace {
-    // This gives us autosave and versioning for free in 10.7 and later.
-    return YES;
-}
 
 + (BOOL) canConcurrentlyReadDocumentsOfType: (NSString *)typeName {
     //  Turn this on for async saving allowing saving to be asynchronous, making all our
@@ -196,8 +219,10 @@
 }
 
 - (void) makeWindowControllers {
-
-    if (self.xliffDoc == nil) return; /// TESTING
+    
+    mflog(@"Making windowControllers");
+    
+    if (self->_xliffDoc == nil) return; /// TESTING
 
     self->ctrl = [MainWindowController new];
     [self->ctrl loadWindow]; /// Doesn't seem to be called automatically, I think this is the right place to call this but not sure [Oct 2025]
@@ -209,12 +234,17 @@
     [self setWindow: self->ctrl.window];
     self->ctrl.window.delegate = self;
     
-    /// Reload Source LIst (Does this belong here?) [Oct 2025]
-    if ((1)) {
-        [self->ctrl->out_sourceList setXliffDoc: self->_xliffDoc];
-        [self->ctrl->out_sourceList reloadData];
-    }
+    /// Load UI
+    [self refreshSourceList];
 }
+
+- (void) refreshSourceList {
+    /// Reload Source LIst (Does this belong here?) [Oct 2025]
+    
+    [self->ctrl->out_sourceList setXliffDoc: self->_xliffDoc];
+    [self->ctrl->out_sourceList reloadData];
+}
+
 NSString *getXliffPath(NSString *xclocPath) {
     auto xliff = findPaths(xclocPath, ^BOOL (NSString *p){
         return [p hasSuffix: @".xliff"];

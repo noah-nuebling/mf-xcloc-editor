@@ -96,10 +96,12 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
         /// Validate & store xliff node children (files)
         assert( allsatisfy(xliff.children, xliff.childCount, x, isclass(x, NSXMLElement)) );
         assert( allsatisfy(xliff.children, xliff.childCount, x, [x.name isEqual: @"file"]) );
-    
+        
         /// Unwrap the transUnits
         auto transUnitsFromAllFiles = [NSMutableArray new];
         self->files = [NSMutableArray new];
+        NSString *sourceLanguage = nil;
+        NSString *targetLanguage = nil;
         for (NSXMLElement *file in xliff.children) {
         
             /** Validate data
@@ -131,6 +133,11 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
                 assert(attrs[@"source-language"].objectValue    );
                 assert(attrs[@"target-language"].objectValue    );
                 assert(attrs[@"datatype"].objectValue           );
+                
+                if (!sourceLanguage) sourceLanguage = attrs[@"source-language"].objectValue;
+                else                 assert([sourceLanguage isEqual: attrs[@"source-language"].objectValue]);
+                if (!targetLanguage) targetLanguage = attrs[@"target-language"].objectValue;
+                else                 assert([targetLanguage isEqual: attrs[@"target-language"].objectValue]);
                 
                 mflog("Attributes: %@", attrs);
                 
@@ -167,6 +174,10 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
         }
         [self->files insertObject: File_Make(transUnitsFromAllFiles, kMFPath_AllDocuments) atIndex: 0];
         self->_transUnitsFromAllFiles = transUnitsFromAllFiles;
+        
+        self->sourceLanguage = sourceLanguage;
+        self->targetLanguage = targetLanguage;
+        
     }
     
     - (void) showAllTransUnits {
@@ -300,5 +311,15 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
         File *file = self->files[self.selectedRow];
         [getdoc(self)->ctrl->out_tableView reloadWithNewData: file->transUnits];
     }
-
+    
+    
+    - (id)copy {
+        return [super copy];
+    }
+    
+    - (id)mutableCopy {
+        return [super mutableCopy];
+    }
+    
+    
 @end

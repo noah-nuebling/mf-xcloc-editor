@@ -9,6 +9,13 @@
 
 @interface SourceList : NSOutlineView <NSOutlineViewDataSource, NSOutlineViewDelegate>
 
+    {
+        @public
+        NSString *sourceLanguage;
+        NSString *targetLanguage;
+    }
+
+
     - (void) setXliffDoc: (NSXMLDocument *)xliffDoc;
 
     - (void) progressHasChanged;

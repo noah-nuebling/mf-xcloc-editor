@@ -9,7 +9,7 @@
 #import "SourceList.h"
 #import "TableView.h"
 
-@interface MainWindowController : NSWindowController <NSWindowDelegate>
+@interface MainWindowController : NSWindowController <NSWindowDelegate, NSToolbarDelegate, NSSearchFieldDelegate>
     {
         /// Outlets
         ///     Get filled by -loadWindow [Oct 2025]
