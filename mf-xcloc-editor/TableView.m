@@ -123,7 +123,7 @@
         return -1;
     }
     - (void) tableMenuItemClicked: (NSMenuItem *)menuItem {
-        [self toggleIsTranslatedState: [self selectedItem]]; /// All our menuItems are for toggling and `validateMenuItem:` makes it so we can only toggle [Oct 2025]
+        [self toggleIsTranslatedState: [self itemAtRow: [self clickedRow]]]; /// All our menuItems are for toggling and `validateMenuItem:` makes it so we can only toggle [Oct 2025]
     }
     
     - (BOOL) validateMenuItem: (NSMenuItem *)menuItem {
@@ -443,7 +443,8 @@
         {
             auto srcCol = [self tableColumnWithIdentifier: @"source"];
             if (!srcCol.title.length)
-                srcCol.title = stringf(@"Original (%@)",    getdoc(self)->ctrl->out_sourceList->sourceLanguage);
+                //srcCol.title = stringf(@"Original (%@)",    getdoc(self)->ctrl->out_sourceList->sourceLanguage);
+                srcCol.title = stringf(@"Original");
         
             auto targetCol = [self tableColumnWithIdentifier: @"target"];
             if (!targetCol.title.length)

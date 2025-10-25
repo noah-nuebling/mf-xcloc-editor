@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="24410" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="24128" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="24410"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="24128"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner"/>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
-        <tableCellView identifier="theReusableCell_Outline" id="iap-cr-ptc" userLabel="Outline Cell">
-            <rect key="frame" x="0.0" y="0.0" width="225" height="31"/>
+        <tableCellView identifier="theReusableCell_Outline" misplaced="YES" id="iap-cr-ptc" userLabel="Outline Cell">
+            <rect key="frame" x="0.0" y="0.0" width="225" height="29"/>
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
             <subviews>
-                <textField focusRingType="none" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Skj-PT-qtH">
-                    <rect key="frame" x="0.0" y="8" width="173" height="15"/>
+                <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="1" translatesAutoresizingMaskIntoConstraints="NO" id="Skj-PT-qtH">
+                    <rect key="frame" x="0.0" y="6" width="173" height="15"/>
                     <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" title="Outline View Cell" id="MIF-Jj-5bO">
                         <font key="font" metaFont="cellTitle"/>
                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -21,7 +21,7 @@
                     </textFieldCell>
                 </textField>
                 <textField identifier="progess-field" focusRingType="none" horizontalHuggingPriority="1000" verticalHuggingPriority="750" horizontalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="Bgg-yc-Yse">
-                    <rect key="frame" x="171" y="8" width="54" height="15"/>
+                    <rect key="frame" x="171" y="6" width="54" height="15"/>
                     <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" alignment="right" title="progress" id="0qK-VE-icK">
                         <font key="font" metaFont="cellTitle"/>
                         <color key="textColor" name="secondaryLabelColor" catalog="System" colorSpace="catalog"/>
@@ -32,9 +32,9 @@
             <constraints>
                 <constraint firstAttribute="trailing" secondItem="Bgg-yc-Yse" secondAttribute="trailing" constant="2" id="2sh-CD-bQF"/>
                 <constraint firstItem="Bgg-yc-Yse" firstAttribute="centerY" secondItem="Skj-PT-qtH" secondAttribute="centerY" id="Hno-6C-ZYd"/>
-                <constraint firstAttribute="bottom" secondItem="Skj-PT-qtH" secondAttribute="bottom" constant="8" id="Jre-VQ-Soi"/>
-                <constraint firstItem="Skj-PT-qtH" firstAttribute="leading" secondItem="iap-cr-ptc" secondAttribute="leading" constant="2" id="coO-sS-rzh"/>
-                <constraint firstItem="Skj-PT-qtH" firstAttribute="top" secondItem="iap-cr-ptc" secondAttribute="top" constant="8" id="lrv-S0-BRB"/>
+                <constraint firstAttribute="bottom" secondItem="Skj-PT-qtH" secondAttribute="bottom" constant="6" id="Jre-VQ-Soi"/>
+                <constraint firstItem="Skj-PT-qtH" firstAttribute="leading" secondItem="iap-cr-ptc" secondAttribute="leading" constant="2" identifier="indentConstraint" id="coO-sS-rzh"/>
+                <constraint firstItem="Skj-PT-qtH" firstAttribute="top" secondItem="iap-cr-ptc" secondAttribute="top" constant="6" id="lrv-S0-BRB"/>
                 <constraint firstItem="Bgg-yc-Yse" firstAttribute="leading" secondItem="Skj-PT-qtH" secondAttribute="trailing" constant="2" id="wig-nj-ir8"/>
             </constraints>
             <connections>

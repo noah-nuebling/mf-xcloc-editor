@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		4F0C649E2EAD4296008B3506 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 4F0C649D2EAD41D5008B3506 /* AppIcon.icon */; };
+		4F0C64A22EAD4C00008B3506 /* MFUI.m in Sources */ = {isa = PBXBuildFile; fileRef = 4F0C64A12EAD4C00008B3506 /* MFUI.m */; };
 		4F33326C2EACC15000055FFC /* FileProvider.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F33326B2EACC15000055FFC /* FileProvider.framework */; };
 		4F4CFDBF2EA8D4F30047E5E8 /* MFQLPreviewItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 4F4CFDBE2EA8D4F30047E5E8 /* MFQLPreviewItem.m */; };
 		4F7E02D12EA7758800C2F693 /* NSObject+Additions.m in Sources */ = {isa = PBXBuildFile; fileRef = 4F7E02D02EA7758700C2F693 /* NSObject+Additions.m */; };
@@ -40,6 +41,7 @@
 
 /* Begin PBXFileReference section */
 		4F0C649D2EAD41D5008B3506 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
+		4F0C64A12EAD4C00008B3506 /* MFUI.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MFUI.m; sourceTree = "<group>"; };
 		4F33326B2EACC15000055FFC /* FileProvider.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = FileProvider.framework; path = System/Library/PrivateFrameworks/FileProvider.framework; sourceTree = SDKROOT; };
 		4F4CFDBD2EA8D4F30047E5E8 /* MFQLPreviewItem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MFQLPreviewItem.h; sourceTree = "<group>"; };
 		4F4CFDBE2EA8D4F30047E5E8 /* MFQLPreviewItem.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MFQLPreviewItem.m; sourceTree = "<group>"; };
@@ -138,6 +140,7 @@
 				4FAD64772E69D1DD00643726 /* MainWindowController.h */,
 				4FAD64782E69D1DD00643726 /* MainWindowController.m */,
 				4FC6FA662E6A367400459F13 /* MFUI.h */,
+				4F0C64A12EAD4C00008B3506 /* MFUI.m */,
 				4F7E02CF2EA7758700C2F693 /* NSObject+Additions.h */,
 				4F7E02D02EA7758700C2F693 /* NSObject+Additions.m */,
 				4FF428662DF63AB2008F2D74 /* MainMenu.xib */,
@@ -260,6 +263,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4FAD64792E69D1DD00643726 /* MainWindowController.m in Sources */,
+				4F0C64A22EAD4C00008B3506 /* MFUI.m in Sources */,
 				4FF4373C2DF63AB8008F2D74 /* AppDelegate.m in Sources */,
 				4FF4373D2DF63AB8008F2D74 /* main.m in Sources */,
 				4FF08E322EAAA8A100BBE492 /* NSAttributedString+Additions.m in Sources */,

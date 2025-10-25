@@ -21,5 +21,7 @@
 			<string>XclocDocument</string>
 		</dict>
 	</array>
+	<key>UIDesignRequiresCompatibility</key>
+	<false/>
 </dict>
 </plist>

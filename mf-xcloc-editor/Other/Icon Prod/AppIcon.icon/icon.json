@@ -13,7 +13,7 @@
           "fill" : {
             "solid" : "extended-gray:1.00000,1.00000"
           },
-          "hidden" : false,
+          "hidden" : true,
           "image-name" : "4x fr.png",
           "name" : "4x fr",
           "position-specializations" : [
@@ -30,23 +30,68 @@
           ]
         },
         {
-          "blend-mode" : "darken",
-          "fill" : {
-            "solid" : "srgb:1.00000,1.00000,1.00000,1.00000"
-          },
-          "glass" : true,
           "hidden" : true,
-          "image-name" : "translate@4x.png",
-          "name" : "translate@4x",
-          "opacity" : 1,
+          "image-name" : "globe.americas.fill@4x.png",
+          "name" : "globe.americas.fill@4x",
           "position-specializations" : [
             {
               "idiom" : "square",
               "value" : {
-                "scale" : 0.9,
+                "scale" : 1.25,
                 "translation-in-points" : [
                   0,
-                  34
+                  0
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "hidden" : true,
+          "image-name" : "globe.americas@4x solid 2.png",
+          "name" : "globe.americas@4x solid 2",
+          "position-specializations" : [
+            {
+              "idiom" : "square",
+              "value" : {
+                "scale" : 1.25,
+                "translation-in-points" : [
+                  0,
+                  0
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "hidden" : false,
+          "image-name" : "globe.americas@4x.png",
+          "name" : "globe.americas@4x",
+          "position-specializations" : [
+            {
+              "idiom" : "square",
+              "value" : {
+                "scale" : 1.25,
+                "translation-in-points" : [
+                  0,
+                  0
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "hidden" : true,
+          "image-name" : "globe@4x.png",
+          "name" : "globe@4x",
+          "position-specializations" : [
+            {
+              "idiom" : "square",
+              "value" : {
+                "scale" : 1.17,
+                "translation-in-points" : [
+                  0,
+                  0
                 ]
               }
             }

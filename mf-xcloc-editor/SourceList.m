@@ -13,6 +13,8 @@
 #import "AppDelegate.h"
 #import "XclocDocument.h"
 #import "RowUtils.h"
+#import "MFUI.h"
+#import "NSObject+Additions.h"
 
 @interface File : NSObject
     {
@@ -29,7 +31,7 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
     return f;
 }
 
-#define kMFPath_AllDocuments @"All Documents"
+#define kMFPath_AllDocuments @"All Project Files"
 
 
 @implementation SourceList
@@ -56,6 +58,9 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
         self.headerView = nil;
         self.allowsEmptySelection = NO;
         self.rowSizeStyle = NSTableViewRowSizeStyleDefault;
+        
+        /// Layout
+        self.usesAutomaticRowHeights = YES;
         
         /// Configure columns
         [self addTableColumn: ({
@@ -172,6 +177,7 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
                 [transUnitsFromAllFiles addObjectsFromArray: filteredTransUnits];
             }
         }
+        [self->files insertObject: (id)@"separator" atIndex: 0];
         [self->files insertObject: File_Make(transUnitsFromAllFiles, kMFPath_AllDocuments) atIndex: 0];
         self->_transUnitsFromAllFiles = transUnitsFromAllFiles;
         
@@ -182,11 +188,7 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
     
     - (void) showAllTransUnits {
     
-        NSInteger row = NSNotFound;
-        for (NSInteger i = 0; i < self->files.count; i++)
-            if ([self->files[i]->path isEqual: kMFPath_AllDocuments])
-                { row = i; break; }
-
+        NSInteger row = 0; /// Hardcode to first row. [Oct 2025]
         [self selectRowIndexes: [NSIndexSet indexSetWithIndex: row] byExtendingSelection: NO];
     }
     
@@ -195,6 +197,7 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
 
         /// This seems to complicated for what we're doing - why two methods for this? [Oct 2025]
         for (NSInteger row = 0; row < self.numberOfRows; row++) {
+            if ([files[row] isEqual: @"separator"]) continue;
             auto cell = [self viewAtColumn: 0 row: row makeIfNecessary: NO];
             [self updateProgressInCell: cell withFile: files[row]];
         }
@@ -202,7 +205,7 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
     
     - (void) updateProgressInCell: (NSTableCellView *)cell withFile: (File *)file {
     
-        NSTextField *progressField = firstmatch(cell.subviews, cell.subviews.count, nil, v, [v.identifier isEqual: @"progess-field"]);
+        NSTextField *progressField = [cell mf_associatedObjectForKey: @"progress-field"];
         progressField.attributedStringValue = ({
             
             /// Determine progress percent
@@ -280,9 +283,15 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
     
     - (NSString *) uiStringForFile: (File *)file {
         
+        if ([file isEqual: @"separator"]) return @"";
+        
         NSMutableArray *allUIStrings = [NSMutableArray new];
         for (File *f in self->files) {
-            NSString *uiString = [[f->path lastPathComponent] stringByDeletingPathExtension];
+            if ([f isEqual: @"separator"]) { [allUIStrings addObject: @""]; continue; }
+            NSString *uiString =
+                [[f->path lastPathComponent] stringByDeletingPathExtension]
+                //[f->path lastPathComponent]
+            ;
             for (int i = 1;; i++) {
                 NSString *appendix = (i == 1) ? @"" : stringf(@" (%d)", i);
                 NSString *uiStringgg = stringf(@"%@%@", uiString, appendix);
@@ -298,13 +307,84 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
     
     - (NSView *) outlineView: (NSOutlineView *)outlineView viewForTableColumn: (NSTableColumn *)tableColumn item: (File *)file {
         
-        /// There's only one column so we can ignore it.
-        NSTableCellView *cell = [self makeViewWithIdentifier: @"theReusableCell_Outline" owner: self]; /// Not sure if owner=self is right. Also see TableView.m
-        cell.textField.stringValue = [self uiStringForFile: file];
+        if ([file isEqual: @"separator"]) {
+            
+            if ((0))
+            return mfui_wrap(mfui_margin(5, 5, 0, 0), ({
+                auto v = mfui_new(NSBox);
+                v.titlePosition = NSNoTitle;
+                v.boxType = NSBoxSeparator;
+                v;
+            }));
+            if ((1))
+            return mfui_wrap(mfui_margin(15, 3, 2, 0),
+                mfui_label(@"Project Files", 11, NSFontWeightSemibold, [NSColor secondaryLabelColor])
+            );
+            
+        }
+        
+        auto mfui_hstack = ^NSStackView *(NSArray *arrangedSubviews) {
+
+            auto v = mfui_new(NSStackView);
+            v.orientation = NSUserInterfaceLayoutOrientationHorizontal;
+            
+            for (NSView *w in arrangedSubviews) {
+                [v addArrangedSubview: w];
+            }
+            if ((1)) {
+                [v setContentHuggingPriority: 1000               forOrientation: NSLayoutConstraintOrientationHorizontal];
+                [v setContentCompressionResistancePriority: 1000 forOrientation: NSLayoutConstraintOrientationHorizontal];
+                [v setContentHuggingPriority: 1000               forOrientation: NSLayoutConstraintOrientationVertical];
+                [v setContentCompressionResistancePriority: 1000 forOrientation: NSLayoutConstraintOrientationVertical];
+            }
+            
+            return v;
+        };
+        
+        NSTableCellView *cell;
+        {
+            if ((0)) { /// Caused weird autolayout crashes in the TableView I think? I edited state and then switched files and then resized the sidebar.
+                cell = [NSTableCellView new];
+                NSTextField *out_label = nil;
+                NSTextField *out_progress = nil;
+                auto content = mfui_wrap(mfui_margin(6, 6, 2, 2), mfui_hstack(@[
+                    mfui_outlet(&out_label,    ({ auto v = mfui_label([self uiStringForFile: file], 12, NSFontWeightRegular, [NSColor labelColor]);
+                        [v setContentCompressionResistancePriority: 1 forOrientation: NSLayoutConstraintOrientationHorizontal];
+                        [v setLineBreakMode: NSLineBreakByTruncatingTail];
+                    v; })),
+                    mfui_spacer(),
+                    mfui_outlet(&out_progress, ({ auto v = mfui_label(@"", 12, NSFontWeightRegular, [NSColor secondaryLabelColor]); /// Text filled in by updateProgressInCell
+                        v.identifier = @"progess-field";
+                    v; }))
+                ]));
+                mfui_insert(cell, mfui_margin(0, 0, 0, 0), content);
+                
+                cell.textField = out_label;
+                [cell mf_setAssociatedObject: out_progress forKey: @"progress-field"];
+            }
+            
+            if ((1)) {
+                /// There's only one column so we can ignore it.
+                cell = [self makeViewWithIdentifier: @"theReusableCell_Outline" owner: self]; /// Not sure if owner=self is right. Also see TableView.m
+                cell.textField.stringValue = [self uiStringForFile: file];
+                
+                id progressField = firstmatch(cell.subviews, cell.subviews.count, nil, sv, [[sv identifier] isEqual: @"progess-field"]);
+                [cell mf_setAssociatedObject: progressField forKey: @"progress-field"];
+                
+                auto indentConstraint = firstmatch(cell.constraints, cell.constraints.count, nil, c, [c.identifier isEqual: @"indentConstraint"]);
+                indentConstraint.constant = ([self rowForItem: file] == 0) ? 2 : 5; /// Indent the project file's rows a bit under the `@"separator"` (Why am I doing this???)
+                
+            }
+        }
         
         [self updateProgressInCell: cell withFile: file];
         
         return cell;
+    }
+
+    - (BOOL)outlineView:(NSOutlineView *)outlineView shouldSelectItem:(id)item {
+        if ([item isEqual: @"separator"]) return NO;
+        return YES;
     }
 
     - (void) outlineViewSelectionDidChange: (NSNotification *)notification {
