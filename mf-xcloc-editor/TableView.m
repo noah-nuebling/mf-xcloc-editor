@@ -20,6 +20,32 @@
 #import "RowUtils.h"
 #import "MFTextField.h"
 
+@interface TableRowView : NSTableRowView @end
+@implementation TableRowView
+
+    /// Give selected rows a light-blue background like Xcode, this is mostly so that selecting text in rows doesn't look weird (selected rows have *dark* blue background, which flips the text to white, but the selection is *light* blue)
+    
+    - (void) drawSelectionInRect: (NSRect)dirtyRect { /// Src: https://stackoverflow.com/a/9594543
+        
+        auto appearance = [[self effectiveAppearance] bestMatchFromAppearancesWithNames: @[NSAppearanceNameAqua, NSAppearanceNameDarkAqua]];
+        if ([appearance isEqual: NSAppearanceNameDarkAqua])
+            [[NSColor colorWithSRGBRed: 24/255.0 green: 48/255.0 blue: 75/255.0 alpha: 1.0] setFill]; /// Color copied from Xcode 26 [Oct 2025]
+        else
+            [[NSColor colorWithSRGBRed: 217/255.0 green: 237/255.0 blue: 255/255.0 alpha: 1.0] setFill]; /// Color copied from Xcode 26 [Oct 2025]
+            
+        [[NSBezierPath bezierPathWithRoundedRect: self.bounds xRadius: 5 yRadius: 5] fill];
+    }
+    
+    - (BOOL)isEmphasized { return NO; } /// Prevent text from turning black
+
+    - (void)drawSeparatorInRect: (NSRect)dirtyRect {
+        if (self.isSelected) return;
+        if (self.nextRowSelected) return;
+        [super drawSeparatorInRect: dirtyRect];
+    }
+
+@end
+
 @implementation TableView
     {
         NSString *_filterString;
@@ -106,6 +132,7 @@
     - (void) drawGridInClipRect: (NSRect)clipRect {
         /// Src: https://stackoverflow.com/a/6844340
         ///     Only affects horizontal grid
+        
         NSRect lastRowRect = [self rectOfRow:[self numberOfRows]-1];
         NSRect myClipRect = NSMakeRect(0, 0, lastRowRect.size.width, NSMaxY(lastRowRect));
         NSRect finalClipRect = NSIntersectionRect(clipRect, myClipRect);
@@ -244,6 +271,7 @@
         }
         
     #pragma mark - NSControlTextEditingDelegate (Callbacks for the MFTextField)
+
     
     - (void) controlTextDidBeginEditing: (NSNotification *)notification {
         NSTextField *textField = notification.object;
@@ -820,7 +848,10 @@
     - (void) outlineViewSelectionDidChange: (NSNotification *)notification {
         [QLPreviewPanel.sharedPreviewPanel reloadData];
     }
-
+    
+    - (NSTableRowView *)outlineView:(NSOutlineView *)outlineView rowViewForItem:(id)item {
+        return [TableRowView new];
+    }
 
     #pragma mark - Quick Look
     

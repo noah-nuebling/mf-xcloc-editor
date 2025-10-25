@@ -343,7 +343,13 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
         
         NSTableCellView *cell;
         {
-            if ((0)) { /// Caused weird autolayout crashes in the TableView I think? I edited state and then switched files and then resized the sidebar.
+            if ((0)) {
+            
+                /// Caused weird autolayout crashes in the TableView I think? I edited state and then switched files and then resized the sidebar.
+                ///     Update: Still happens after switching back. Here's the error message: [Oct 2025]
+                ///         Thread 1: "Unable to activate constraint with anchors <NSLayoutXAxisAnchor:0xb2a45cb00 \"NSTableCellView:0xb2a143480.left\"> and <NSLayoutXAxisAnchor:0xb2a45c4c0 \"NSTableRowView:0xb2a171800.left\"> because they have no common ancestor.  Does the constraint or its anchors reference items in different view hierarchies?  That's illegal."
+                ///
+                
                 cell = [NSTableCellView new];
                 NSTextField *out_label = nil;
                 NSTextField *out_progress = nil;

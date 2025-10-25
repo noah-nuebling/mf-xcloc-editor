@@ -95,7 +95,6 @@
             
             /// TODO: Fix layout jank on @"id" and @"state" cells (sometimes disappear)
             /// TODO: Better default column-widths
-            /// TODO: Make text-selection in cells less ugly
             /// TODO: Fix issue where double-clicking / triple-clicking /...  a row does nothing (instead of starting text-editing)
             /// TODO: checkmark.circle cells disappear when you double-click it.
             
