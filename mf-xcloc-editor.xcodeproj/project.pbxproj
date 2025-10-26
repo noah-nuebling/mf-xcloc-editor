@@ -19,7 +19,6 @@
 		4FF436D32DF63AB3008F2D74 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4FF428662DF63AB2008F2D74 /* MainMenu.xib */; };
 		4FF4373C2DF63AB8008F2D74 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 4FF428622DF63AB2008F2D74 /* AppDelegate.m */; };
 		4FF4373D2DF63AB8008F2D74 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 4FF428642DF63AB2008F2D74 /* main.m */; };
-		4FF447A32DF6467E008F2D74 /* README.txt in Resources */ = {isa = PBXBuildFile; fileRef = 4FF447A22DF6467E008F2D74 /* README.txt */; };
 		4FF447A62DF6BC6F008F2D74 /* TableView.m in Sources */ = {isa = PBXBuildFile; fileRef = 4FF447A52DF6BC6E008F2D74 /* TableView.m */; };
 		4FF447AA2DF701EE008F2D74 /* SourceList.m in Sources */ = {isa = PBXBuildFile; fileRef = 4FF447A92DF701EE008F2D74 /* SourceList.m */; };
 		4FFBA6B52EAA14AF00CF1A71 /* XclocDocument.m in Sources */ = {isa = PBXBuildFile; fileRef = 4FFBA6B42EAA14AF00CF1A71 /* XclocDocument.m */; };
@@ -46,6 +45,7 @@
 		4F7E02D02EA7758700C2F693 /* NSObject+Additions.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSObject+Additions.m"; sourceTree = "<group>"; };
 		4F7E02D22EA77C9700C2F693 /* da.xcloc */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = da.xcloc; sourceTree = "<group>"; };
 		4F7E02D32EA77D1600C2F693 /* da (original).xcloc */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = "da (original).xcloc"; sourceTree = "<group>"; };
+		4F9BA2C02EAEBFEE001C8B9B /* README.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.txt; sourceTree = SOURCE_ROOT; };
 		4FAD64772E69D1DD00643726 /* MainWindowController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MainWindowController.h; sourceTree = "<group>"; };
 		4FAD64782E69D1DD00643726 /* MainWindowController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MainWindowController.m; sourceTree = "<group>"; };
 		4FC6FA622E6A0BA700459F13 /* ReusableViews.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ReusableViews.xib; sourceTree = "<group>"; };
@@ -61,7 +61,6 @@
 		4FF428642DF63AB2008F2D74 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		4FF428652DF63AB2008F2D74 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		4FF428672DF63AB2008F2D74 /* mf_xcloc_editor.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = mf_xcloc_editor.entitlements; sourceTree = "<group>"; };
-		4FF447A22DF6467E008F2D74 /* README.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.txt; sourceTree = "<group>"; };
 		4FF447A42DF6BC6E008F2D74 /* TableView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TableView.h; sourceTree = "<group>"; };
 		4FF447A52DF6BC6E008F2D74 /* TableView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TableView.m; sourceTree = "<group>"; };
 		4FF447A72DF6CB3A008F2D74 /* Utility.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Utility.h; sourceTree = "<group>"; };
@@ -91,7 +90,7 @@
 			children = (
 				4FFBA6F42EAA337A00CF1A71 /* Info.plist */,
 				4F0C649D2EAD41D5008B3506 /* AppIcon.icon */,
-				4FF447A22DF6467E008F2D74 /* README.txt */,
+				4F9BA2C02EAEBFEE001C8B9B /* README.txt */,
 				4FF428672DF63AB2008F2D74 /* mf_xcloc_editor.entitlements */,
 				4FF428632DF63AB2008F2D74 /* Assets.xcassets */,
 				4FF428642DF63AB2008F2D74 /* main.m */,
@@ -242,7 +241,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4FF447A32DF6467E008F2D74 /* README.txt in Resources */,
 				4FF436D22DF63AB3008F2D74 /* Assets.xcassets in Resources */,
 				4FF436D32DF63AB3008F2D74 /* MainMenu.xib in Resources */,
 				4FC6FA632E6A0BA700459F13 /* ReusableViews.xib in Resources */,
