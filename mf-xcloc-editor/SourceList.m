@@ -372,6 +372,7 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
             if ((1)) {
                 /// There's only one column so we can ignore it.
                 cell = [self makeViewWithIdentifier: @"theReusableCell_Outline" owner: self]; /// Not sure if owner=self is right. Also see TableView.m
+                assert(cell);
                 cell.textField.stringValue = [self uiStringForFile: file];
                 
                 id progressField = firstmatch(cell.subviews, cell.subviews.count, nil, sv, [[sv identifier] isEqual: @"progess-field"]);

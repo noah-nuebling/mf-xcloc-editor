@@ -22,6 +22,14 @@
 
 #pragma mark - TableRowView
 
+auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifier:` on. Otherwise the `makeViewWithIdentifier:` will randomly return nil when it 'runs out' of views or something. [Oct 2025]
+    @"theReusableCell_Table",
+    @"theReusableCell_TableState",
+    @"theReusableCell_TableID",
+    @"theReusableCell_TableTarget",
+        
+];
+
 @interface TableRowView : NSTableRowView @end
 @implementation TableRowView
 
@@ -78,8 +86,9 @@
         self.autoresizesOutlineColumn = NO; /// This makes the column-width be auto-resized according to Claude - we don't want that I think
         
         /// Register ReusableViews
-        ///     Not sure this is necesssary / correct. What about `theReusableCell_TableState` [Oct 2025]
-        [self registerNib: [[NSNib alloc] initWithNibNamed: @"ReusableViews" bundle: nil]  forIdentifier: @"theReusableCell_Table"];
+        auto nib = [[NSNib alloc] initWithNibNamed: @"ReusableViews" bundle: nil];
+        for (NSString *viewID in reusableViewIDs)
+            [self registerNib: nib forIdentifier: viewID];
         
         /// Add columns
         {
@@ -860,6 +869,7 @@
         NSTableCellView *cell;
         {
             if (stateCellBackgroundColor) {
+                assert([reusableViewIDs containsObject: @"theReusableCell_TableState"]);
                 cell = [outlineView makeViewWithIdentifier: @"theReusableCell_TableState" owner: self];
                 { /// Style copies Xcode xcloc editor. Rest of the style defined in IB.
                     cell.nextKeyView.wantsLayer = YES;
@@ -872,12 +882,18 @@
             }
             else {
 
-                if (iscol(@"id"))
+                if (iscol(@"id")) {
+                    assert([reusableViewIDs containsObject: @"theReusableCell_TableID"]);
                     cell = [outlineView makeViewWithIdentifier: @"theReusableCell_TableID" owner: self]; /// [Jun 2025] What to pass as owner here? Will this lead to retain cycle?
-                else if (iscol(@"target"))
+                }
+                else if (iscol(@"target")) {
+                    assert([reusableViewIDs containsObject: @"theReusableCell_TableTarget"]);
                     cell = [outlineView makeViewWithIdentifier: @"theReusableCell_TableTarget" owner: self]; /// This contains an `MFTextField`
-                else
+                }
+                else {
+                    assert([reusableViewIDs containsObject: @"theReusableCell_Table"]);
                     cell = [outlineView makeViewWithIdentifier: @"theReusableCell_Table" owner: self];
+                }
 
                 cell.textField.delegate = (id)self; /// Optimization: Could prolly set this once in IB [Oct 2025]
                 cell.textField.lineBreakMode = NSLineBreakByWordWrapping;
@@ -890,6 +906,7 @@
                     auto matchingPlistEntry = [self _localizedStringsDataPlist_GetEntryForRowModel: transUnit];
                     if (!matchingPlistEntry) {
                         /// Remove the quicklook button from IB
+                        assert([reusableViewIDs containsObject: @"theReusableCell_Table"]);
                         cell = [outlineView makeViewWithIdentifier: @"theReusableCell_Table" owner: self]; /// Go back to default cell (TODO: refactor) (We don't modify cause that affects future calls to `makeViewWithIdentifier:`)
                     }
                     else {
@@ -897,21 +914,21 @@
                         [quickLookButton setAction: @selector(quickLookButtonPressed:)];
                         [quickLookButton setTarget: self];
                         [quickLookButton mf_setAssociatedObject: @([outlineView rowForItem: item]) forKey: @"rowOfQuickLookButton"];
-
-
-
-
-                        /// Set up things ...
                     }
-
-
-
+                }
+                else {
+                    assert(false);
                 }
             }
 
             [cell.textField setAttributedStringValue: uiStringAttributed];
         }
         
+        /// Validate
+        if (cell == nil) {
+            assert(false);
+            mflog(@"nill cell %@", transUnit);
+        }
         
         /// Return
         return cell;
