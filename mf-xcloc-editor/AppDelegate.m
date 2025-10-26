@@ -18,7 +18,7 @@
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
     
-    if ((1)) { /// TESTING
+    if ((0)) { /// TESTING
     
         NSString *xclocPath;
         if ((0)) xclocPath = @"/Users/noah/mmf-stuff/xcode-localization-screenshot-fix/CustomImplForLocalizationScreenshotTest/Notes/Examples/example-da.xcloc";
