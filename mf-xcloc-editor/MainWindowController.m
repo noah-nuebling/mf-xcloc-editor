@@ -93,7 +93,8 @@
         assert(!self.window);
         {
             
-            /// TODO: Command-R and Return don't work after marking as translated
+            /// TODO: Sometimes the close button turns into save button (black dot)
+            ///     (Are we missing a save?) ... Nope we're not missing  a save, but undoing makes the black dot show. Turned this off through `autosavesInPlace` – not sure that's correct [Oct 2025]
         
             /// TODO: Fix issue where double-clicking / triple-clicking /...  a row does nothing (instead of starting text-editing)
             ///     Tried to fix this but hard. Maybe just live with it.

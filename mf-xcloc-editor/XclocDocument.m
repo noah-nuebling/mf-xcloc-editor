@@ -52,15 +52,21 @@
             /// Works on macOS Tahoe
             ///     Src: https://stackoverflow.com/a/11998846
         }
+        - (BOOL)_shouldShowAutosaveButtonForWindow: (NSWindow*)window {
+            return NO;
+        }
+        - (void)_setShowAutosaveButton: (BOOL)flag {
+            [super _setShowAutosaveButton: NO];
+        }
     #endif
     
-    + (BOOL)preservesVersions {
+    + (BOOL) preservesVersions {
         return useNativeSaving;
     }
     + (BOOL) autosavesInPlace {
         // "Gives us autosave and versioning for free in 10.7 and later."
         /// Not sure we want this, since we just immediately save (`writeTranslationDataToFile`) on every edit. [Oct 2025]
-        return useNativeSaving;
+        return useNativeSaving || YES; /// Note: Setting this to YES prevents the dot in the close button from showing, which otherwise shows after we undo. (Couldn't prevent this with the private methods (https://stackoverflow.com/a/11998846)) Hope this doesn't have other weird side effects. (Saving was so simple before NSDocument, why do they make it so complicated to just manually save?) [Oct 2025]
     }
 
 #pragma mark - Read & Write
@@ -129,7 +135,9 @@
         
         fw_writePath(self.storedXclocFileWrapper, fw_getXliffPath(self.storedXclocFileWrapper), [[self->_xliffDoc XMLStringWithOptions: NSXMLNodePrettyPrint] dataUsingEncoding: NSUTF8StringEncoding]);
         
-        mflog(@"Returning fileWrapper for saving document: %@", self.storedXclocFileWrapper);
+        
+        static int _fileWrapCounter = 0; /// Monitor if our file is consistently saved on every edit [Oct 2025]
+        mflog(@"(%d) Returning fileWrapper for saving document: %@", _fileWrapCounter++, self.storedXclocFileWrapper);
         
         return self.storedXclocFileWrapper;
     }

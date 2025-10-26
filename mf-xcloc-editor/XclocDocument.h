@@ -11,6 +11,10 @@
 #import "MainWindowController.h"
 #import "Utility.h"
 
+@interface NSDocument (PrivateStuff)
+    - (void)_setShowAutosaveButton: (BOOL)flag;
+@end
+
 @interface XclocDocument : NSDocument
 
     {
