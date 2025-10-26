@@ -879,6 +879,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
 
                 cell.nextKeyView.layer.borderColor     = [stateCellBackgroundColor CGColor];
                 cell.nextKeyView.layer.backgroundColor = [[stateCellBackgroundColor colorWithAlphaComponent: 0.15] CGColor];
+                
             }
             else {
 
@@ -895,29 +896,38 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                     cell = [outlineView makeViewWithIdentifier: @"theReusableCell_Table" owner: self];
                 }
 
+                /// Special config
+                {
+                    if (iscol(@"target")) {
+                        [cell.textField setEditable: targetCellShouldBeEditable];
+                    }
+                    else if (iscol(@"id")) {
+                        auto matchingPlistEntry = [self _localizedStringsDataPlist_GetEntryForRowModel: transUnit];
+                        if (!matchingPlistEntry) {
+                            /// Remove the quicklook button from IB
+                            assert([reusableViewIDs containsObject: @"theReusableCell_Table"]);
+                            cell = [outlineView makeViewWithIdentifier: @"theReusableCell_Table" owner: self]; /// Go back to default cell (TODO: refactor) (We don't modify cause that affects future calls to `makeViewWithIdentifier:`)
+                        }
+                        else {
+                            NSButton *quickLookButton = firstmatch(cell.subviews, cell.subviews.count, nil, sv, [sv.identifier isEqual: @"quick-look-button"]);
+                            [quickLookButton setAction: @selector(quickLookButtonPressed:)];
+                            [quickLookButton setTarget: self];
+                            [quickLookButton mf_setAssociatedObject: @([outlineView rowForItem: item]) forKey: @"rowOfQuickLookButton"];
+                        }
+                    }
+                    else {
+                        
+                    }
+                }
+                /// Common config
                 cell.textField.delegate = (id)self; /// Optimization: Could prolly set this once in IB [Oct 2025]
                 cell.textField.lineBreakMode = NSLineBreakByWordWrapping;
                 cell.textField.selectable = YES;
-
-                if (iscol(@"target")) {
-                    [cell.textField setEditable: targetCellShouldBeEditable];
-                }
-                else if (iscol(@"id")) {
-                    auto matchingPlistEntry = [self _localizedStringsDataPlist_GetEntryForRowModel: transUnit];
-                    if (!matchingPlistEntry) {
-                        /// Remove the quicklook button from IB
-                        assert([reusableViewIDs containsObject: @"theReusableCell_Table"]);
-                        cell = [outlineView makeViewWithIdentifier: @"theReusableCell_Table" owner: self]; /// Go back to default cell (TODO: refactor) (We don't modify cause that affects future calls to `makeViewWithIdentifier:`)
-                    }
-                    else {
-                        NSButton *quickLookButton = firstmatch(cell.subviews, cell.subviews.count, nil, sv, [sv.identifier isEqual: @"quick-look-button"]);
-                        [quickLookButton setAction: @selector(quickLookButtonPressed:)];
-                        [quickLookButton setTarget: self];
-                        [quickLookButton mf_setAssociatedObject: @([outlineView rowForItem: item]) forKey: @"rowOfQuickLookButton"];
-                    }
-                }
-                else {
-                    assert(false);
+                
+                /// Special override config
+                if (iscol(@"state")) {
+                    cell.textField.selectable = NO; /// This is only called for the `green_checkmark` (Other state cells are handled by `stateCellBackgroundColor`).
+                                                    /// The `green_checkmark` disappears when selected, so we disable selection. [Oct 2025]
                 }
             }
 
