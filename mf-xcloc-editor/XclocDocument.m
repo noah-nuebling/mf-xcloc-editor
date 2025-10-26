@@ -39,7 +39,7 @@
     
 #pragma mark - Saving
     
-    #define useNativeSaving 0
+    #define useNativeSaving 0 /// Note: If we activate this, we should add back the default menu items like `Save`, maybe 'Revert to Version...' etc. [Oct 2025]
     
     - (void) writeTranslationDataToFile {
         /// Our code calls this whenever an edit is made

@@ -60,8 +60,6 @@
 
 - (BOOL) validateMenuItem: (NSMenuItem *)menuItem {
     
-    /// TODO: Maybe delete some of the default menuItems we don't need.
-    
     if (menuItem.action == @selector(filterMenuItemSelected:)) {
         return YES;
     }
