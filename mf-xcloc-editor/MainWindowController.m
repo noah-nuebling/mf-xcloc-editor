@@ -95,8 +95,10 @@
             
             /// TODO: Fix layout jank on @"id" and @"state" cells (sometimes disappear)
             /// TODO: Better default column-widths
-            /// TODO: Fix issue where double-clicking / triple-clicking /...  a row does nothing (instead of starting text-editing)
             /// TODO: checkmark.circle cells disappear when you double-click it.
+            /// TODO: Fix issue where double-clicking / triple-clicking /...  a row does nothing (instead of starting text-editing)
+            ///     Tried to fix this but hard. Maybe just live with it.
+            
             
             window = [NSWindow new];
             window.styleMask = 0

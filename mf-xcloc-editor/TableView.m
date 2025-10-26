@@ -20,6 +20,8 @@
 #import "RowUtils.h"
 #import "MFTextField.h"
 
+#pragma mark - TableRowView
+
 @interface TableRowView : NSTableRowView @end
 @implementation TableRowView
 
@@ -177,6 +179,33 @@
         return YES;
     }
     
+    #pragma mark - Mouse Control
+        
+        /// When you click a non-selected row, you have to way to click again to start editing. Otherwise the 'double click' will do nothing.
+        ///     ... Seems this is hard to turn off ... maybe I'll just leave it. [Oct 2025]
+        
+        #if 0
+            - (void) mf_doubleClicked: (id)sender {
+            
+                //mflog(@"doubleCliceedd: %@", sender);
+                //[self editColumn: [self indexOfColumnWithIdentifier: @"target"] row: [self selectedRow] withEvent: nil select: YES];
+            }
+        #endif
+        
+        #if 0 /// Messes up stuff. `controlTextDidBeginEditing` is not called (I think due to this)
+        - (void) mouseDown: (NSEvent *)event {
+            NSInteger clickedRow = [self rowAtPoint: [self convertPoint: event.locationInWindow fromView: nil]];
+            if (clickedRow == -1) { assert(false); return; }
+            if ([self selectedRow] == clickedRow) {
+                [self editColumn: [self indexOfColumnWithIdentifier: @"target"] row: clickedRow withEvent: event select: NO];
+                
+            }
+            else {
+                [self selectRowIndexes: indexset(clickedRow) byExtendingSelection: NO];
+            }
+        }
+        #endif
+    
     #pragma mark - Keyboard control
     
         - (void) returnFocus {
@@ -201,6 +230,27 @@
             
             
         }
+        
+        - (void) editNextRow {
+        
+            if (self.selectedRow == -1) return;
+            auto nextRow = self.selectedRow + 1;
+            if ([self numberOfRows] <= nextRow) return;
+            [self selectRowIndexes: indexset(nextRow) byExtendingSelection: NO];
+            
+            [self editColumn: [self indexOfColumnWithIdentifier: @"target"] row: nextRow withEvent: nil select: YES];
+        }
+        - (void) editPreviousRow {
+        
+            if (self.selectedRow == -1) return;
+            auto nextRow = self.selectedRow - 1;
+            if (0
+ > nextRow) return;
+            [self selectRowIndexes: indexset(nextRow) byExtendingSelection: NO];
+            
+            [self editColumn: [self indexOfColumnWithIdentifier: @"target"] row: nextRow withEvent: nil select: YES];
+        }
+        
     
         - (void) keyDown: (NSEvent *)theEvent {
             
@@ -236,6 +286,8 @@
     
         - (BOOL) control: (NSControl*)control textView: (NSTextView*)textView doCommandBySelector: (SEL)commandSelector {
             
+            mflog(@"commandBySelector: %s", commandSelector);
+            
             BOOL didHandle = NO;
          
             if (isclass(control, MFTextField)) {
@@ -246,14 +298,32 @@
                 ///     Idea: Could also instead add shift-return for newline to make it more discoverable for LLM users.
                 
                 {
-                    if (commandSelector == @selector(insertNewline:)) { /// Map Return -> newline
+                    
+                    BOOL kreturn    = commandSelector == @selector(insertNewline:) || commandSelector == @selector(insertNewlineIgnoringFieldEditor:);
+                    BOOL koption    = commandSelector == @selector(insertNewlineIgnoringFieldEditor:);
+                    BOOL kshift     = (NSApp.currentEvent.modifierFlags & NSEventModifierFlagShift);
+                    
+                    if ((0)) {}
+                    else if (kreturn && (koption ^ kshift))               goto newline;
+                    else if (kreturn)                       goto end_editing;
+                    
+                    goto end;
+                    newline: {
                         [textView insertNewlineIgnoringFieldEditor: self];
                         didHandle = YES;
                     }
-                    else if (commandSelector == @selector(insertNewlineIgnoringFieldEditor:)) { /// Map Option-Return -> end-editing (So we can still navigate everything with the keyboard)
+                    goto end;
+                    end_editing: {
                         [textView insertNewline: self];
                         didHandle = YES;
+                        
+                        if (koption && kshift)
+                            [self editPreviousRow];
+                        else
+                            [self editNextRow];
                     }
+                    end: {}
+                    
                 }
                 
                 /// Let users enter tabs (without holding Option)
@@ -271,18 +341,26 @@
         }
         
     #pragma mark - NSControlTextEditingDelegate (Callbacks for the MFTextField)
-
     
     - (void) controlTextDidBeginEditing: (NSNotification *)notification {
+        /// TODO: This is not called
+        ///     See:
+        ///     - https://developer.apple.com/documentation/objectivec/nsobject/1428847-controltextdidendediting?language=objc
+        ///     
         NSTextField *textField = notification.object;
         _lastTargetCellString = textField.stringValue; /// Track whether textField content was actually changed inside `controlTextDidEndEditing:`. Would be nicer if we could use callbacks instead of ivars. [Oct 2025]
+        mflog(@"controlTextDidBeginEditing: %@", _lastTargetCellString);
     }
     - (void) controlTextDidEndEditing: (NSNotification *)notification {
-            
+        
+        
+        mflog(@"controlTextDidEndEditing: %@", [[notification object] stringValue]);
+        
         NSTextField *textField = notification.object;
         if (!textField.editable) return;  /// This is also called for selectable textFields.
         assert(isclass(textField, MFTextField));
         auto selectedItem = [self selectedItem];
+        if (!selectedItem) { [self reloadData]; return; } /// This happens when macOS restores the user interface after a crash while a row was being edited. [reloadData] to make sure the user is editing up-to-date data.
         assert(selectedItem);
         if (![_lastTargetCellString isEqual: textField.stringValue])
             [self setTranslation: textField.stringValue andIsTranslated: YES onRowModel: [self selectedItem]]; /// We also save if the user cancels editing by pressing escape – but they can always Command-Z to undo. [Oct 2025]
@@ -551,6 +629,10 @@
         /// Log
         mflog(@"setTranslation: %@", newString);
         
+        /// Guard no edit
+        if ([rowModel_getCellModel(transUnit, @"target") isEqual: newString])
+            return; /// `controlTextDidBeginEditing:` doesn't work so we do this here. [Oct 2025]
+        
         /// Prepare undo
         {
             auto undoManager = [getdoc(self) undoManager];
@@ -616,6 +698,11 @@
         
         /// Expand the parent in case the row we wanna reveal is a child (not sure if necessary)
         [self expandItem: topLevel];
+        
+        /// HACK: Remove editing state
+        ///     Otherwise bug: If the current row's @"target" textfield is being edited, macOS will transfer editing to the @"target" textField on the row we're going to select, (not sure why, may be bug? – macOS 26.0) but then, when we reload the @"target" cell in `setTranslation:` (caller of this method), that immediately removes the editing state and that invokes `controlTextDidEndEditing:`, which then invokes the undoManger writes to our data model (Calls `setTranslation:`) but with the *current* content of the textField insteadof the value we want to restore via undo. So this cancels the undo.
+        ///         Note: Even with this fix, this whole thing is brittle: If this is triggered by an undo while editing a @"target" textField, this line will trigger `controlTextDidEndEditing:` on the currently selected row which then calls `setTranslation:` but this works because `setTranslation:` should always do nothing in this case because the undoManager should only try to undo edits from another row, if the currently selected row's textField has no edits that can be undone, which will cause `setTranslation:` to immediately return [Oct 2025]
+        [[NSApp mainWindow] makeFirstResponder: nil];
         
         /// Show transUnit row
         ///     Should only be necessary if we're undoing. See `Navigate UI` above [Oct 2025]

@@ -209,6 +209,24 @@
         }
     #endif
 
+#pragma mark - Turn off restoration
+    /// (I think this) Causes app to open and immediately start edting the first row, but without selecting that row, which causes crash and is weird.
+    ///     This only happens when the app crashes while editing. Fixed the crash in `controlTextDidEndEditing:` instead – disabling this cause I don't know if overriding has other weird consequences (Was using NSDocument a mistake? This used to be so easy. [Oct 2025]
+    
+    #if 0
+    - (void)restoreDocumentWindowWithIdentifier:(NSUserInterfaceItemIdentifier)identifier state:(NSCoder *)state completionHandler:(void (^)(NSWindow * _Nullable, NSError * _Nullable))completionHandler {
+        mflog(@"restoreee");
+    }
+
+    - (void)restoreStateWithCoder:(NSCoder *)coder {
+        mflog(@"resture");
+    }
+
+    - (void)restoreUserActivityState:(NSUserActivity *)userActivity {
+        mflog(@"active restore");
+    }
+    #endif
+
 #pragma mark - Stuff
 
 
