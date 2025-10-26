@@ -93,6 +93,8 @@ Overview: `MMF Xcloc Editor`
 Building:
     Just open in Xcode and hit the play button. If there are problems let me know.
     I'll also consider uploading a notarized version under "Releases" [Oct 2025]
+        You could download this and send it to your localizers alongside your
+        .xcloc files.
 
 ---
 
