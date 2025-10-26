@@ -129,9 +129,8 @@
             </connections>
             <point key="canvasLocation" x="-262" y="-118"/>
         </tableCellView>
-        <tableCellView identifier="theReusableCell_TableState" verticalCompressionResistancePriority="1000" id="O08-pG-JwC" userLabel="Table Cell - State">
+        <tableCellView identifier="theReusableCell_TableState" verticalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="O08-pG-JwC" userLabel="Table Cell - State">
             <rect key="frame" x="0.0" y="0.0" width="119" height="33"/>
-            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
             <subviews>
                 <customView translatesAutoresizingMaskIntoConstraints="NO" id="H5e-M4-U47" userLabel="Background View">
                     <rect key="frame" x="2" y="11" width="103" height="14"/>
