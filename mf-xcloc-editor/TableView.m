@@ -48,15 +48,23 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
     - (void) drawSelectionInRect: (NSRect)dirtyRect { /// Src: https://stackoverflow.com/a/9594543
         
         auto appearance = [[self effectiveAppearance] bestMatchFromAppearancesWithNames: @[NSAppearanceNameAqua, NSAppearanceNameDarkAqua]];
-        if ([appearance isEqual: NSAppearanceNameDarkAqua])
-            [[NSColor colorWithSRGBRed: 24/255.0 green: 48/255.0 blue: 75/255.0 alpha: 1.0] setFill]; /// Color copied from Xcode 26 [Oct 2025]
-        else
-            [[NSColor colorWithSRGBRed: 217/255.0 green: 237/255.0 blue: 255/255.0 alpha: 1.0] setFill]; /// Color copied from Xcode 26 [Oct 2025]
+        if (![self isEmphasized])
+            [[NSColor unemphasizedSelectedContentBackgroundColor] setFill]; /// Exacly matches Xcode 26 xcloc editor (Looks a bit dark but oh well) [Oct 2025]
+        else {
+            if ([appearance isEqual: NSAppearanceNameDarkAqua])
+                [[NSColor colorWithSRGBRed: 24/255.0 green: 48/255.0 blue: 75/255.0 alpha: 1.0] setFill]; /// Color copied from Xcode 26 [Oct 2025]
+            else
+                [[NSColor colorWithSRGBRed: 217/255.0 green: 237/255.0 blue: 255/255.0 alpha: 1.0] setFill]; /// Color copied from Xcode 26 [Oct 2025]
+        }
             
         [[NSBezierPath bezierPathWithRoundedRect: self.bounds xRadius: 5 yRadius: 5] fill];
     }
     
-    - (BOOL)isEmphasized { return NO; } /// Prevent text from turning black
+    //- (BOOL)isEmphasized { return NO; } /// Prevent text from turning black
+    - (NSBackgroundStyle)interiorBackgroundStyle {
+        return NSBackgroundStyleNormal; /// Prevent text from turning black
+    }
+
 
     - (void)drawSeparatorInRect: (NSRect)dirtyRect {
         if (self.isSelected) return;
@@ -278,8 +286,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         
             if (self.selectedRow == -1) return;
             auto nextRow = self.selectedRow - 1;
-            if (0
- > nextRow) return;
+            if (0 > nextRow) return;
             [self selectRowIndexes: indexset(nextRow) byExtendingSelection: NO];
             
             [self editColumn: [self indexOfColumnWithIdentifier: @"target"] row: nextRow withEvent: nil select: YES];
@@ -736,7 +743,8 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         /// HACK: Remove editing state
         ///     Otherwise bug: If the current row's @"target" textfield is being edited, macOS will transfer editing to the @"target" textField on the row we're going to select, (not sure why, may be bug? – macOS 26.0) but then, when we reload the @"target" cell in `setTranslation:` (caller of this method), that immediately removes the editing state and that invokes `controlTextDidEndEditing:`, which then invokes the undoManger writes to our data model (Calls `setTranslation:`) but with the *current* content of the textField insteadof the value we want to restore via undo. So this cancels the undo.
         ///         Note: Even with this fix, this whole thing is brittle: If this is triggered by an undo while editing a @"target" textField, this line will trigger `controlTextDidEndEditing:` on the currently selected row which then calls `setTranslation:` but this works because `setTranslation:` should always do nothing in this case because the undoManager should only try to undo edits from another row, if the currently selected row's textField has no edits that can be undone, which will cause `setTranslation:` to immediately return [Oct 2025]
-        [[NSApp mainWindow] makeFirstResponder: nil];
+        ///         Update: Had to pass `self` instead of `nil` so we don't break keyboard-interaction
+        [[NSApp mainWindow] makeFirstResponder: self];
         
         /// Show transUnit row
         ///     Should only be necessary if we're undoing. See `Navigate UI` above [Oct 2025]
