@@ -277,6 +277,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         
             if (self.selectedRow == -1) return;
             auto nextRow = self.selectedRow + 1;
+            if (rowModel_isParent([self itemAtRow: nextRow])) nextRow += 1; /// Skip over parents
             if ([self numberOfRows] <= nextRow) return;
             [self selectRowIndexes: indexset(nextRow) byExtendingSelection: NO];
             
@@ -286,6 +287,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         
             if (self.selectedRow == -1) return;
             auto nextRow = self.selectedRow - 1;
+            if (rowModel_isParent([self itemAtRow: nextRow])) nextRow -= 1; /// Skip over parents
             if (0 > nextRow) return;
             [self selectRowIndexes: indexset(nextRow) byExtendingSelection: NO];
             
