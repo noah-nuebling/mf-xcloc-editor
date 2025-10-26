@@ -365,10 +365,10 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
     #pragma mark - NSControlTextEditingDelegate (Callbacks for the MFTextField)
     
     - (void) controlTextDidBeginEditing: (NSNotification *)notification {
-        /// TODO: This is not called
+        /// CAUTION: This is not called
         ///     See:
         ///     - https://developer.apple.com/documentation/objectivec/nsobject/1428847-controltextdidendediting?language=objc
-        ///     
+        ///     ... Update: We stopped relying on this [Oct 2025]
         NSTextField *textField = notification.object;
         _lastTargetCellString = textField.stringValue; /// Track whether textField content was actually changed inside `controlTextDidEndEditing:`. Would be nicer if we could use callbacks instead of ivars. [Oct 2025]
         mflog(@"controlTextDidBeginEditing: %@", _lastTargetCellString);
@@ -895,10 +895,19 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                 
             }
             else {
+                auto matchingScreenshotPlistEntry = [self _localizedStringsDataPlist_GetEntryForRowModel: transUnit];
 
                 if (iscol(@"id")) {
-                    assert([reusableViewIDs containsObject: @"theReusableCell_TableID"]);
-                    cell = [outlineView makeViewWithIdentifier: @"theReusableCell_TableID" owner: self]; /// [Jun 2025] What to pass as owner here? Will this lead to retain cycle?
+                    if (matchingScreenshotPlistEntry) {
+                        assert([reusableViewIDs containsObject: @"theReusableCell_TableID"]);
+                        cell = [outlineView makeViewWithIdentifier: @"theReusableCell_TableID" owner: self]; /// [Jun 2025] What to pass as owner here? Will this lead to retain cycle?
+                    }
+                    else {
+                        /// Use default text cell if there is no quickLook button
+                        assert([reusableViewIDs containsObject: @"theReusableCell_Table"]);
+                        cell = [outlineView makeViewWithIdentifier: @"theReusableCell_Table" owner: self];
+                    }
+
                 }
                 else if (iscol(@"target")) {
                     assert([reusableViewIDs containsObject: @"theReusableCell_TableTarget"]);
@@ -915,13 +924,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                         [cell.textField setEditable: targetCellShouldBeEditable];
                     }
                     else if (iscol(@"id")) {
-                        auto matchingPlistEntry = [self _localizedStringsDataPlist_GetEntryForRowModel: transUnit];
-                        if (!matchingPlistEntry) {
-                            /// Remove the quicklook button from IB
-                            assert([reusableViewIDs containsObject: @"theReusableCell_Table"]);
-                            cell = [outlineView makeViewWithIdentifier: @"theReusableCell_Table" owner: self]; /// Go back to default cell (TODO: refactor) (We don't modify cause that affects future calls to `makeViewWithIdentifier:`)
-                        }
-                        else {
+                        if (matchingScreenshotPlistEntry) {
                             NSButton *quickLookButton = firstmatch(cell.subviews, cell.subviews.count, nil, sv, [sv.identifier isEqual: @"quick-look-button"]);
                             [quickLookButton setAction: @selector(quickLookButtonPressed:)];
                             [quickLookButton setTarget: self];
