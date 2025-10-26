@@ -957,16 +957,15 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                         
                     }
                 }
-                /// Common config
-                cell.textField.delegate = (id)self; /// Optimization: Could prolly set this once in IB [Oct 2025]
-                cell.textField.lineBreakMode = NSLineBreakByWordWrapping;
-                cell.textField.selectable = YES;
-                
-                /// Special override config
-                if (iscol(@"state")) {
-                    cell.textField.selectable = NO; /// This is only called for the `green_checkmark` (Other state cells are handled by `stateCellBackgroundColor`).
-                                                    /// The `green_checkmark` disappears when selected, so we disable selection. [Oct 2025]
-                }
+            }
+            /// Common config
+            cell.textField.delegate = (id)self; /// Optimization: Could prolly set this once in IB [Oct 2025]
+            cell.textField.lineBreakMode = NSLineBreakByWordWrapping;
+            cell.textField.selectable = YES;
+            
+            /// Special override config
+            if (iscol(@"state") && !stateCellBackgroundColor) { /// This is only called for the `green_checkmark` (Other state cells are handled by `stateCellBackgroundColor`).
+                cell.textField.selectable = NO;                 /// The `green_checkmark` disappears when selected, so we disable selection. [Oct 2025]
             }
 
             [cell.textField setAttributedStringValue: uiStringAttributed];
@@ -1056,7 +1055,10 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                 [self togglePreviewPanel: nil];
             }
             else {
+            
                 [self selectRowIndexes: [NSIndexSet indexSetWithIndex: row] byExtendingSelection: NO];
+                
+                [self returnFocus];
                 [[QLPreviewPanel sharedPreviewPanel] makeKeyAndOrderFront: nil];
             }
         }

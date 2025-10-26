@@ -2,6 +2,7 @@
 <document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="24128" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
     <dependencies>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="24128"/>
+        <capability name="Image references" minToolsVersion="12.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -90,39 +91,43 @@
             <point key="canvasLocation" x="-696" y="-77"/>
         </tableCellView>
         <tableCellView identifier="theReusableCell_TableID" verticalCompressionResistancePriority="1000" id="JTE-ER-1V4" userLabel="Table Cell - ID">
-            <rect key="frame" x="0.0" y="0.0" width="168" height="62"/>
+            <rect key="frame" x="0.0" y="0.0" width="230" height="62"/>
             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
             <subviews>
                 <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" verticalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="QQo-Qf-nO7" userLabel="Table View Cell">
-                    <rect key="frame" x="0.0" y="39" width="115" height="15"/>
+                    <rect key="frame" x="0.0" y="39" width="205" height="15"/>
                     <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="Table View Cell - ID" id="TWI-eH-Nff">
                         <font key="font" metaFont="cellTitle"/>
                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                         <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                     </textFieldCell>
                 </textField>
-                <button identifier="quick-look-button" verticalHuggingPriority="750" horizontalCompressionResistancePriority="1000" verticalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="qr8-CF-vVi">
-                    <rect key="frame" x="2" y="15" width="31" height="16"/>
-                    <buttonCell key="cell" type="push" title="View Screenshot" bezelStyle="rounded" image="NSQuickLookTemplate" imagePosition="only" alignment="center" controlSize="mini" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="GSq-rv-bbb">
+                <button identifier="quick-look-button" verticalHuggingPriority="750" horizontalCompressionResistancePriority="1000" verticalCompressionResistancePriority="1000" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="qr8-CF-vVi">
+                    <rect key="frame" x="124" y="39" width="20" height="16"/>
+                    <buttonCell key="cell" type="push" title="View Screenshot" bezelStyle="rounded" imagePosition="only" alignment="center" controlSize="mini" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="GSq-rv-bbb">
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                         <font key="font" metaFont="miniSystem"/>
+                        <imageReference key="image" image="eye" catalog="system" symbolScale="medium"/>
                     </buttonCell>
+                    <constraints>
+                        <constraint firstAttribute="width" constant="20" id="Dtu-NQ-hC6"/>
+                    </constraints>
                 </button>
             </subviews>
             <constraints>
+                <constraint firstAttribute="trailing" secondItem="qr8-CF-vVi" secondAttribute="trailing" constant="2" id="3WN-Bb-bU0"/>
                 <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="QQo-Qf-nO7" secondAttribute="trailing" constant="2" id="D1U-fc-Xcs"/>
                 <constraint firstItem="QQo-Qf-nO7" firstAttribute="leading" secondItem="JTE-ER-1V4" secondAttribute="leading" constant="2" id="DMG-i7-9u2"/>
-                <constraint firstItem="qr8-CF-vVi" firstAttribute="top" secondItem="QQo-Qf-nO7" secondAttribute="bottom" constant="8" symbolic="YES" id="GZV-4h-QeD"/>
                 <constraint firstAttribute="bottom" relation="greaterThanOrEqual" secondItem="QQo-Qf-nO7" secondAttribute="bottom" constant="8" id="Hy3-oM-NUS"/>
-                <constraint firstItem="qr8-CF-vVi" firstAttribute="leading" secondItem="JTE-ER-1V4" secondAttribute="leading" constant="2" id="kKe-cn-Vgm"/>
+                <constraint firstItem="qr8-CF-vVi" firstAttribute="leading" secondItem="QQo-Qf-nO7" secondAttribute="trailing" constant="5" id="QbF-Kf-9HG"/>
                 <constraint firstItem="QQo-Qf-nO7" firstAttribute="top" secondItem="JTE-ER-1V4" secondAttribute="top" constant="8" id="nlz-Fe-swT"/>
-                <constraint firstAttribute="bottom" relation="greaterThanOrEqual" secondItem="qr8-CF-vVi" secondAttribute="bottom" constant="8" id="u3y-Ca-OgJ"/>
+                <constraint firstItem="qr8-CF-vVi" firstAttribute="top" secondItem="JTE-ER-1V4" secondAttribute="top" constant="8" id="zKD-RU-5bf"/>
             </constraints>
             <connections>
                 <outlet property="nextKeyView" destination="qr8-CF-vVi" id="1NF-S2-zpp"/>
                 <outlet property="textField" destination="QQo-Qf-nO7" id="xeh-gI-5A1"/>
             </connections>
-            <point key="canvasLocation" x="-293" y="-118"/>
+            <point key="canvasLocation" x="-262" y="-118"/>
         </tableCellView>
         <tableCellView identifier="theReusableCell_TableState" verticalCompressionResistancePriority="1000" id="O08-pG-JwC" userLabel="Table Cell - State">
             <rect key="frame" x="0.0" y="0.0" width="119" height="33"/>
@@ -160,6 +165,6 @@
         </tableCellView>
     </objects>
     <resources>
-        <image name="NSQuickLookTemplate" width="26" height="17"/>
+        <image name="eye" catalog="system" width="21" height="13"/>
     </resources>
 </document>
