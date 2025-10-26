@@ -65,7 +65,7 @@
         NSWindow *window; /// Without storing after creation in -loadWindow, this started crashing somewhere in AppKit on Tahoe  after adding `windowShouldClose:` [Oct 2025]
     }
     
-    NSSplitView *mfsplitview(NSArray<NSView *> *arrangedSubviews) {
+    NSSplitView *mfui_splitview(NSArray<NSView *> *arrangedSubviews) {
         
         auto splitView = mfui_new(NSSplitView);
         
@@ -92,6 +92,9 @@
         /// Set up window
         assert(!self.window);
         {
+            
+            /// TODO: Command-R and Return don't work after marking as translated
+        
             /// TODO: Fix issue where double-clicking / triple-clicking /...  a row does nothing (instead of starting text-editing)
             ///     Tried to fix this but hard. Maybe just live with it.
             /// TODO: Undo is a bit unresponsive (cause saving the doc on every edit is slow)
@@ -124,7 +127,7 @@
         /// Define view hierarchy & get outlets
         NSSplitView *out_splitView = nil;
         #if 0
-            mfui_insert(window.contentView, mfui_margin(0,0,0,0), mfui_outlet(&out_splitView, mfsplitview(@[ /// Hack: Have to use autolayout around the NSSplitView to give the viewHierarchy a `_layoutEngine`. Otherwise `[NSSplitView setHoldingPriority:forSubviewAtIndex:]` doesn't work. HACKS ON HACKS ON HACK ON HACKS
+            mfui_insert(window.contentView, mfui_margins(0,0,0,0), mfui_outlet(&out_splitView, mfui_splitview(@[ /// Hack: Have to use autolayout around the NSSplitView to give the viewHierarchy a `_layoutEngine`. Otherwise `[NSSplitView setHoldingPriority:forSubviewAtIndex:]` doesn't work. HACKS ON HACKS ON HACK ON HACKS
                 mfui_scrollview(mfui_outlet(&self->out_sourceList, [SourceList new])),
                 mfui_scrollview(mfui_outlet(&self->out_tableView,  [TableView new]))
             ])));
@@ -133,17 +136,17 @@
                 auto contentViewController = [NSSplitViewController new];
                 if ((0)) {
                     contentViewController.splitView = ({
-                        mfui_outlet(&out_splitView, mfsplitview(@[]));
+                        mfui_outlet(&out_splitView, mfui_splitview(@[]));
                     });
                 }
                 out_splitView = contentViewController.splitView;
                 contentViewController.splitViewItems = @[
                     ({
-                        auto sideBarItem = [NSSplitViewItem sidebarWithViewController: mfui_viewcontroller(
-                            ({ auto v = mfui_scrollview(mfui_outlet(&self->out_sourceList, mfui_new(SourceList)));
+                        auto sideBarItem = [NSSplitViewItem sidebarWithViewController: mfui_viewcontroller(({
+                            auto v = mfui_scrollview(mfui_outlet(&self->out_sourceList, mfui_new(SourceList)));
                             v.drawsBackground = YES; /// Turn off liquid glass - just make it sidebar white.
-                            v; })
-                        )];
+                            v;
+                        }))];
                         sideBarItem.canCollapse = NO;
                         sideBarItem;
                     }),
@@ -165,7 +168,7 @@
             
             auto viewController = [TitlbarAccessoryViewController new];
             viewController->_theView = ({
-                auto w = mfui_wrap(mfui_margin(5, 5, 5, 5), mfui_outlet(&self->out_filterField, ({
+                auto w = mfui_wrap(mfui_margins(5, 5, 5, 5), mfui_outlet(&self->out_filterField, ({
                     auto v = mfui_new(FilterField);
                     v.editable = YES;
                     v.placeholderString = @"Filter Translations";

@@ -310,15 +310,18 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
         if ([file isEqual: @"separator"]) {
             
             if ((0))
-            return mfui_wrap(mfui_margin(5, 5, 0, 0), ({
+            return mfui_wrap(mfui_margins(5, 5, 0, 0), ({
                 auto v = mfui_new(NSBox);
                 v.titlePosition = NSNoTitle;
                 v.boxType = NSBoxSeparator;
                 v;
             }));
             if ((1))
-            return mfui_wrap(mfui_margin(15, 3, 2, 0),
-                mfui_label(@"Project Files", 11, NSFontWeightSemibold, [NSColor secondaryLabelColor])
+
+    
+
+            return mfui_wrap(mfui_margins(15, 3, 2, 0),
+                mfui_label(@"Project Files", .size = 11, .weight = NSFontWeightSemibold, .color = [NSColor secondaryLabelColor])
             );
             
         }
@@ -353,17 +356,19 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
                 cell = [NSTableCellView new];
                 NSTextField *out_label = nil;
                 NSTextField *out_progress = nil;
-                auto content = mfui_wrap(mfui_margin(6, 6, 2, 2), mfui_hstack(@[
-                    mfui_outlet(&out_label,    ({ auto v = mfui_label([self uiStringForFile: file], 12, NSFontWeightRegular, [NSColor labelColor]);
+                auto content = mfui_wrap(mfui_margins(6, 6, 2, 2), mfui_hstack(@[
+                    
+                    mfui_outlet(&out_label, ({
+                        auto v = mfui_label([self uiStringForFile: file], .size = 12);
                         [v setContentCompressionResistancePriority: 1 forOrientation: NSLayoutConstraintOrientationHorizontal];
                         [v setLineBreakMode: NSLineBreakByTruncatingTail];
                     v; })),
                     mfui_spacer(),
-                    mfui_outlet(&out_progress, ({ auto v = mfui_label(@"", 12, NSFontWeightRegular, [NSColor secondaryLabelColor]); /// Text filled in by updateProgressInCell
+                    mfui_outlet(&out_progress, ({ auto v = mfui_label(@"", .size = 12, .color = [NSColor secondaryLabelColor]); /// Text filled in by updateProgressInCell
                         v.identifier = @"progess-field";
                     v; }))
                 ]));
-                mfui_insert(cell, mfui_margin(0, 0, 0, 0), content);
+                mfui_insert(cell, mfui_margins(0, 0, 0, 0), content);
                 
                 cell.textField = out_label;
                 [cell mf_setAssociatedObject: out_progress forKey: @"progress-field"];

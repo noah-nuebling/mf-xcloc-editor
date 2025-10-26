@@ -14,11 +14,21 @@
 #import "Utility.h"
 #import "NSObject+Additions.h"
 #import "AppDelegate.h"
-#import "MFQLPreviewItem.h"
 #import "Constants.h"
 #import "XclocDocument.h"
 #import "RowUtils.h"
 #import "MFTextField.h"
+
+#pragma mark - MFQLPreviewItem
+
+@interface MFQLPreviewItem : NSObject<QLPreviewItem>
+
+    @property NSURL * previewItemURL;
+    @property NSString * previewItemTitle;
+    //@property id previewItemDisplayState;
+
+@end
+@implementation MFQLPreviewItem @end
 
 #pragma mark - TableRowView
 
@@ -55,6 +65,8 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
     }
 
 @end
+
+#pragma mark - TableView
 
 @implementation TableView
     {
@@ -420,7 +432,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         _childrenMap = [NSMutableDictionary new];
         NSMutableSet<NSXMLElement *> *allChildTransUnits = [NSMutableSet new];
 
-        for (NSXMLElement *transUnit in self.transUnits) {
+        for (NSXMLElement *transUnit in self->transUnits) {
             NSString *idStr = xml_attr(transUnit, @"id").objectValue;
             if ([idStr containsString: @"|==|"]) {
                 /// This is a child variant
@@ -428,7 +440,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                 NSString *baseKey = parts[0];
 
                 /// Find parent with matching baseKey
-                for (NSXMLElement *potentialParent in self.transUnits) {
+                for (NSXMLElement *potentialParent in self->transUnits) {
                     NSString *parentId = xml_attr(potentialParent, @"id").objectValue;
                     if ([parentId isEqual: baseKey]) { /// Found parent
                     
@@ -449,7 +461,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
 
         /// Filter
         _displayedTopLevelTransUnits = [NSMutableArray new];
-        for (NSXMLElement *transUnit in self.transUnits) {
+        for (NSXMLElement *transUnit in self->transUnits) {
 
             { /// Validate
                 assert(isclass(transUnit, NSXMLElement));
@@ -564,7 +576,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
 
     - (void) reloadWithNewData: (NSArray <NSXMLElement *> *)transUnits {
         
-        self->_transUnits = transUnits;
+        self->transUnits = transUnits;
         [self bigUpdateAndStuff];
             
         /// Update column names (weird place to do this) [Oct 2025]
