@@ -1,7 +1,7 @@
 
 Overview: `MMF Xcloc Editor`
 
-    Clone of Xcode xcloc editing UI 
+    Lightweight clone of Xcode's .xcloc file editor for the Mac Mouse Fix project.
         
     Perks that it has in common with Xcode's xcloc editor:
         - Very simple, elegant design that gives you just what is necessary 
@@ -37,8 +37,8 @@ Overview: `MMF Xcloc Editor`
             the app. (There's no glossary support, but this may be good enough)
         - QuickLook of localization screenshots via Space or Command-Y (Xcode has quicklook 
             but it always has to be triggered by clicking a tiny button with the mouse which is 
-            annoying – this may be a bug)
-        - Doesn't have Xcode bug where red rectangles that highlight strings in localization 
+            annoying – this may be a bug, but it's been there for a long time)
+        - Doesn't have Xcode bug where red rectangles that highlight strings in localization
             screenshots are never updated. [FB20608107]
             - This bug can be circumvented by including a copy of the screenshot for each 
                 localizable string that appears inside of it – however, for my app, Mac Mouse 
@@ -48,20 +48,23 @@ Overview: `MMF Xcloc Editor`
         - Localizers can edit the state of localized strings
             - In Xcode, the state automatically updates to 'translated' whenever the localizer 
                 edits the string, but other than that localizers have no control over the state, 
-                e.g. if they wanna come back to a string later.
-            - `MMF Xcloc Editor` lets localizers toggle the state between 'needs_review' and 
-                'translated' – plus there's a convenient Command-R shortcut.
-        - Shows localization progress percentage in the sidebar (Similar to Xcode's 
-                **.xcstrings** editor), helping localizers keep track of their progress.
+                which could be useful if they want to come back to a string later.
+            - In contrast, `MMF Xcloc Editor` lets localizers easily toggle the state between
+                'needs_review' and 'translated' via a convenient Command-R shortcut,
+                or an easy-to-discover right-click menu.
+        - Shows localization progress percentage in the sidebar (Similar to
+            Xcode's **.xcstrings** editor), helping localizers keep track of their progress.
         - Strings marked as 'do not translate' are *not* shown to localizers.
-        - Strings with multiple pluralizable variants are displayed in a simple way. 
-            Note: Pluralizable format specifiers like `%#@pluralizable@` can not be edited and 
-                are not shown to localizers. From my understanding it's never necessary to make 
+            - Xcode sorts these strings above 'needs_review' strings making it harder to find
+              strings that need review.
+        - Strings with multiple pluralizable variants are displayed in a simple way.
+            Note: In `MMF Xcloc Editor`, pluralizable format specifiers like `%#@pluralizable@` can not be edited and
+                are not shown to localizers. From my understanding it's never necessary to make
                 this editable, at least for my app Mac Mouse Fix, which this editor is primarily 
-                designed for. In Mac Mouse Fix, I set the `pluralizable format string` of all 
-                pluralizable strings to to only a single format specifier (like 
-                `%#@pluralizable@`) and then have all the actual content in the plural variants. 
-                This simplifies things for localizers and has no drawbacks as far as I can tell. 
+                designed for. In Mac Mouse Fix, I set the *pluralizable format string* of all
+                pluralizable strings to only a single format specifier (like `%#@pluralizable@`)
+                and then have all the actual content in the plural variants.
+                This simplifies things for localizers and has no drawbacks as far as I can tell.
                 If somebody does need this functionality – let me know and I'll consider 
                 adding it.
         - Pluralizable variants are not hidden by default. 
@@ -70,23 +73,28 @@ Overview: `MMF Xcloc Editor`
         - Only once all the pluralizable variants are marked as 'translated' does the entire 
             string show up as 'translated'
             - In Xcode, the pluralizable string can be marked as 'translated' while the variants 
-                are still marked as 'needs_review' which could be confusing.
+                are still marked as 'needs_review' which could make the strings hard to find.
         - Supports undo and redo for all edits.
-        - Can be controlled completely via the keyboard. 
-        (- Shift-Return enters a newline, for the ChatGPT users.)
+        - Can be controlled and navigated completely via the keyboard.
+        - Shift-Return enters a newline, for the ChatGPT users.
         - .xcloc file automatically saves on every edit so users don't have to manually save and 
             no data will be lost. 
         - Small size – can be shipped in a bundle with your .xcloc files.
     
     Caveats:
-        - I kinda hacked this together in a few days as a hobby project. I made this specifically 
-            for the .xcloc files of my app Mac Mouse Fix, and may not work correctly with other 
-            .xcloc files. If you find some bug or incompatibility with your .xcloc files, let me 
-            know and I'll consider adding a patch. (Or just write a pull request)
-        - Can't edit `pluralizable format string`s (but that shouldn't be necessary I 
+        - I kinda hacked this together in a few days as a for-fun project. I made this specifically
+            for the .xcloc files of my app Mac Mouse Fix, I haven't done much testing outside of that,
+                and so this may not work correctly with other .xcloc files. If you find some bug or
+                incompatibility with your .xcloc files, feel free to let me know or open a pull request.
+                (as of [Oct 2025])
+        - Can't edit `pluralizable format string`s (but that shouldn't be necessary I
             think – see above)
 
---- 
+Building:
+    Just open in Xcode and hit the play button. If there are problems let me know.
+    I'll also consider uploading a notarized version under "Releases" [Oct 2025]
+
+---
 
 Old notes
 
