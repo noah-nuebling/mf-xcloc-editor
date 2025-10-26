@@ -92,8 +92,6 @@
         /// Set up window
         assert(!self.window);
         {
-            
-            /// TODO: Better default column-widths
             /// TODO: Fix issue where double-clicking / triple-clicking /...  a row does nothing (instead of starting text-editing)
             ///     Tried to fix this but hard. Maybe just live with it.
             /// TODO: Undo is a bit unresponsive (cause saving the doc on every edit is slow)

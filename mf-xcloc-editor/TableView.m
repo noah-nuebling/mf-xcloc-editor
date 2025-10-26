@@ -92,22 +92,35 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         
         /// Add columns
         {
-            auto mfui_tablecol = ^NSTableColumn *(NSString *identifier, NSString *title) {
+            auto mfui_tablecol = ^NSTableColumn *(NSString *identifier, NSString *title, NSInteger minWidth, NSInteger defaultWidth, NSInteger maxWidth, BOOL autoresizes) {
                 auto v = [[NSTableColumn alloc] initWithIdentifier: identifier];
                 [v setSortDescriptorPrototype: [NSSortDescriptor sortDescriptorWithKey: v.identifier ascending: YES]];
                 v.title = title;
+                v.minWidth = minWidth;
+                v.maxWidth = maxWidth;
+                v.width = defaultWidth;
+                
+                if (autoresizes) {
+                    v.resizingMask = NSTableColumnAutoresizingMask | NSTableColumnUserResizingMask;
+                }
+                else {
+                    v.resizingMask = NSTableColumnUserResizingMask;
+                }
+                
                 return v;
             };
             
-            NSTableColumn *idCol = mfui_tablecol(@"id", @"Key");
-            [self addTableColumn: idCol];
-            [self addTableColumn: mfui_tablecol(@"state",  @"State")];
-            [self addTableColumn: mfui_tablecol(@"source", @"")]; /// Set in `reloadWithNewData:` [Oct 2025]
-            [self addTableColumn: mfui_tablecol(@"target", @"")];
-            [self addTableColumn: mfui_tablecol(@"note",   @"Comment")];
+            [self addTableColumn: mfui_tablecol(@"id",     @"Key",     75,  150, 999999, NO)];
+            [self addTableColumn: mfui_tablecol(@"source", @"",        100, 300, 999999, NO)]; /// UIString set in `reloadWithNewData:` [Oct 2025]
+            [self addTableColumn: mfui_tablecol(@"target", @"",        100, 300, 999999, NO)];
+            [self addTableColumn: mfui_tablecol(@"note",   @"Comment", 100, 150, 999999, YES)];
+            [self addTableColumn: mfui_tablecol(@"state",  @"State",   77,  77,  77, NO)]; /// Fit 'NEEDS REVIEW' badge perfectly
 
             /// Set the ID column as the outline column (shows disclosure triangles)
-            [self setOutlineTableColumn: idCol];
+            [self setOutlineTableColumn: [self tableColumnWithIdentifier: @"id"]];
+            
+            /// Column sizing
+            [self setColumnAutoresizingStyle: NSTableViewUniformColumnAutoresizingStyle];
         }
         
         /// Add right-click menu
