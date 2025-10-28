@@ -93,6 +93,15 @@
         assert(!self.window);
         {
             
+            /// TODO:
+            /// - [x] Fix crash in MMF Xcloc Editor
+            ///     - Happened after not doing anything for a while – Prolly autosave
+            ///     - While editing /Users/noah/Downloads/loca-studio-sample-documents/sample-xcloc/ja.xcloc
+            ///     -> Update Never happened again. Not sure why.
+            /// - [x] Change icon back
+            /// - [ ] Maybe implement glyphs for single-linebreak (/ other invisibles)
+            
+            
             /// TODO: Sometimes the close button turns into save button (black dot)
             ///     (Are we missing a save?) ... Nope we're not missing  a save, but undoing makes the black dot show. Turned this off through `autosavesInPlace` – not sure that's correct [Oct 2025]
         
@@ -110,6 +119,8 @@
                 | NSWindowStyleMaskUnifiedTitleAndToolbar
             ;
             
+            window.identifier = @"XclocWindowIdentifier"; /// Doesn't seem to make a difference (Thought it might improve some restorableState issues)
+            
             window.delegate = self;
             if ((0)) window.windowController = self; /// Used by `getdoc()` [Oct 2025]
             
@@ -122,8 +133,12 @@
                 window.toolbar.allowsDisplayModeCustomization = NO;
             }
             if ((0)) window.toolbarStyle = NSWindowToolbarStyleUnifiedCompact;
-            
         };
+        
+        /// Enable cascading, if we open multiple documents
+        ///     Doesn't work on macOS 26 [Oct 2025]
+        ///     Also tried overriding `cascadeTopLeftFromPoint:` but it's not called.
+        self.shouldCascadeWindows = YES; /// Doesn't make a difference [Oct 2025]
         
         /// Define view hierarchy & get outlets
         NSSplitView *out_splitView = nil;
@@ -218,10 +233,11 @@
         
         /// Set window size/position
         { /// Default size/position
-            [window setContentSize: NSMakeSize(800, 600)];
+            [window setContentSize: NSMakeSize(1440 - 100, 900 - 100)];
             [window center];
         }
-        [window setFrameUsingName: @"TheeeEditor"]; /// Override with last saved size / position
+        if ((0)) /// This is unnecessary now since it's handled automatically by `restoreWindowWithIdentifier:`? [Oct 2025]
+            [window setFrameUsingName: @"TheeeEditor"]; /// Override with last saved size / position
         
         /// Open window
         [window makeKeyAndOrderFront: nil];

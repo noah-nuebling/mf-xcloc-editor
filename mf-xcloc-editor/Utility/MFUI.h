@@ -50,15 +50,8 @@ static NSView *mfui_wrap(NSEdgeInsets insets, NSView *v) {
 
 NSScrollView *mfui_scrollview(NSView *view);
 
-static NSView *mfui_spacer(void) {
-    assert(false); /// Unused
-    auto v = mfui_new(NSView);
-    v.identifier = @"mfui_spacer";
-    return v;
-}
 
-
-typedef struct { CGFloat size; NSFontWeight weight; NSColor *color; } mfui_label_args;
+typedef struct { CGFloat size; NSFontWeight weight; NSColor *color; NSLineBreakMode breakMode; } mfui_label_args;
 static NSTextField *mfui_label(NSString *text, mfui_label_args args) {
     #define mfui_label(text, args...) mfui_label((text), (mfui_label_args){ args })
     
@@ -77,28 +70,38 @@ static NSTextField *mfui_label(NSString *text, mfui_label_args args) {
     v.font = [NSFont systemFontOfSize: args.size weight: args.weight];
     v.textColor = args.color;
     
+    if (args.breakMode) {
+        assert(false); /// Unused
+        v.lineBreakMode = args.breakMode;
+        [v setContentCompressionResistancePriority: 1 forOrientation: NSLayoutConstraintOrientationHorizontal];
+    }
+    
     return v;
 }
 
 
-static NSStackView *mfui_vstack(NSArray *arrangedSubviews) {
-
+static NSStackView *mfui_stack(char orientation, CGFloat spacing, NSArray *arrangedSubviews) {
+    
     assert(false); /// Unused
-
+    
     auto v = mfui_new(NSStackView);
-    v.orientation = NSUserInterfaceLayoutOrientationVertical;
+    v.orientation = orientation == 'v' ? NSUserInterfaceLayoutOrientationVertical : NSUserInterfaceLayoutOrientationHorizontal;
     
     for (NSView *w in arrangedSubviews) {
         [v addArrangedSubview: w];
     }
     
-    [v setContentHuggingPriority: 1                  forOrientation: NSLayoutConstraintOrientationHorizontal];
-    [v setContentCompressionResistancePriority: 1000 forOrientation: NSLayoutConstraintOrientationHorizontal];
-    [v setContentHuggingPriority: 1000               forOrientation: NSLayoutConstraintOrientationVertical];
-    [v setContentCompressionResistancePriority: 1000 forOrientation: NSLayoutConstraintOrientationVertical];
+    v.spacing = spacing;
     
-    ///TEST
-    if ((0)) [[v widthAnchor] constraintGreaterThanOrEqualToConstant: 200].active = YES;
-    
+    return v;
+}
+
+#define mfui_vstack(spacing, views...) mfui_stack('v', (spacing), (views))
+#define mfui_hstack(spacing, views...) mfui_stack('h', (spacing), (views))
+
+static NSView *mfui_spacer(void) {
+    assert(false);
+    auto v = mfui_new(NSView);
+    v.identifier = @"mfui_spacer";
     return v;
 }

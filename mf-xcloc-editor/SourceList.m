@@ -326,24 +326,6 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
             
         }
         
-        auto mfui_hstack = ^NSStackView *(NSArray *arrangedSubviews) {
-
-            auto v = mfui_new(NSStackView);
-            v.orientation = NSUserInterfaceLayoutOrientationHorizontal;
-            
-            for (NSView *w in arrangedSubviews) {
-                [v addArrangedSubview: w];
-            }
-            if ((1)) {
-                [v setContentHuggingPriority: 1000               forOrientation: NSLayoutConstraintOrientationHorizontal];
-                [v setContentCompressionResistancePriority: 1000 forOrientation: NSLayoutConstraintOrientationHorizontal];
-                [v setContentHuggingPriority: 1000               forOrientation: NSLayoutConstraintOrientationVertical];
-                [v setContentCompressionResistancePriority: 1000 forOrientation: NSLayoutConstraintOrientationVertical];
-            }
-            
-            return v;
-        };
-        
         NSTableCellView *cell;
         {
             if ((0)) {
@@ -356,7 +338,7 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
                 cell = [NSTableCellView new];
                 NSTextField *out_label = nil;
                 NSTextField *out_progress = nil;
-                auto content = mfui_wrap(mfui_margins(6, 6, 2, 2), mfui_hstack(@[
+                auto content = mfui_wrap(mfui_margins(6, 6, 2, 2), mfui_hstack(0, @[
                     
                     mfui_outlet(&out_label, ({
                         auto v = mfui_label([self uiStringForFile: file], .size = 12);

@@ -49,10 +49,11 @@
         return result;
     }
 
-    static XclocDocument *getdoc_frontmost(void) { /// Heuristic for accessing the document state from code that isn't specific to a window (mainMenu code) [Oct 2025]
+    static XclocDocument *_Nullable getdoc_frontmost(void) { /// Heuristic for accessing the document state from code that isn't specific to a window (mainMenu code) [Oct 2025]
 
         /// `-[NSDocumentController currentDocument]` does the same but docs say it's unreliable, not sure that matters here. [Oct 2025]
-
+        ///     Returns nil if no document is open at all (See NSOpenPanel)
+        
         __block XclocDocument *result = nil;
         
         [NSApp enumerateWindowsWithOptions: NSWindowListOrderedFrontToBack usingBlock:^(NSWindow * _Nonnull w, BOOL * _Nonnull stop) {
@@ -62,6 +63,5 @@
             }
         }];
         
-        assert(result != nil);
         return result;
     }

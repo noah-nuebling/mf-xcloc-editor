@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 http://docs.oasis-open.org/xliff/v1.2/os/xliff-core-1.2-strict.xsd">
+  <file original="MyApp/en.lproj/InfoPlist.strings" datatype="plaintext" source-language="en" target-language="zh-Hans">
+    <header>
+      <tool tool-id="com.apple.dt.xcode" tool-name="Xcode" tool-version="11.2.1" build-num="11B500"/>
+    </header>
+    <body>
+      <trans-unit id="CFBundleName" xml:space="preserve">
+        <source>MyApp</source>
+        <note>Bundle name</note>
+      </trans-unit>
+    </body>
+  </file>
+  <file original="MyApp/en.lproj/Localizable.strings" source-language="en" target-language="zh-Hans" datatype="plaintext">
+    <header>
+      <tool tool-id="com.apple.dt.xcode" tool-name="Xcode" tool-version="11.2.1" build-num="11B500"/>
+    </header>
+    <body>
+      <trans-unit id="signin.siwa" xml:space="preserve">
+        <source>Sign in with Apple⁩</source>
+        <target>Sign in with Apple⁩</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="%1$d/%2$d item(s) selected" xml:space="preserve">
+        <source>%1$d/%2$d item(s) selected</source>
+        <target>%d 件商品，已选 %d 件商品</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="%ld color(s)" xml:space="preserve">
+        <source>%ld color(s)</source>
+        <target>%ld  种颜色</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Allow MyApp to access your location in Settings &gt; MyApp &gt; Location" xml:space="preserve">
+        <source>Allow MyApp to access your location in Settings &gt; MyApp &gt; Location</source>
+        <target>你必须在允许MyApp使用你的位置: 设定&gt;MyApp&gt;定位</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Estimated waiting time: %d minute(s)" xml:space="preserve">
+        <source>Estimated waiting time: %d minute(s)</source>
+        <target>预计等待时间为 %d 分钟 %d</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="My localized string" xml:space="preserve">
+        <source>My localized string</source><target>My localized string</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Please allow notifications in Settings &gt; MyApp &gt; Notifications" xml:space="preserve">
+        <source>Please allow notifications in Settings &gt; MyApp &gt; Notifications</source>
+        <target>您必须在设置 &gt; MyApp &gt; 讯息中启用讯息</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Tap to edit" xml:space="preserve">
+        <source>Tap to edit</source>
+        <target>點按即可編輯
+</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Tap to select" xml:space="preserve">
+        <source>Tap to select</source>
+        <target>点击选择
+</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+    </body>
+  </file>
+  <file original="MyApp/en.lproj/Localizable.stringsdict" source-language="en" target-language="zh-Hans" datatype="plaintext">
+    <header>
+      <tool tool-id="com.apple.dt.xcode" tool-name="Xcode" tool-version="11.2.1" build-num="11B500"/>
+    </header>
+    <body>
+      <trans-unit id="/%1$d/%2$d item(s) selected:dict/NSStringLocalizedFormatKey:dict/:string" xml:space="preserve">
+        <source>%#@items@</source>
+        <target>%#@item@</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="/%1$d/%2$d item(s) selected:dict/items:dict/other:dict/:string" xml:space="preserve">
+        <source>%d/%d items selected</source>
+        <target>%1$d 件商品，已选 %3$d 件商品</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="/%ld color(s):dict/NSStringLocalizedFormatKey:dict/:string" xml:space="preserve">
+        <source>%#@colors@</source>
+        <target>%#@colors@</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="/%ld color(s):dict/colors:dict/other:dict/:string" xml:space="preserve">
+        <source>%ld colors</source>
+        <target>%d 种颜色</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="/Estimated waiting time: %d minute(s):dict/NSStringLocalizedFormatKey:dict/:string" xml:space="preserve">
+        <source>Estimated waiting time: %#@minutes@</source>
+        <target>%#@minutes@</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="/Estimated waiting time: %d minute(s):dict/minutes:dict/other:dict/:string" xml:space="preserve">
+        <source>%d minutes</source>
+        <target>预计等待时间为 %d 分钟</target>
+        <note/>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

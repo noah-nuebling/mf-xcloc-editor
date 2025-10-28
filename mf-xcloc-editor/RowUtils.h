@@ -18,6 +18,7 @@
     #define kMFTransUnitState_DontTranslate   @"mf_dont_translate"
     #define kMFTransUnitState_New             @"new"
     #define kMFTransUnitState_NeedsReview     @"needs-review-l10n"
+    #define kMFTransUnitState_NeedsReview2    @"needs-translation" /// Saw the app crash on this. Can't reproduce. May have been editing the file with Xcode. Was loca studio ja.xcloc example.. Will map this to `kMFTransUnitState_NeedsReview` just in case.
     static auto _stateOrder = @[ /// Order of the states to be used for sorting [Oct 2025]
         kMFTransUnitState_New,
         kMFTransUnitState_NeedsReview,
@@ -42,25 +43,31 @@
             else if ([columnID isEqual: @"state"]) {
                 if ([xml_attr(transUnit, @"translate").objectValue isEqual: @"no"])
                     return kMFTransUnitState_DontTranslate;
-                else
-                    return xml_attr((NSXMLElement *)xml_childnamed(transUnit, @"target"), @"state").objectValue ?: @""; /// ?: cause `<target>` sometimes doesnt' exist. [Oct 2025]
+                else {
+                    NSString *state = xml_attr((NSXMLElement *)xml_childnamed(transUnit, @"target"), @"state").objectValue ?: kMFTransUnitState_New;
+                    if ([state isEqual: kMFTransUnitState_NeedsReview2])
+                        state = kMFTransUnitState_NeedsReview;
+                    return state;
+                }
             }
         else assert(false);
         return nil;
     }
      static void _rowModel_setCellModel(NSXMLElement *transUnit, NSString *columnID, NSString *newValue) { /// This is only called from wrapper functions which use `NSUndoManager` [Oct 2025]
+        #define new_attr() [[NSXMLNode alloc] initWithKind: NSXMLAttributeKind]
+        #define new_el()   [NSXMLElement new]
+        
         if ((0)) {}
-            else if ([columnID isEqual: @"id"])        xml_attr(transUnit, @"id")          .objectValue = newValue;
-            else if ([columnID isEqual: @"source"])    xml_childnamed(transUnit, @"source").objectValue = newValue;
-            else if ([columnID isEqual: @"target"])    xml_childnamed(transUnit, @"target").objectValue = newValue;
-            else if ([columnID isEqual: @"note"])      xml_childnamed(transUnit, @"note")  .objectValue = newValue;
+            else if ([columnID isEqual: @"target"])    xml_childnamed(transUnit, @"target", .fallback=new_el()).objectValue = newValue;
             else if ([columnID isEqual: @"state"]) {
                 if ([newValue isEqual: kMFTransUnitState_DontTranslate])
-                    xml_attr(transUnit, @"translate").objectValue = @"no";
-                else
-                    xml_attr((NSXMLElement *)xml_childnamed(transUnit, @"target"), @"state").objectValue = newValue;
+                    xml_attr(transUnit, @"translate", .fallback=new_attr()).objectValue = @"no";
+                else {
+                    NSXMLElement *el = (id)xml_childnamed(transUnit, @"target", .fallback=new_el());
+                    xml_attr(el, @"state", .fallback=new_attr()).objectValue = newValue;
+                }
             }
-        else assert(false);
+        else assert(false); /// Only handle @"target" and @"state" cause we never wanna edit the other stuff [Oct 2025]
     };
     
     static BOOL rowModel_isParent(NSXMLElement *transUnit) { /// Detects the `%#@formatSstring@` of pluralizable strings (parent row)

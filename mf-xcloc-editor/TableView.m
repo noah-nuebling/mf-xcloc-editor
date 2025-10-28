@@ -897,7 +897,10 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                 else if ([uiString isEqual: @"(pluralizable)"]) { /// Unused now [Oct 2025]
                     uiStringAttributed = attributed(@"");
                 }
-            else assert(false);
+            else {
+                uiStringAttributed = attributed(stringf(@"Error: unknown state: %@", uiString));
+                assert(false);
+            }
         }
         
         /// Create cell
@@ -1184,7 +1187,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                 NSRect frame = NSRectFromString(screenshotEntry[@"frame"]);
                 NSString *name = screenshotEntry[@"name"];
                 
-                NSString *imagePath = findPaths([stringf(@"%@%@", [getdoc(self).fileURL path], @"/Notes/Screenshots/") stringByStandardizingPath], ^BOOL(NSString *path) {
+                NSString *imagePath = findPaths(0, [stringf(@"%@%@", [getdoc(self).fileURL path], @"/Notes/Screenshots/") stringByStandardizingPath], ^BOOL(NSString *path) {
                     return [[path lastPathComponent] isEqual: name];
                 })[0];
                 

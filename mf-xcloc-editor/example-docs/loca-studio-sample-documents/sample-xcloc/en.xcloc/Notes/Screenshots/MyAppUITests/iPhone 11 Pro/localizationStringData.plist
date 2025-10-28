@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<array>
+	<dict>
+		<key>bundleID</key>
+		<string>com.cunningo.MyApp</string>
+		<key>bundlePath</key>
+		<string>/Users/jonas/Library/Developer/CoreSimulator/Devices/8BC9B0DB-41B2-4C88-9E3B-6AB4F08CB13D/data/Containers/Bundle/Application/F55E18C2-68DE-4E76-8F51-CCAA74837586/MyApp.app</string>
+		<key>screenshots</key>
+		<array>
+			<dict>
+				<key>frame</key>
+				<string>{{12, 81}, {335, 29}}</string>
+				<key>name</key>
+				<string>MyAppUITests-iPhone 11 Pro-en-1.jpeg</string>
+			</dict>
+		</array>
+		<key>stringKey</key>
+		<string>My localized string</string>
+		<key>tableName</key>
+		<string></string>
+	</dict>
+	<dict>
+		<key>bundleID</key>
+		<string>com.cunningo.MyApp</string>
+		<key>bundlePath</key>
+		<string>/Users/jonas/Library/Developer/CoreSimulator/Devices/8BC9B0DB-41B2-4C88-9E3B-6AB4F08CB13D/data/Containers/Bundle/Application/F55E18C2-68DE-4E76-8F51-CCAA74837586/MyApp.app</string>
+		<key>screenshots</key>
+		<array>
+			<dict>
+				<key>frame</key>
+				<string>{{0, 0}, {375, 812}}</string>
+				<key>name</key>
+				<string>MyAppUITests-iPhone 11 Pro-en-1.jpeg</string>
+			</dict>
+		</array>
+		<key>stringKey</key>
+		<string>My localized string</string>
+		<key>tableName</key>
+		<string></string>
+	</dict>
+</array>
+</plist>

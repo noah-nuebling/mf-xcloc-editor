@@ -91,14 +91,18 @@
                 doc = [[NSXMLDocument alloc] initWithData:  xliffWrapper.regularFileContents options: NSXMLNodeOptionsNone error: &err];
                 if (err) fail(@"Loading XMLDocument from wrapper '%@' failed with error: '%@'", xliffWrapper, err);
                 
-                mflog(@"Loaded xliff from fileWrapper %@", xliffWrapper);
+                mflog(@"Loaded xliff from fileWrapper %@", xliffWrapper.filename);
             }
             
             /// Load localizedStringData.plist
             NSArray *localizedStringsDataPlist = nil;
             {
-                auto stringsDataPaths = fw_findPaths(xclocWrapper, ^BOOL (NSFileWrapper *w, NSString *p) {
-                    return [p hasSuffix: @"localizedStringData.plist"];
+                auto stringsDataPaths = fw_findPaths(xclocWrapper, ^BOOL (NSFileWrapper *w, NSString *p, BOOL *stop) {
+                    if ([p hasSuffix: @"localizedStringData.plist"]) {
+                        *stop = YES;
+                        return YES;
+                    }
+                    return NO;
                 });
                 
                 if (stringsDataPaths.count) { /// .xloc files with no screenshots don't have `localizedStringData.plist` [Oct 2025]
@@ -192,7 +196,7 @@
                 /// Load localizedStringData.plist
                 NSArray *localizedStringsDataPlist = nil;
                 {
-                    auto stringsDataPaths = findPaths([url path], ^BOOL (NSString *p) {
+                    auto stringsDataPaths = findPaths(0, [url path], ^BOOL (NSString *p) {
                         return [p hasSuffix: @"localizedStringData.plist"];
                     });
                     if (stringsDataPaths.count) { /// .xloc files with no screenshots don't have `localizedStringData.plist` [Oct 2025]
@@ -217,22 +221,41 @@
         }
     #endif
 
-#pragma mark - Turn off restoration
-    /// (I think this) Causes app to open and immediately start edting the first row, but without selecting that row, which causes crash and is weird.
-    ///     This only happens when the app crashes while editing. Fixed the crash in `controlTextDidEndEditing:` instead – disabling this cause I don't know if overriding has other weird consequences (Was using NSDocument a mistake? This used to be so easy. [Oct 2025]
+#pragma mark - Restoration
+    /// See `XclocDocumentController.m` for discussion
+    /// Bug: (I think `restoreDocumentWindowWithIdentifier:`) Causes app to open and immediately start edting the first row, but without selecting that row, which causes crash and is weird. (app doesn't expect to be editing a row that is not selected)
+    ///     Could fix this by turning off restoration after a crash (See `XclocDocumentController`) But I instead fixed `controlTextDidEndEditing:` to handle the edge-case.
+    ///         (Was using NSDocument a mistake? This used to be so easy. [Oct 2025])
     
     #if 0
-    - (void)restoreDocumentWindowWithIdentifier:(NSUserInterfaceItemIdentifier)identifier state:(NSCoder *)state completionHandler:(void (^)(NSWindow * _Nullable, NSError * _Nullable))completionHandler {
-        mflog(@"restoreee");
-    }
+        
+        - (void)encodeRestorableStateWithCoder:(NSCoder *)coder backgroundQueue:(NSOperationQueue *)queue {
+            mflog(@"encodeRestorableStateWithCoder:backgroundQueue:");
+            [super encodeRestorableStateWithCoder: coder  backgroundQueue: queue];
+        }
+        - (void)encodeRestorableStateWithCoder:(NSCoder *)coder {
+            mflog(@"encodeRestorableStateWithCoder:");
+            [super encodeRestorableStateWithCoder: coder];
+        }
+    
+        - (void)restoreDocumentWindowWithIdentifier:(NSUserInterfaceItemIdentifier)identifier state:(NSCoder *)state completionHandler:(void (^)(NSWindow * _Nullable, NSError * _Nullable))completionHandler {
+            /// Observations:
+            ///     - This calls `[NSWindow restoreStateWithCoder:]`
+            ///     - This is called by: `[NSDocumentController restoreWindowWithIdentifier:state:completionHandler:]` (Override in `XclocDocumentController`)
+            mflog(@"restoreDocumentWindowWithIdentifier:");
+            [super restoreDocumentWindowWithIdentifier: identifier state: state completionHandler: completionHandler];
+        }
+        - (void)restoreStateWithCoder:(NSCoder *)coder {
+            /// Called by `restoreDocumentWindowWithIdentifier:`
+            mflog(@"restoreStateWithCoder:");
+            [super restoreStateWithCoder: coder];
+        }
 
-    - (void)restoreStateWithCoder:(NSCoder *)coder {
-        mflog(@"resture");
-    }
-
-    - (void)restoreUserActivityState:(NSUserActivity *)userActivity {
-        mflog(@"active restore");
-    }
+        - (void)restoreUserActivityState:(NSUserActivity *)userActivity {
+            assert(false); /// Never called
+            mflog(@"active restore");
+            [super restoreUserActivityState: userActivity];
+        }
     #endif
 
 #pragma mark - Stuff
@@ -248,7 +271,10 @@
     
     mflog(@"Making windowControllers");
     
-    if (self->_xliffDoc == nil) return; /// TESTING
+    if (self->_xliffDoc == nil) {
+        assert(false);
+        return;
+    }
 
     self->ctrl = [MainWindowController new];
     [self->ctrl loadWindow]; /// Doesn't seem to be called automatically, I think this is the right place to call this but not sure [Oct 2025]
@@ -272,7 +298,7 @@
 }
 
 NSString *getXliffPath(NSString *xclocPath) {
-    auto xliff = findPaths(xclocPath, ^BOOL (NSString *p){
+    auto xliff = findPaths(0, xclocPath, ^BOOL (NSString *p){
         return [p hasSuffix: @".xliff"];
     })[0];
     return xliff;
@@ -280,8 +306,12 @@ NSString *getXliffPath(NSString *xclocPath) {
 
 NSString *fw_getXliffPath(NSFileWrapper *xclocWrapper) {
     
-    auto xliff = fw_findPaths(xclocWrapper, ^BOOL (NSFileWrapper *w, NSString *p) {
-        return [p hasSuffix: @".xliff"];
+    auto xliff = fw_findPaths(xclocWrapper, ^BOOL (NSFileWrapper *w, NSString *p, BOOL *stop) {
+        if ([p hasSuffix: @".xliff"]) {
+            *stop = YES;
+            return YES;
+        }
+        return NO;
     })[0];
     
     return xliff;

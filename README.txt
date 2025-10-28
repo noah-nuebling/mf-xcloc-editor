@@ -32,7 +32,9 @@ Overview: `MMF Xcloc Editor`
         
         - Don't have to download Xcode (large)
         - Doesn't have Xcode sidebar which is useless to localizers
-        - Allows filtering / searching in strings from *all* project files, which could 
+        - All project files are layout out flat in the sidebar,
+            so localizers don't have to search through the folder hierarchy in your project.
+        - Allows filtering / searching in strings from *all* project files, which could
             e.g. help localizers easily reference how a term is localized in other parts of 
             the app. (There's no glossary support, but this may be good enough)
         - QuickLook of localization screenshots via Space or Command-Y (Xcode has quicklook 
@@ -80,6 +82,7 @@ Overview: `MMF Xcloc Editor`
         - .xcloc file automatically saves on every edit so users don't have to manually save and 
             no data will be lost. 
         - Small size – can be shipped in a bundle with your .xcloc files.
+        - Window and column resizing is less annoying than in Xcode
     
     Caveats:
         - I kinda hacked this together in a few days as a for-fun project. I made this specifically

@@ -9,9 +9,11 @@
 /* Begin PBXBuildFile section */
 		4F0C649E2EAD4296008B3506 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 4F0C649D2EAD41D5008B3506 /* AppIcon.icon */; };
 		4F0C64A22EAD4C00008B3506 /* MFUI.m in Sources */ = {isa = PBXBuildFile; fileRef = 4F0C64A12EAD4C00008B3506 /* MFUI.m */; };
+		4F2AD0F32EB0518C00C8E930 /* AppIcon_Include.icon in Resources */ = {isa = PBXBuildFile; fileRef = 4F2AD0F22EB0518C00C8E930 /* AppIcon_Include.icon */; };
 		4F33326C2EACC15000055FFC /* FileProvider.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F33326B2EACC15000055FFC /* FileProvider.framework */; };
 		4F7E02D12EA7758800C2F693 /* NSObject+Additions.m in Sources */ = {isa = PBXBuildFile; fileRef = 4F7E02D02EA7758700C2F693 /* NSObject+Additions.m */; };
 		4FAD64792E69D1DD00643726 /* MainWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4FAD64782E69D1DD00643726 /* MainWindowController.m */; };
+		4FAD9C142EAF7DC600875CA0 /* XclocDocumentController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4FAD9C132EAF7DC600875CA0 /* XclocDocumentController.m */; };
 		4FC6FA632E6A0BA700459F13 /* ReusableViews.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4FC6FA622E6A0BA700459F13 /* ReusableViews.xib */; };
 		4FF08E322EAAA8A100BBE492 /* NSAttributedString+Additions.m in Sources */ = {isa = PBXBuildFile; fileRef = 4FF08E302EAAA7DC00BBE492 /* NSAttributedString+Additions.m */; };
 		4FF08E352EAAC57E00BBE492 /* MFTextField.m in Sources */ = {isa = PBXBuildFile; fileRef = 4FF08E342EAAC57E00BBE492 /* MFTextField.m */; };
@@ -40,6 +42,8 @@
 /* Begin PBXFileReference section */
 		4F0C649D2EAD41D5008B3506 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		4F0C64A12EAD4C00008B3506 /* MFUI.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MFUI.m; sourceTree = "<group>"; };
+		4F2AD0F22EB0518C00C8E930 /* AppIcon_Include.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon_Include.icon; sourceTree = "<group>"; };
+		4F2AD0F42EB052B300C8E930 /* AppIcon_Include.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = AppIcon_Include.md; sourceTree = "<group>"; };
 		4F33326B2EACC15000055FFC /* FileProvider.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = FileProvider.framework; path = System/Library/PrivateFrameworks/FileProvider.framework; sourceTree = SDKROOT; };
 		4F7E02CF2EA7758700C2F693 /* NSObject+Additions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSObject+Additions.h"; sourceTree = "<group>"; };
 		4F7E02D02EA7758700C2F693 /* NSObject+Additions.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSObject+Additions.m"; sourceTree = "<group>"; };
@@ -48,6 +52,8 @@
 		4F9BA2C02EAEBFEE001C8B9B /* README.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.txt; sourceTree = SOURCE_ROOT; };
 		4FAD64772E69D1DD00643726 /* MainWindowController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MainWindowController.h; sourceTree = "<group>"; };
 		4FAD64782E69D1DD00643726 /* MainWindowController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MainWindowController.m; sourceTree = "<group>"; };
+		4FAD9C132EAF7DC600875CA0 /* XclocDocumentController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = XclocDocumentController.m; sourceTree = "<group>"; };
+		4FAD9C152EAF892F00875CA0 /* XclocDocumentController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XclocDocumentController.h; sourceTree = "<group>"; };
 		4FC6FA622E6A0BA700459F13 /* ReusableViews.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ReusableViews.xib; sourceTree = "<group>"; };
 		4FC6FA662E6A367400459F13 /* MFUI.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MFUI.h; sourceTree = "<group>"; };
 		4FF08E2F2EAAA7DC00BBE492 /* NSAttributedString+Additions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSAttributedString+Additions.h"; sourceTree = "<group>"; };
@@ -90,6 +96,8 @@
 			children = (
 				4FFBA6F42EAA337A00CF1A71 /* Info.plist */,
 				4F0C649D2EAD41D5008B3506 /* AppIcon.icon */,
+				4F2AD0F22EB0518C00C8E930 /* AppIcon_Include.icon */,
+				4F2AD0F42EB052B300C8E930 /* AppIcon_Include.md */,
 				4F9BA2C02EAEBFEE001C8B9B /* README.txt */,
 				4FF428672DF63AB2008F2D74 /* mf_xcloc_editor.entitlements */,
 				4FF428632DF63AB2008F2D74 /* Assets.xcassets */,
@@ -138,6 +146,8 @@
 				4FF428622DF63AB2008F2D74 /* AppDelegate.m */,
 				4FFBA6B32EAA14AF00CF1A71 /* XclocDocument.h */,
 				4FFBA6B42EAA14AF00CF1A71 /* XclocDocument.m */,
+				4FAD9C152EAF892F00875CA0 /* XclocDocumentController.h */,
+				4FAD9C132EAF7DC600875CA0 /* XclocDocumentController.m */,
 				4FAD64772E69D1DD00643726 /* MainWindowController.h */,
 				4FAD64782E69D1DD00643726 /* MainWindowController.m */,
 				4FC6FA622E6A0BA700459F13 /* ReusableViews.xib */,
@@ -243,6 +253,7 @@
 			files = (
 				4FF436D22DF63AB3008F2D74 /* Assets.xcassets in Resources */,
 				4FF436D32DF63AB3008F2D74 /* MainMenu.xib in Resources */,
+				4F2AD0F32EB0518C00C8E930 /* AppIcon_Include.icon in Resources */,
 				4FC6FA632E6A0BA700459F13 /* ReusableViews.xib in Resources */,
 				4F0C649E2EAD4296008B3506 /* AppIcon.icon in Resources */,
 			);
@@ -257,6 +268,7 @@
 			files = (
 				4FAD64792E69D1DD00643726 /* MainWindowController.m in Sources */,
 				4F0C64A22EAD4C00008B3506 /* MFUI.m in Sources */,
+				4FAD9C142EAF7DC600875CA0 /* XclocDocumentController.m in Sources */,
 				4FF4373C2DF63AB8008F2D74 /* AppDelegate.m in Sources */,
 				4FF4373D2DF63AB8008F2D74 /* main.m in Sources */,
 				4FF08E322EAAA8A100BBE492 /* NSAttributedString+Additions.m in Sources */,
@@ -400,7 +412,7 @@
 		4FF4FA2E2DF62711008F2D74 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon_Include;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_ENTITLEMENTS = "mf-xcloc-editor/Other/mf_xcloc_editor.entitlements";
@@ -437,7 +449,7 @@
 		4FF4FA2F2DF62711008F2D74 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon_Include;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_ENTITLEMENTS = "mf-xcloc-editor/Other/mf_xcloc_editor.entitlements";

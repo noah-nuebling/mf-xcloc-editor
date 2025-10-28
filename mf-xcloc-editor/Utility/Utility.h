@@ -5,6 +5,8 @@
 //  Created by Noah Nübling on 09.06.25.
 //
 
+#import <AppKit/AppKit.h>
+
 ///
 /// General convenience
 ///
@@ -15,6 +17,8 @@
 #define stringf(format, args...)        [NSString stringWithFormat: (format), ## args]
 
 #define arrcount(x...) (sizeof ((x)) / sizeof (x)[0])
+        
+#define nowtime() (CACurrentMediaTime() * 1000.0) /// Timestamp in milliseconds
         
 #define mferror(domain, code_, msg_and_args...) \
     [NSError errorWithDomain: (domain) code: (code_) userInfo: @{ NSDebugDescriptionErrorKey: stringf(msg_and_args) }] /** Should we use `NSLocalizedFailureReasonErrorKey`? [Oct 2025] */
@@ -70,13 +74,31 @@ static NSMutableIndexSet *indexSetWithIndexArray(NSInteger arr[], int len) {
     auto _node = (xmlNode);                                     \
     safeidx(_node.children, _node.children.count, (idx), nil);  \
 })
-#define xml_childnamed(xmlNode, name_) ({                        \
-    auto _node = (xmlNode);                                     \
-    firstmatch(_node.children, _node.children.count, nil, x, [x.name isEqual: (name_)]);  \
-})
 
-static NSXMLNode *xml_attr(NSXMLElement *xmlElement, NSString *name) {
-    return [xmlElement attributeForName: name];
+typedef struct { NSXMLNode *fallback; } xml_childnamed_args;
+static NSXMLNode *xml_childnamed(NSXMLElement *_node, NSString *name_, xml_childnamed_args args) {
+    #define xml_childnamed(node, name, fallback...) xml_childnamed((node), (name), (xml_childnamed_args){ fallback })
+    
+    auto result = firstmatch(_node.children, _node.children.count, nil, x, [x.name isEqual: (name_)]);
+    if (!result && args.fallback) {
+        [args.fallback setName: name_];
+        [_node addChild: args.fallback]; /// NSXMLNode doesn't have `addChild:` for some reason, otherwise this func would work on NSXMLNode, not just NSXMLElement.
+        result = args.fallback;
+    }
+    return result;
+}
+
+typedef struct { NSXMLNode *fallback; } xml_attr_args;
+static NSXMLNode *xml_attr(NSXMLElement *xmlElement, NSString *name, xml_attr_args args) {
+    #define xml_attr(xmlElement, name, fallback...) xml_attr((xmlElement), (name), (xml_attr_args) { fallback })
+    
+    auto result = [xmlElement attributeForName: name];
+    if (!result && args.fallback) {
+        args.fallback.name = name;
+        [xmlElement addAttribute: args.fallback];
+        result = args.fallback;
+    }
+    return result;
 }
 
 static NSMutableDictionary<NSString *, NSXMLNode *> *xml_attrdict(NSXMLElement *_xmlElement) {
@@ -87,28 +109,31 @@ static NSMutableDictionary<NSString *, NSXMLNode *> *xml_attrdict(NSXMLElement *
 
 #pragma mark - Shorthands for horrible NSFileWrapper API
 
-    static void _fw_walk(NSFileWrapper *fileWrapper, void (^callback)(NSFileWrapper *subFileWrapper, NSString *subpath), NSMutableArray *currentKeyPath) {
+    static void _fw_walk(NSFileWrapper *fileWrapper, void (^callback)(NSFileWrapper *subFileWrapper, NSString *subpath, BOOL *stop), NSMutableArray *currentKeyPath, BOOL *stop) {
         
         /// Helper for `fw_walk`
-        ///     Optimization: We only need this for `fw_findPaths`, and it only needs to see file nodes not directory nodes, so we could skip calling the callback on those [Oct 2025]
         
-        callback(fileWrapper, [currentKeyPath componentsJoinedByString: @"/"]);
-        
-        if (fileWrapper.isDirectory)
-        for (NSString *key in fileWrapper.fileWrappers) {
-            
-            NSFileWrapper *w = fileWrapper.fileWrappers[key];
-            
-            [currentKeyPath addObject: key];
-            _fw_walk(w, callback, currentKeyPath); /// Recurse
-            [currentKeyPath removeLastObject];
+        if (!fileWrapper.isDirectory) { /// { Optimization: We only need this for `fw_findPaths`, and it only needs to see file nodes not directory nodes. [Oct 2025]
+            callback(fileWrapper, [currentKeyPath componentsJoinedByString: @"/"], stop);
+            if (*stop) return;
         }
+        else
+            for (NSString *key in fileWrapper.fileWrappers) {
+                
+                NSFileWrapper *w = fileWrapper.fileWrappers[key];
+                
+                [currentKeyPath addObject: key];
+                _fw_walk(w, callback, currentKeyPath, stop); /// Recurse
+                if (*stop) return;
+                [currentKeyPath removeLastObject];
+            }
     }
-    static void fw_walk(NSFileWrapper *fileWrapper, void (^callback)(NSFileWrapper *w, NSString *subpath)) {
+    static void fw_walk(NSFileWrapper *fileWrapper, void (^callback)(NSFileWrapper *w, NSString *subpath, BOOL *stop)) {
         
         /// Walk all the filesystem nodes inside the `fileWrapper`
     
-        _fw_walk(fileWrapper, callback, [NSMutableArray new]);
+        BOOL stop = NO;
+        _fw_walk(fileWrapper, callback, [NSMutableArray new], &stop);
     }
 
     static NSFileWrapper *fw_readPath(NSFileWrapper *fw, NSString *subpath) {
@@ -147,35 +172,44 @@ static NSMutableDictionary<NSString *, NSXMLNode *> *xml_attrdict(NSXMLElement *
     }
     
 
-    static NSArray<NSString *> *fw_findPaths(NSFileWrapper *wrapper, BOOL (^condition)(NSFileWrapper *fw, NSString *p)) {
+    static NSArray<NSString *> *fw_findPaths(NSFileWrapper *wrapper, BOOL (^condition)(NSFileWrapper *fw, NSString *p, BOOL *stop)) {
         
         /// Like `findPaths()` but for NSFileWrapper [Oct 2025]
         
         auto result = [NSMutableArray new];
         
-        fw_walk(wrapper, ^(NSFileWrapper *fw, NSString *p) {
-            if (condition(fw, p))
+        fw_walk(wrapper, ^(NSFileWrapper *fw, NSString *p, BOOL *stop) {
+            if (condition(fw, p, stop)) {
                 [result addObject: p]; /// Unlike `findPaths()`, these paths are relative [Oct 2025]
+            }
         });
         
         return result;
     }
 
 
-static NSArray<NSString *> *findPaths(NSString *dirPath, BOOL (^condition)(NSString *path)) {
+static NSArray<NSString *> *findPaths(int timeout_ms, NSString *dirPath, BOOL (^condition)(NSString *path)) {
     
-    /// Like shell globbing but more cumbersome. I guess we could also use zsh for globbing. [Oct 2025]
+    /// Like shell globbing but more cumbersome.
+    ///     `timeout_ms` arg is for when we're searching outside of our own bundle, where the folder structure could be anything.
     
     auto result = [NSMutableArray new];
     
-    for (NSString *p in [[NSFileManager defaultManager] enumeratorAtPath: dirPath])
-        if (condition(p))
+    double ts_start = nowtime();
+    
+    for (NSString *p in [[NSFileManager defaultManager] enumeratorAtPath: dirPath]) {
+        if (timeout_ms > 0)
+            if (nowtime() - ts_start > timeout_ms) {
+                mflog(@"Timed out after %d ms", timeout_ms);
+                break;
+            }
+        if (condition(p)) {
             [result addObject: [dirPath stringByAppendingPathComponent: p]]; /// Make path absolute, (When it's passed into `condition()` it's still relative – hope that's not confusing [Oct 2025])
-
+        }
+    }
+        
     return result;
 }
-
-#import <AppKit/AppKit.h>
 
 static NSEvent *makeKeyDown(unichar keyEquivalent, int keyCode) {
     return [NSEvent

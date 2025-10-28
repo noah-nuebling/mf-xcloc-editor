@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 http://docs.oasis-open.org/xliff/v1.2/os/xliff-core-1.2-strict.xsd">
+  <file original="MyApp/en.lproj/InfoPlist.strings" datatype="plaintext" source-language="en" target-language="tr">
+    <header>
+      <tool tool-id="com.apple.dt.xcode" tool-name="Xcode" tool-version="11.2.1" build-num="11B500"/>
+    </header>
+    <body>
+      <trans-unit id="CFBundleName" xml:space="preserve">
+        <source>MyApp</source>
+        <note>Bundle name</note>
+      </trans-unit>
+    </body>
+  </file>
+  <file original="MyApp/en.lproj/Localizable.strings" source-language="en" target-language="tr" datatype="plaintext">
+    <header>
+      <tool tool-id="com.apple.dt.xcode" tool-name="Xcode" tool-version="11.2.1" build-num="11B500"/>
+    </header>
+    <body>
+      <trans-unit id="signin.siwa" xml:space="preserve">
+        <source>Sign in with Apple⁩</source>
+        <target>Sign in with Apple⁩</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="%1$d/%2$d item(s) selected" xml:space="preserve">
+        <source>%1$d/%2$d item(s) selected</source>
+        <target>%1$d/%3$d ürün seçildi</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="%ld color(s)" xml:space="preserve">
+        <source>%ld color(s)</source>
+        <target>%d renk</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Allow MyApp to access your location in Settings &gt; MyApp &gt; Location" xml:space="preserve">
+        <source>Allow MyApp to access your location in Settings &gt; MyApp &gt; Location</source>
+        <target> Ayarlar &gt; MyApp &gt; Konum seçenekleriyle MyApp’nın konumunuza erişmesine izin vermeniz gerekir</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Estimated waiting time: %d minute(s)" xml:space="preserve">
+        <source>Estimated waiting time: %d minute(s)</source>
+        <target>Tahmini bekleme süresi %d dakika</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="My localized string" xml:space="preserve">
+        <source>My localized string</source>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Please allow notifications in Settings &gt; MyApp &gt; Notifications" xml:space="preserve">
+        <source>Please allow notifications in Settings &gt; MyApp &gt; Notifications</source>
+        <target>Ayarlar &gt; MyApp &gt; Bildirimler'den bildirimlere izin vermelisiniz</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Tap to edit" xml:space="preserve">
+        <source>Tap to edit</source>
+        <target>Düzenlemek için dokunun
+</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Tap to select" xml:space="preserve">
+        <source>Tap to select</source>
+        <target>Seçmek için dokunun</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+    </body>
+  </file>
+  <file original="MyApp/en.lproj/Localizable.stringsdict" source-language="en" target-language="tr" datatype="plaintext">
+    <header>
+      <tool tool-id="com.apple.dt.xcode" tool-name="Xcode" tool-version="11.2.1" build-num="11B500"/>
+    </header>
+    <body>
+      <trans-unit id="/%1$d/%2$d item(s) selected:dict/NSStringLocalizedFormatKey:dict/:string" xml:space="preserve">
+        <source>%#@items@</source>
+        <target>%#@items@</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="/%1$d/%2$d item(s) selected:dict/items:dict/one:dict/:string" xml:space="preserve">
+        <source>%d/%d item selected</source>
+        <target>%d/%d ürün seçildi</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="/%1$d/%2$d item(s) selected:dict/items:dict/other:dict/:string" xml:space="preserve">
+        <source>%d/%d items selected</source>
+        <target>%d/%d ürün seçildi</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="/%ld color(s):dict/NSStringLocalizedFormatKey:dict/:string" xml:space="preserve">
+        <source>%#@colors@</source>
+        <target>%#@color@</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="/%ld color(s):dict/colors:dict/one:dict/:string" xml:space="preserve">
+        <source>%ld color</source>
+        <target>%ld renk</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="/%ld color(s):dict/colors:dict/other:dict/:string" xml:space="preserve">
+        <source>%ld colors</source>
+        <target>%ld renk</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="/Estimated waiting time: %d minute(s):dict/NSStringLocalizedFormatKey:dict/:string" xml:space="preserve">
+        <source>Estimated waiting time: %#@minutes@</source>
+        <target>Tahmini bekleme süresi %#@minutes@</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="/Estimated waiting time: %d minute(s):dict/minutes:dict/one:dict/:string" xml:space="preserve">
+        <source>%d minute</source>
+        <target>%d dakika</target>
+        <note/>
+      </trans-unit>
+      <trans-unit id="/Estimated waiting time: %d minute(s):dict/minutes:dict/other:dict/:string" xml:space="preserve">
+        <source>%d minutes</source>
+        <target>%d dakika</target>
+        <note/>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>
