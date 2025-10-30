@@ -17,14 +17,40 @@
     ///     Can be attached to an NSTextView
     ///     (I also tried adding invisibles to NSTextField but could just not figure out where it does it's drawing – it's all private APIs) [Oct 2025]
 
-    - (void)drawGlyphsForGlyphRange:(NSRange)range atPoint:(NSPoint)point {
+
+
+static CGGlyph getReturnGlyph(NSFont *font) {
+    
+    /// Get glyph for return symbol character
+    /// Use CTFont with font fallback to support characters not in the base font
+    /// TODO: Use a better glyph [Oct 2025]
+    
+    unichar returnChar =
+        u'¬'
+        //u'⏎'
+        //u'￢' // not works
+        //u'↵'  // not works
+        //u'↩'  // not works
+    ;
+    CGGlyph result;
+    bool succ = CTFontGetGlyphsForCharacters((__bridge void *)font, &returnChar, &result, 1);
+    if (!succ) {
+        assert(false);
+        return 0; /// Does 0 make sense as sentinel?
+    }
+    return result;
+}
+
+- (void)drawGlyphsForGlyphRange:(NSRange)range atPoint:(NSPoint)point {
     
         /// Source: https://stackoverflow.com/a/29681234
     
       NSTextStorage* storage = self.textStorage;
       NSString* string = storage.string;
       for (NSUInteger glyphIndex = range.location; glyphIndex < range.location + range.length; glyphIndex++) {
+            
             NSUInteger characterIndex = [self characterIndexForGlyphAtIndex: glyphIndex];
+            
             switch ([string characterAtIndex:characterIndex]) {
                 break;
                 case ' ':
@@ -36,25 +62,10 @@
                 break;
                 case '\n': {
                     NSFont* font = [storage attribute:NSFontAttributeName atIndex:characterIndex effectiveRange:NULL];
-                    /// Get glyph for return symbol character
-                    /// Use CTFont with font fallback to support characters not in the base font
-                    unichar returnChar =
-                        u'¬'
-                        //u'⏎'
-                        //u'￢' // not works
-                        //u'↵'  // not works
-                        //u'↩'  // not works
-                    ;
-                    CGGlyph returnGlyph; /// TODO: Use a better glyph [Oct 2025]
-                    
-                    CTFontGetGlyphsForCharacters((__bridge void *)font, &returnChar, &returnGlyph, 1);
 
+                    CGGlyph returnGlyph = getReturnGlyph(font);
                     if (returnGlyph != 0)
-                        [self replaceGlyphAtIndex:glyphIndex withGlyph: returnGlyph];
-                    else {
-                        assert(false);
-
-                    }
+                        [self replaceGlyphAtIndex: glyphIndex withGlyph: returnGlyph];
                 }
             }
         }
@@ -64,26 +75,30 @@
 
     - (void)showCGGlyphs:(const CGGlyph *)glyphs positions:(const CGPoint *)positions count:(NSUInteger)glyphCount font:(NSFont *)font textMatrix:(CGAffineTransform)textMatrix attributes:(NSDictionary *)attributes inContext:(CGContextRef)graphicsContext {
 
-        /// TODO: This doesn't gray-out consecutive linebreaks correctly.
-
         /// Draw glyphs individually so we can set different opacity for newline symbols
         NSTextStorage* storage = self.textStorage;
         NSString* string = storage.string;
 
-        NSRange glyphRange = NSMakeRange([self glyphIndexForPoint:positions[0] inTextContainer:self.textContainers.firstObject fractionOfDistanceThroughGlyph:NULL], glyphCount);
-
+        NSGlyph returnGlyph = getReturnGlyph(font);
+        
         for (NSUInteger i = 0; i < glyphCount; i++) {
-            NSUInteger glyphIndex = glyphRange.location + i;
-            if (glyphIndex < [self numberOfGlyphs]) {
-                NSUInteger characterIndex = [self characterIndexForGlyphAtIndex:glyphIndex];
-                if (characterIndex < string.length && [string characterAtIndex:characterIndex] == '\n') {
-                    CGContextSaveGState(graphicsContext);
+            
+            double opacity = 1.0;
+            
+            if (glyphs[i] == returnGlyph)
+                /// Claude used `[string characterAtIndex: [self characterIndexForPoint: ...]] == '\n'` here which is more robust theoretically but failed for a blankline followed by a non-blank line.
+                /// This fails if our real content contains the unicode character for the `returnGlyph` – that would also get grayed out. But that's not going to happen for MMF. [Oct 2025]
+                opacity = 0.3;
+        
+            if (opacity < 1.0) {
+                CGContextSaveGState(graphicsContext);
+                {
                     CGContextSetAlpha(graphicsContext, 0.3);
                     [super showCGGlyphs:&glyphs[i] positions:&positions[i] count:1 font:font textMatrix:textMatrix attributes:attributes inContext:graphicsContext];
-                    CGContextRestoreGState(graphicsContext);
-                } else {
-                    [super showCGGlyphs:&glyphs[i] positions:&positions[i] count:1 font:font textMatrix:textMatrix attributes:attributes inContext:graphicsContext];
                 }
+                CGContextRestoreGState(graphicsContext);
+            } else {
+                [super showCGGlyphs:&glyphs[i] positions:&positions[i] count:1 font:font textMatrix:textMatrix attributes:attributes inContext:graphicsContext];
             }
         }
     }
