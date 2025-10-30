@@ -155,10 +155,6 @@
             /// - [x] Change icon back
             /// - [ ] Maybe implement glyphs for single-linebreak (/ other invisibles)
             
-            /// TODO:
-            ///     `MFTextView_Overlay` doesn't get removed if we press escape.
-            ///
-            
             /// TODO: Sometimes the close button turns into save button (black dot)
             ///     (Are we missing a save?) ... Nope we're not missing  a save, but undoing makes the black dot show. Turned this off through `autosavesInPlace` – not sure that's correct [Oct 2025]
         

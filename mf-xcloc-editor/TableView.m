@@ -113,7 +113,12 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                 
                 MFTextField *textField__ = note.object;
                         
-                NSInteger row = [self rowForView: textField__]; /// TODO: Randomly returns -1 sometimes [Oct 2025]
+                NSInteger row = [self rowForView: textField__]; /// Randomly returns -1 sometimes. Can't reproduce. In lldb it consistently returns -1 IIRC, so there is some weird state causing this, not just sporadic. [Oct 2025]
+                if (row == -1) { /// Handle gracefully since it'll probably happen sometimes in production. [Oct 2025]
+                    assert(false);
+                    textField__.hidden = NO;
+                    return;
+                }
                 
                 NSTableCellView *cell = [self viewAtColumn: [self columnWithIdentifier: @"source"] row: row makeIfNecessary: NO];
                 
