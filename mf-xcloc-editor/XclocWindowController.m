@@ -151,12 +151,9 @@
         {
             
             /// TODO:
-            /// - [ ] Fix autolayout crash when toggling state while the cell is off-screen and then resizing the window so it's on-screen.
+            /// - [x] Fix autolayout crash when toggling state while the cell is off-screen and then resizing the window so it's on-screen. (Fixed by using reloadItem:)
             /// - [x] Change icon back
             /// - [ ] Maybe implement glyphs for single-linebreak (/ other invisibles)
-            
-            /// TODO: Sometimes the close button turns into save button (black dot)
-            ///     (Are we missing a save?) ... Nope we're not missing  a save, but undoing makes the black dot show. Turned this off through `autosavesInPlace` – not sure that's correct [Oct 2025]
         
             /// TODO: Fix issue where double-clicking / triple-clicking /...  a row does nothing (instead of starting text-editing)
             ///     Tried to fix this but hard. Maybe just live with it.

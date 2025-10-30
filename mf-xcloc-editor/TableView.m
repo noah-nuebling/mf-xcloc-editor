@@ -738,15 +738,12 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         
         /// Reload state cell
         ///     - (Don't think this is necessary if we called `updateFilter:` or `showAllTransUnits` in `_revealTransUnit:`, cause those will already have reloaded the whole table [Oct 2025]
-        [self /// Specifying rows and colums  to update for speedup, but I think the delay is just built in to NSMenu  (macOS Tahoe, [Oct 2025])
-            reloadDataForRowIndexes: indexset(
-                self.selectedRow,    /// `_revealTransUnit:` selects the desired row [Oct 2025]
-                [self rowForItem: [self parentForItem: [self selectedItem]]] /// Update the parent as well – the state it displays depends on its children.
-            )
-            columnIndexes: indexset(
-                [self indexOfColumnWithIdentifier: @"state"]
-            )
-        ];
+        ///     - Used to use `reloadDataForRowIndexes:` but that caused weird crashes in the layout system when toggling state and then resizing the table. [Oct 2025]
+        ///         Also note that `reloadDataForRowIndexes:` is an NSTableView method not an NSOutlineView one - so maybe we're not supposed to call that.
+        {
+            [self reloadItem: [self selectedItem] reloadChildren: NO]; /// `_revealTransUnit:` selects the desired row [Oct 2025]
+            [self reloadItem: [self parentForItem: [self selectedItem]] reloadChildren: NO]; /// Update the parent as well – the state it displays depends on its children.
+        }
         
     }
     - (void) setTranslation: (NSString *)newString andIsTranslated: (BOOL)isTranslated onRowModel: (NSXMLElement *)transUnit {
@@ -781,16 +778,10 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
          [self _revealTransUnit: transUnit];
              
         /// Reload cells
-        [self
-            reloadDataForRowIndexes: indexset(
-                self.selectedRow,
-                [self rowForItem: [self parentForItem: [self selectedItem]]] /// See `setIsTranslatedState:`
-            )
-            columnIndexes: indexset(
-                [self indexOfColumnWithIdentifier: @"target"], /// This is only needed in case this is called by the undoManager [Oct 2025]
-                [self indexOfColumnWithIdentifier: @"state"]
-            )
-        ];
+        {
+            [self reloadItem: [self selectedItem] reloadChildren: NO];
+            [self reloadItem: [self parentForItem: [self selectedItem]] reloadChildren: NO]; /// See `setIsTranslatedState:`
+        }
     }
     
     - (void) _revealTransUnit: (NSXMLElement *)transUnit {
@@ -840,6 +831,11 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
             [self scrollRowToVisible: [self rowForItem: transUnit]];
         });
         
+        { /// Idea: Also scroll the state-column into-view when toggling it. [Oct 2025]
+            NSString *col = nil;
+            if (col)
+                [self scrollColumnToVisible: [self columnWithIdentifier: col]];
+        }
 
     }
     
@@ -962,7 +958,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
             if ((0)) {}
                 else if ([uiString isEqual: kMFTransUnitState_Translated]) {
                     uiStringAttributed = make_green_checkmark(uiString);
-                    
+                    stateCellBackgroundColor = nil;
                 }
                 else if ([uiString isEqual: kMFTransUnitState_DontTranslate]) {
                     uiStringAttributed = attributed(@"DON'T TRANSLATE");
