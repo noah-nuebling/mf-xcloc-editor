@@ -12,7 +12,7 @@
 		4F2AD0F32EB0518C00C8E930 /* AppIcon_Include.icon in Resources */ = {isa = PBXBuildFile; fileRef = 4F2AD0F22EB0518C00C8E930 /* AppIcon_Include.icon */; };
 		4F33326C2EACC15000055FFC /* FileProvider.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F33326B2EACC15000055FFC /* FileProvider.framework */; };
 		4F7E02D12EA7758800C2F693 /* NSObject+Additions.m in Sources */ = {isa = PBXBuildFile; fileRef = 4F7E02D02EA7758700C2F693 /* NSObject+Additions.m */; };
-		4FAD64792E69D1DD00643726 /* MainWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4FAD64782E69D1DD00643726 /* MainWindowController.m */; };
+		4FAD64792E69D1DD00643726 /* XclocWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4FAD64782E69D1DD00643726 /* XclocWindowController.m */; };
 		4FAD9C142EAF7DC600875CA0 /* XclocDocumentController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4FAD9C132EAF7DC600875CA0 /* XclocDocumentController.m */; };
 		4FC6FA632E6A0BA700459F13 /* ReusableViews.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4FC6FA622E6A0BA700459F13 /* ReusableViews.xib */; };
 		4FF08E322EAAA8A100BBE492 /* NSAttributedString+Additions.m in Sources */ = {isa = PBXBuildFile; fileRef = 4FF08E302EAAA7DC00BBE492 /* NSAttributedString+Additions.m */; };
@@ -50,8 +50,8 @@
 		4F7E02D22EA77C9700C2F693 /* da.xcloc */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = da.xcloc; sourceTree = "<group>"; };
 		4F7E02D32EA77D1600C2F693 /* da (original).xcloc */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = "da (original).xcloc"; sourceTree = "<group>"; };
 		4F9BA2C02EAEBFEE001C8B9B /* README.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.txt; sourceTree = SOURCE_ROOT; };
-		4FAD64772E69D1DD00643726 /* MainWindowController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MainWindowController.h; sourceTree = "<group>"; };
-		4FAD64782E69D1DD00643726 /* MainWindowController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MainWindowController.m; sourceTree = "<group>"; };
+		4FAD64772E69D1DD00643726 /* XclocWindowController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XclocWindowController.h; sourceTree = "<group>"; };
+		4FAD64782E69D1DD00643726 /* XclocWindowController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = XclocWindowController.m; sourceTree = "<group>"; };
 		4FAD9C132EAF7DC600875CA0 /* XclocDocumentController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = XclocDocumentController.m; sourceTree = "<group>"; };
 		4FAD9C152EAF892F00875CA0 /* XclocDocumentController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XclocDocumentController.h; sourceTree = "<group>"; };
 		4FC6FA622E6A0BA700459F13 /* ReusableViews.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ReusableViews.xib; sourceTree = "<group>"; };
@@ -148,8 +148,8 @@
 				4FFBA6B42EAA14AF00CF1A71 /* XclocDocument.m */,
 				4FAD9C152EAF892F00875CA0 /* XclocDocumentController.h */,
 				4FAD9C132EAF7DC600875CA0 /* XclocDocumentController.m */,
-				4FAD64772E69D1DD00643726 /* MainWindowController.h */,
-				4FAD64782E69D1DD00643726 /* MainWindowController.m */,
+				4FAD64772E69D1DD00643726 /* XclocWindowController.h */,
+				4FAD64782E69D1DD00643726 /* XclocWindowController.m */,
 				4FC6FA622E6A0BA700459F13 /* ReusableViews.xib */,
 				4FF08EEB2EAB685600BBE492 /* RowUtils.h */,
 				4FF447A82DF701EE008F2D74 /* SourceList.h */,
@@ -266,7 +266,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4FAD64792E69D1DD00643726 /* MainWindowController.m in Sources */,
+				4FAD64792E69D1DD00643726 /* XclocWindowController.m in Sources */,
 				4F0C64A22EAD4C00008B3506 /* MFUI.m in Sources */,
 				4FAD9C142EAF7DC600875CA0 /* XclocDocumentController.m in Sources */,
 				4FF4373C2DF63AB8008F2D74 /* AppDelegate.m in Sources */,

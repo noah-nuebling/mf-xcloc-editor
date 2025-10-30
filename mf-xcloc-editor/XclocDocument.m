@@ -276,7 +276,7 @@
         return;
     }
 
-    self->ctrl = [MainWindowController new];
+    self->ctrl = [XclocWindowController new];
     [self->ctrl loadWindow]; /// Doesn't seem to be called automatically, I think this is the right place to call this but not sure [Oct 2025]
 
     /// Store result

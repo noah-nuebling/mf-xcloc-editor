@@ -18,9 +18,6 @@
             
             /// Invoked by Command-O but we're also redirecting `applicationOpenUntitledFile:` to this [Oct 2025]
             
-            /// TODO: Prevent new window on each `applicationOpenUntitledFile:` invocation. (DONE)
-            /// TODO: getdoc_frontmost() crash when there is no doc open (during menu-item-validation) (DONE)
-            
             /// Log
             mflog(@"openDocument: (sender: %@)", sender);
             

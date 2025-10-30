@@ -5,7 +5,7 @@
 //  Created by Noah Nübling on 9/4/25.
 //
 
-#import "MainWindowController.h"
+#import "XclocWindowController.h"
 #import "Utility.h"
 #import "Cocoa/Cocoa.h"
 #import "MFUI.h"
@@ -16,6 +16,7 @@
 #import <Carbon/Carbon.h>
 
 #import "XclocDocument.h"
+#import "MFTextField.h"
 
 @interface TitlbarAccessoryViewController : NSTitlebarAccessoryViewController @end
 @implementation TitlbarAccessoryViewController { @public NSView *_theView; }
@@ -59,33 +60,89 @@
 
 @end
 
-@implementation MainWindowController
+@interface XclocWindow : NSWindow @end
+@implementation XclocWindow
 
     {
-        NSWindow *window; /// Without storing after creation in -loadWindow, this started crashing somewhere in AppKit on Tahoe  after adding `windowShouldClose:` [Oct 2025]
+        NSTextView *mfFieldEditor;
+        BOOL isRestoringState;
+        
     }
     
-    NSSplitView *mfui_splitview(NSArray<NSView *> *arrangedSubviews) {
+    #pragma mark - Field Editor
+    
+        - (NSText *) fieldEditor: (BOOL)createFlag forObject: (id)object {
+
+                /// Install custom fieldEditor
+                    ///  References:
+                    ///     - https://stackoverflow.com/questions/12712288/making-invisible-characters-visible-in-nstextfield
+                    ///     - https://stackoverflow.com/questions/300086/display-hidden-characters-in-nstextview
+
+            if (isclass(object, MFTextField)) {
+                
+                if (!mfFieldEditor) {
+                    
+                    self->mfFieldEditor = [NSTextView new];
+                    [self->mfFieldEditor setFieldEditor: YES];
+                    [[self->mfFieldEditor textContainer] replaceLayoutManager: [MFInvisiblesLayoutManager new]];
+                    
+                }
+
+                return self->mfFieldEditor;
+                
+            }
+            
+            return [super fieldEditor: createFlag forObject: object];
+        }
+    
+    #pragma mark - State restoration
+    
+        - (BOOL)makeFirstResponder:(NSResponder *)responder {
         
-        auto splitView = mfui_new(NSSplitView);
-        
-        splitView.vertical = YES;
-        splitView.dividerStyle = NSSplitViewDividerStyleThin;
-        
-        for (NSView *subview in arrangedSubviews) {
-            [splitView addArrangedSubview: subview];
+            mflog("makeFirstResponder: %@ with self->isRestoringState: %d", responder, self->isRestoringState);
+            
+            if (self->isRestoringState) /// See `restoreStateWithCoder:` [Oct 2025]
+                return NO;
+            else
+                return [super makeFirstResponder: responder];
         }
         
-        return splitView;
-    }
-    
-    NSViewController *mfui_viewcontroller(NSView *view) {
-        auto c = [NSViewController new];
-        c.view = view;
-        return c;
-    }
-    
+        - (void) restoreStateWithCoder: (NSCoder *)coder {
+            /// We don't want any state restoration except for windowFrames – the only other thing the super impl does is start editing random rows immediately but in a weird state where things break after (Worked around that with `@"MFSourceCellSister"`)[Oct 2025]
+            ///     We if we don't call super, the entire window restoration fails though (Doesn't even open the window) So we set `self->isRestoringState` to customize behavior – hacky but should work. [Oct 2025]
+            ///     This is called by the completionHandler passed to our `restoreWindowWithIdentifier:` override [Oct 2025]
+            mflog(@"restoreStateWithCoder: %@", coder);
+            self->isRestoringState = YES;
+            [super restoreStateWithCoder: coder];
+            self->isRestoringState = NO;
+        }
+        
+        - (void)encodeWithCoder:(NSCoder *)coder {
+        
+            assert(false); /// Don't think this is called
+            [super encodeWithCoder:coder];
+        }
 
+        - (void)encodeRestorableStateWithCoder:(NSCoder *)coder backgroundQueue:(NSOperationQueue *)queue {
+        
+            mflog(@"encodeRestorableStateWithCoder:backgroundQueue: %@", coder);
+            [super encodeRestorableStateWithCoder: coder backgroundQueue: queue];
+        }
+        
+        - (void)encodeRestorableStateWithCoder:(NSCoder *)coder {
+        
+            mflog(@"encodeRestorableStateWithCoder: %@", coder);
+            [super encodeRestorableStateWithCoder: coder];
+        }
+
+@end
+
+@implementation XclocWindowController
+
+    {
+        XclocWindow *window; /// Without storing after creation in -loadWindow, this started crashing somewhere in AppKit on Tahoe  after adding `windowShouldClose:` [Oct 2025]
+    }
+    
     
     - (void) loadWindow { /// Replaces `- (Outlets) makeMainWindow` I think [Oct 2025]
         
@@ -94,13 +151,13 @@
         {
             
             /// TODO:
-            /// - [x] Fix crash in MMF Xcloc Editor
-            ///     - Happened after not doing anything for a while – Prolly autosave
-            ///     - While editing /Users/noah/Downloads/loca-studio-sample-documents/sample-xcloc/ja.xcloc
-            ///     -> Update Never happened again. Not sure why.
+            /// - [ ] Fix autolayout crash when toggling state while the cell is off-screen and then resizing the window so it's on-screen.
             /// - [x] Change icon back
             /// - [ ] Maybe implement glyphs for single-linebreak (/ other invisibles)
             
+            /// TODO:
+            ///     `MFTextView_Overlay` doesn't get removed if we press escape.
+            ///
             
             /// TODO: Sometimes the close button turns into save button (black dot)
             ///     (Are we missing a save?) ... Nope we're not missing  a save, but undoing makes the black dot show. Turned this off through `autosavesInPlace` – not sure that's correct [Oct 2025]
@@ -110,7 +167,7 @@
             /// TODO: Undo is a bit unresponsive (cause saving the doc on every edit is slow)
             ///     Maybe we'll just live with that. (Do we even need undo? – All this NSDocument stuff may have been overkill. Things we so much simpler when we were just writing to disk directly. )
             
-            window = [NSWindow new];
+            window = [XclocWindow new];
             window.styleMask = 0
                 | NSWindowStyleMaskClosable
                 | NSWindowStyleMaskResizable
@@ -276,5 +333,26 @@
         return result;
     }
     
+    #pragma mark - Local MFUI Stuff
+    
+    NSSplitView *mfui_splitview(NSArray<NSView *> *arrangedSubviews) {
+        
+        auto splitView = mfui_new(NSSplitView);
+        
+        splitView.vertical = YES;
+        splitView.dividerStyle = NSSplitViewDividerStyleThin;
+        
+        for (NSView *subview in arrangedSubviews) {
+            [splitView addArrangedSubview: subview];
+        }
+        
+        return splitView;
+    }
+    
+    NSViewController *mfui_viewcontroller(NSView *view) {
+        auto c = [NSViewController new];
+        c.view = view;
+        return c;
+    }
 
 @end

@@ -8,7 +8,7 @@
 #import <Cocoa/Cocoa.h>
 #import "TableView.h"
 #import "SourceList.h"
-#import "MainWindowController.h"
+#import "XclocWindowController.h"
 
 @interface AppDelegate : NSObject <NSApplicationDelegate, NSMenuItemValidation>
 

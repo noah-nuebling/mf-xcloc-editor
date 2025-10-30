@@ -18,6 +18,7 @@
 #import "XclocDocument.h"
 #import "RowUtils.h"
 #import "MFTextField.h"
+#import "MFUI.h"
 
 #pragma mark - MFQLPreviewItem
 
@@ -94,6 +95,74 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         
         self.delegate   = self; /// [Jun 2025] Will this lead to retain cycles or other problems?
         self.dataSource = self;
+
+        /// Listen for field editor notifications to reload source cell when editing begins/ends
+        [[NSNotificationCenter defaultCenter]
+            addObserverForName: @"MFTextField_BecomeFirstResponder"
+            object:  nil
+            queue:  nil
+            usingBlock:^(NSNotification *note) {
+                
+                /// Swap in MFTextView for @"source" column cell when the @"target" column cell is being edited
+                ///     (To be able to display invisibles just like our fieldEditor does on the @"target" cell being edited.) [Oct 2025]
+                /// Note: We used to reload the tableCells here to display the MFTextview, but reloading here seems to break our firstResponder tracking in MFTextField (See `MFTextField_BecomeFirstResponder`) – I hope it doesn't break due to other random stuff. (Now we're applying the overlay directly here instead of reloading the table)
+                ///
+                /// High-level:
+                ///     We're trying to dynamically swap in invisibles-drawing NSTextVIew for the MFTextField for performance, while the MFTextField in the @"target" col is firstResponder (being edited) but both firstResponder tracking and retrieving the reference to the @"source" column views is brittle and doesn't work 100% reliably right now [Oct 2025]
+                ///     Alternative: Just make everything NSTextViews all the time and take the performance hit. Or just give up on invisibles.
+                
+                MFTextField *textField__ = note.object;
+                        
+                NSInteger row = [self rowForView: textField__]; /// TODO: Randomly returns -1 sometimes [Oct 2025]
+                
+                NSTableCellView *cell = [self viewAtColumn: [self columnWithIdentifier: @"source"] row: row makeIfNecessary: NO];
+                
+                /// Show MFTextView with newline glyphs
+                cell.textField.hidden = YES /*NO*/; /// Set to YES overlays the MFTextField and MFTextView, making text darker – useful as debugging tool (or to keep usable if there are bugs)
+
+                NSTextView *textView = [cell.textField mf_associatedObjectForKey: @"MFTextView_Overlay"];
+                if (!textView) {
+                    textView = [[NSTextView alloc] initWithFrame: NSZeroRect];
+                    {
+                        [[textView textContainer] replaceLayoutManager: [MFInvisiblesLayoutManager new]];
+                        textView.translatesAutoresizingMaskIntoConstraints = NO;
+                        textView.font = cell.textField.font;
+                        textView.textColor = cell.textField.textColor ?: [NSColor labelColor];
+                        textView.editable = NO;
+                        textView.selectable = YES;
+                        textView.drawsBackground = NO;
+                        textView.textContainer.lineFragmentPadding = 0;
+                        
+                    }
+
+                    [cell addSubview: textView];
+                    mfui_setmargins(cell, mfui_margins(8,8,2,2), textView); /// Margins match constraints on cell.textField in IB [Oct 2025]
+                    [cell.textField mf_setAssociatedObject: textView forKey: @"MFTextView_Overlay"];
+                    [textField__ mf_setAssociatedObject: cell.textField forKey: @"MFSourceCellSister"];
+                }
+
+                textView.hidden = NO;
+                textView.string = cell.textField.stringValue;
+            }
+        ];
+
+        [[NSNotificationCenter defaultCenter]
+            addObserverForName: @"MFTextField_ResignFirstResponder"
+            object: nil
+            queue: nil
+            usingBlock: ^(NSNotification *note) {
+                
+                /// Note:
+                ///     Using "MFSourceCellSister" associatedObject because `[self rowForView: textField__]` always returns zero in the `MFTextField_ResignFirstResponder` callback, when the firstResponder state was produced by `[XclocWindow -restoreStateWithCoder:]` [Oct 2025]
+                
+                MFTextField *textField__ = note.object;
+                MFTextField *sisterTextField = [textField__ mf_associatedObjectForKey: @"MFSourceCellSister"];
+                NSTextView *textView = [sisterTextField mf_associatedObjectForKey: @"MFTextView_Overlay"];
+                
+                if (sisterTextField) sisterTextField.hidden = NO;
+                if (textView)        textView.hidden = YES;
+            }
+        ];
         
         /// Configure style
         self.gridStyleMask = 0
@@ -319,8 +388,16 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         }
         - (void) cancelOperation: (id)sender {
             
-            if ([[self.window firstResponder] isKindOfClass: [NSTextView class]]) { /// If the user is editing a translation, cancel editing
+            
+            if (isclass([self.window firstResponder], NSTextView)) { /// If the user is editing a translation, cancel editing
+                
+                NSTextView *textView = (id)[self.window firstResponder];
+                MFTextField *textField = (id)[textView delegate];
+                
                 [super cancelOperation: sender];
+                
+                [textField textDidEndEditing: [NSNotification notificationWithName: @"MFHACK" object: textView]]; /// HACK: Make `textDidEndEditing:` be called in MFTextField when the user hits escape
+                
                 return;
             }
             
@@ -329,7 +406,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
     
         - (BOOL) control: (NSControl*)control textView: (NSTextView*)textView doCommandBySelector: (SEL)commandSelector {
             
-            mflog(@"commandBySelector: %s", commandSelector);
+            mflog(@"commandBySelector: %s", sel_getName(commandSelector));
             
             BOOL didHandle = NO;
          

@@ -7,7 +7,7 @@
 
 #import "AppDelegate.h"
 #import "Utility.h"
-#import "MainWindowController.h"
+#import "XclocWindowController.h"
 #import "XclocDocumentController.h"
 #import "Constants.h"
 #import "XclocDocument.h"

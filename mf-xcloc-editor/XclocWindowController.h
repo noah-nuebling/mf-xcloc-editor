@@ -1,5 +1,5 @@
 //
-//  MainWindowController.h
+//  XclocWindowController.h
 //  mf-xcloc-editor
 //
 //  Created by Noah Nübling on 9/4/25.
@@ -9,7 +9,7 @@
 #import "SourceList.h"
 #import "TableView.h"
 
-@interface MainWindowController : NSWindowController <NSWindowDelegate, NSToolbarDelegate, NSSearchFieldDelegate>
+@interface XclocWindowController : NSWindowController <NSWindowDelegate, NSToolbarDelegate, NSSearchFieldDelegate>
     {
         /// Outlets
         ///     Get filled by -loadWindow [Oct 2025]
