@@ -17,92 +17,78 @@
     ///     Can be attached to an NSTextView
     ///     (I also tried adding invisibles to NSTextField but could just not figure out where it does it's drawing – it's all private APIs) [Oct 2025]
 
+unichar returnChar =
+    //u'¬'
+    //u'⏎'
+    //u'￢'
+    //u'↵'
+    u'↩'
+;
 
-
-static CGGlyph getReturnGlyph(NSFont *font) {
-    
-    /// Get glyph for return symbol character
-    /// Use CTFont with font fallback to support characters not in the base font
-    /// TODO: Use a better glyph [Oct 2025]
-    
-    unichar returnChar =
-        u'¬'
-        //u'⏎'
-        //u'￢' // not works
-        //u'↵'  // not works
-        //u'↩'  // not works
-    ;
-    CGGlyph result;
-    bool succ = CTFontGetGlyphsForCharacters((__bridge void *)font, &returnChar, &result, 1);
-    if (!succ) {
-        assert(false);
-        return 0; /// Does 0 make sense as sentinel?
-    }
-    return result;
-}
-
-- (void)drawGlyphsForGlyphRange:(NSRange)range atPoint:(NSPoint)point {
+- (void) drawGlyphsForGlyphRange: (NSRange)range atPoint: (NSPoint)point {
     
         /// Source: https://stackoverflow.com/a/29681234
+      
+      mflog(@"drawGlyphsForGlyphRange: %@ atPoint: %@", NSStringFromRange(range), @(point));
+      
+      /// Extend range
+      ///   Cause range is often one specific, line, but whether we wanna draw the newline indicator on the previous line depends on current line content [Oct 2025]
+      ///   TODO: Make this work
+      if (range.location >= 1) {
+        range.location   -= 1;
+        range.length     += 1;
+      }
+      
+      for (NSInteger i = range.location; i < NSMaxRange(range); i++) {
+            
+            NSInteger characterIndex    = [self characterIndexForGlyphAtIndex: i];
+            unichar character           = [self.textStorage.string characterAtIndex: characterIndex];
+            unichar nextCharacter       =
+                (characterIndex+1 >= self.textStorage.string.length) ?
+                0 :
+                [self.textStorage.string characterAtIndex: characterIndex+1]
+            ;
+            unichar lastCharacter =
+                (characterIndex-1 < 0) ?
+                0 :
+                [self.textStorage.string characterAtIndex: characterIndex-1]
+            ;
+            
+            printf("%C", character);
+            
+            if (
+                character == '\n' &&
+                lastCharacter != '\n' && lastCharacter != 0 &&
+                nextCharacter != '\n' && nextCharacter != 0  /// Translators can easily see blank lines – no need to highlight them.
+            ) {
+                NSFont* font = [self.textStorage attribute: NSFontAttributeName atIndex: characterIndex effectiveRange: NULL];
+                
+                printf("DRAW DA NEWLINE");
+                NSInteger markerSize = 9;
+                NSFontWeight markerWeight = NSFontWeightBold; /// Not sure it's affecting u'↩' – which we're currently using [Oct 2025]
+                NSColor *markerColor = [NSColor secondaryLabelColor]; /// I kinda want something in-between secondaryLabelColor and tertiaryLabelColor
+                
+                NSPoint glyphPoint = [self locationForGlyphAtIndex: i];
+                NSRect glyphRect = [self lineFragmentRectForGlyphAtIndex: i effectiveRange: NULL];
+                { /// Don't understand but necessary for wrapping lines. Src: https://stackoverflow.com/a/576642/10601702
+                    glyphPoint.x += glyphRect.origin.x;
+                    glyphPoint.y = glyphRect.origin.y;
+                }
+                { /// Adjust position some by vibes
+                    glyphPoint.y += (font.pointSize - markerSize) / 2.0 + 1; /// Center
+                    glyphPoint.x += 2; /// Increase margin
+                }
+                [stringf(@"%C", returnChar) drawAtPoint: glyphPoint withAttributes: @{
+                    NSFontAttributeName: [NSFont systemFontOfSize: markerSize weight: markerWeight],
+                    NSForegroundColorAttributeName: markerColor
+                }];
+
+            }
+        }
+            
+        [super drawGlyphsForGlyphRange: range atPoint: point];
+    }
     
-      NSTextStorage* storage = self.textStorage;
-      NSString* string = storage.string;
-      for (NSUInteger glyphIndex = range.location; glyphIndex < range.location + range.length; glyphIndex++) {
-            
-            NSUInteger characterIndex = [self characterIndexForGlyphAtIndex: glyphIndex];
-            
-            switch ([string characterAtIndex:characterIndex]) {
-                break;
-                case ' ':
-                if ((0)) {
-                    NSFont* font = [storage attribute: NSFontAttributeName atIndex: characterIndex effectiveRange:NULL];
-                    [self replaceGlyphAtIndex:glyphIndex withGlyph: [font glyphWithName: @"periodcentered"]];
-                }
-
-                break;
-                case '\n': {
-                    NSFont* font = [storage attribute:NSFontAttributeName atIndex:characterIndex effectiveRange:NULL];
-
-                    CGGlyph returnGlyph = getReturnGlyph(font);
-                    if (returnGlyph != 0)
-                        [self replaceGlyphAtIndex: glyphIndex withGlyph: returnGlyph];
-                }
-            }
-        }
-
-        [super drawGlyphsForGlyphRange:range atPoint:point];
-    }
-
-    - (void)showCGGlyphs:(const CGGlyph *)glyphs positions:(const CGPoint *)positions count:(NSUInteger)glyphCount font:(NSFont *)font textMatrix:(CGAffineTransform)textMatrix attributes:(NSDictionary *)attributes inContext:(CGContextRef)graphicsContext {
-
-        /// Draw glyphs individually so we can set different opacity for newline symbols
-        NSTextStorage* storage = self.textStorage;
-        NSString* string = storage.string;
-
-        NSGlyph returnGlyph = getReturnGlyph(font);
-        
-        for (NSUInteger i = 0; i < glyphCount; i++) {
-            
-            double opacity = 1.0;
-            
-            if (glyphs[i] == returnGlyph)
-                /// Claude used `[string characterAtIndex: [self characterIndexForPoint: ...]] == '\n'` here which is more robust theoretically but failed for a blankline followed by a non-blank line.
-                /// This fails if our real content contains the unicode character for the `returnGlyph` – that would also get grayed out. But that's not going to happen for MMF. [Oct 2025]
-                opacity = 0.3;
-        
-            if (opacity < 1.0) {
-                CGContextSaveGState(graphicsContext);
-                {
-                    CGContextSetAlpha(graphicsContext, 0.3);
-                    [super showCGGlyphs:&glyphs[i] positions:&positions[i] count:1 font:font textMatrix:textMatrix attributes:attributes inContext:graphicsContext];
-                }
-                CGContextRestoreGState(graphicsContext);
-            } else {
-                [super showCGGlyphs:&glyphs[i] positions:&positions[i] count:1 font:font textMatrix:textMatrix attributes:attributes inContext:graphicsContext];
-            }
-        }
-    }
-
 @end
 
 @implementation MFTextField
