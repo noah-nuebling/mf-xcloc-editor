@@ -7,8 +7,7 @@
 
 #import <Cocoa/Cocoa.h>
 
-@interface MFInvisiblesLayoutManager : NSLayoutManager @end
-
+@interface MFInvisiblesTextView : NSTextView @end
 @interface MFTextField : NSTextField @end
 
 

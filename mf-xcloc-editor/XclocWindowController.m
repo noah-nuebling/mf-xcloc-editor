@@ -82,10 +82,8 @@
                 
                 if (!mfFieldEditor) {
                     
-                    self->mfFieldEditor = [NSTextView new];
+                    self->mfFieldEditor = [MFInvisiblesTextView new];
                     [self->mfFieldEditor setFieldEditor: YES];
-                    [[self->mfFieldEditor textContainer] replaceLayoutManager: [MFInvisiblesLayoutManager new]];
-                    
                 }
 
                 return self->mfFieldEditor;

@@ -103,7 +103,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
             queue:  nil
             usingBlock:^(NSNotification *note) {
                 
-                /// Swap in MFTextView for @"source" column cell when the @"target" column cell is being edited
+                /// Swap in MFInvisiblesTextView for @"source" column cell when the @"target" column cell is being edited
                 ///     (To be able to display invisibles just like our fieldEditor does on the @"target" cell being edited.) [Oct 2025]
                 /// Note: We used to reload the tableCells here to display the MFTextview, but reloading here seems to break our firstResponder tracking in MFTextField (See `MFTextField_BecomeFirstResponder`) – I hope it doesn't break due to other random stuff. (Now we're applying the overlay directly here instead of reloading the table)
                 ///
@@ -122,14 +122,13 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                 
                 NSTableCellView *cell = [self viewAtColumn: [self columnWithIdentifier: @"source"] row: row makeIfNecessary: NO];
                 
-                /// Show MFTextView with newline glyphs
-                cell.textField.hidden = YES /*NO*/; /// Set to YES overlays the MFTextField and MFTextView, making text darker – useful as debugging tool (or to keep usable if there are bugs)
+                /// Show MFInvisiblesTextView with newline glyphs
+                cell.textField.hidden = YES /*NO*/; /// Set to YES overlays the MFTextField and MFInvisiblesTextView, making text darker – useful as debugging tool (or to keep usable if there are bugs)
 
-                NSTextView *textView = [cell.textField mf_associatedObjectForKey: @"MFTextView_Overlay"];
+                NSTextView *textView = [cell.textField mf_associatedObjectForKey: @"MFInvisiblesTextView_Overlay"];
                 if (!textView) {
-                    textView = [[NSTextView alloc] initWithFrame: NSZeroRect];
+                    textView = [[MFInvisiblesTextView alloc] initWithFrame: NSZeroRect];
                     {
-                        [[textView textContainer] replaceLayoutManager: [MFInvisiblesLayoutManager new]];
                         textView.translatesAutoresizingMaskIntoConstraints = NO;
                         textView.font = cell.textField.font;
                         textView.textColor = cell.textField.textColor ?: [NSColor labelColor];
@@ -142,7 +141,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
 
                     [cell addSubview: textView];
                     mfui_setmargins(cell, mfui_margins(8,8,2,2), textView); /// Margins match constraints on cell.textField in IB [Oct 2025]
-                    [cell.textField mf_setAssociatedObject: textView forKey: @"MFTextView_Overlay"];
+                    [cell.textField mf_setAssociatedObject: textView forKey: @"MFInvisiblesTextView_Overlay"];
                     [textField__ mf_setAssociatedObject: cell.textField forKey: @"MFSourceCellSister"];
                 }
 
@@ -162,7 +161,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                 
                 MFTextField *textField__ = note.object;
                 MFTextField *sisterTextField = [textField__ mf_associatedObjectForKey: @"MFSourceCellSister"];
-                NSTextView *textView = [sisterTextField mf_associatedObjectForKey: @"MFTextView_Overlay"];
+                NSTextView *textView = [sisterTextField mf_associatedObjectForKey: @"MFInvisiblesTextView_Overlay"];
                 
                 if (sisterTextField) sisterTextField.hidden = NO;
                 if (textView)        textView.hidden = YES;
