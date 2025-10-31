@@ -105,7 +105,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                 
                 /// Swap in MFInvisiblesTextView for @"source" column cell when the @"target" column cell is being edited
                 ///     (To be able to display invisibles just like our fieldEditor does on the @"target" cell being edited.) [Oct 2025]
-                /// Note: We used to reload the tableCells here to display the MFTextview, but reloading here seems to break our firstResponder tracking in MFTextField (See `MFTextField_BecomeFirstResponder`) – I hope it doesn't break due to other random stuff. (Now we're applying the overlay directly here instead of reloading the table)
+                /// Note: We used to reload the tableCells here to display the `MFTextField`, but reloading here seems to break our firstResponder tracking in MFTextField (See `MFTextField_BecomeFirstResponder`) – I hope it doesn't break due to other random stuff. (Now we're applying the overlay directly here instead of reloading the table)
                 ///
                 /// High-level:
                 ///     We're trying to dynamically swap in invisibles-drawing NSTextVIew for the MFTextField for performance, while the MFTextField in the @"target" col is firstResponder (being edited) but both firstResponder tracking and retrieving the reference to the @"source" column views is brittle and doesn't work 100% reliably right now [Oct 2025]
