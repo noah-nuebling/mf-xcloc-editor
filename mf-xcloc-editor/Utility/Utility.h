@@ -13,7 +13,8 @@
 
 #define auto __auto_type                /// `auto` keyword is unused in C, so overriding with CPP-style `__auto_type` should be fine.
 #define mflog(msg...)                   NSLog(@"%20s: %@", __FILE_NAME__, stringf(@"" msg))
-#define isclass(obj, classname)        ({ [[(obj) class] isSubclassOfClass: [classname class]]; })
+#define isclass(obj,  classname)        ({ [[(obj) class] isSubclassOfClass: [classname class]]; })
+#define isclassd(obj, classname_str)     ({ [[(obj) class] isSubclassOfClass: NSClassFromString(classname_str)]; })
 #define stringf(format, args...)        [NSString stringWithFormat: (format), ## args]
 
 #define arrcount(x...) (sizeof ((x)) / sizeof (x)[0])
