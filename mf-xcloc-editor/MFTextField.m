@@ -9,6 +9,7 @@
 #import "Utility.h"
 #import "NSAttributedString+Additions.h"
 #import "NSObject+Additions.h"
+#import "NSNotificationCenter+Additions.h"
 
 /// Also see:
 ///     https://stackoverflow.com/questions/34504031/control-spacing-around-custom-text-attributes-in-nslayoutmanager
@@ -367,8 +368,8 @@ double newlineMarkerWidth = 0.0 /*15.0*/; /// Try to stop newline marker from be
     #pragma mark AutoLayout support
     
         static void realInit(MFTextField *self) {
-            [[NSNotificationCenter defaultCenter] addObserverForName: NSControlTextDidChangeNotification object: self queue: nil usingBlock: ^(NSNotification * _Nonnull notification) {
-                [self setNeedsUpdateConstraints: YES]; /// Call `intrinsicContentSize` again
+            [[NSNotificationCenter defaultCenter] mf_addObserverForName: NSControlTextDidChangeNotification object: self observee: self block: ^(NSNotification * _Nonnull notification, id  _Nullable observee) {
+                [observee setNeedsUpdateConstraints: YES]; /// Call `intrinsicContentSize` again
             }];
         }
         

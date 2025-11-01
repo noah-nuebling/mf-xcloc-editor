@@ -18,6 +18,8 @@
 #import "XclocDocument.h"
 #import "MFTextField.h"
 
+#import "NSNotificationCenter+Additions.h"
+
 @interface TitlbarAccessoryViewController : NSTitlebarAccessoryViewController @end
 @implementation TitlbarAccessoryViewController { @public NSView *_theView; }
     - (void)loadView { self.view = _theView; }
@@ -152,6 +154,14 @@
             /// - [x] Fix autolayout crash when toggling state while the cell is off-screen and then resizing the window so it's on-screen. (Fixed by using reloadItem:)
             /// - [x] Change icon back
             /// - [x] Maybe implement glyphs for single-linebreak (/ other invisibles)
+            
+            /// TODO: Make mf-xcloc-editor disappear from the UI (menubar)
+            /// TODO: Maybe make Command-R work while editing.
+            
+            /// TODO:
+            ///     Crash when close window while editing first row, then reopen window from file picker, then start editing first row
+            ///         See `textField__.hidden = NO;` in code
+            ///         (DONE)
         
             /// TODO: Fix issue where double-clicking / triple-clicking /...  a row does nothing (instead of starting text-editing)
             ///     Tried to fix this but hard. Maybe just live with it.
@@ -274,9 +284,9 @@
         }
         
         /// Set up `result.filterField` callback
-        [[NSNotificationCenter defaultCenter] addObserverForName: NSControlTextDidChangeNotification object: self->out_filterField queue: nil usingBlock: ^(NSNotification * _Nonnull notification) {
-            mflog(@"filter fiellddd: %@", self->out_filterField.stringValue);
-            [self->out_tableView updateFilter: self->out_filterField.stringValue];
+        [[NSNotificationCenter defaultCenter] mf_addObserverForName: NSControlTextDidChangeNotification object: self->out_filterField observee: self block: ^(NSNotification * _Nonnull notification, XclocWindowController *_Nullable observee) {
+            mflog(@"filter fiellddd: %@", observee->out_filterField.stringValue);
+            [observee->out_tableView updateFilter: observee->out_filterField.stringValue];
         }];
         
         /// Set window size/position

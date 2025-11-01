@@ -19,6 +19,7 @@
 #import "RowUtils.h"
 #import "MFTextField.h"
 #import "MFUI.h"
+#import "NSNotificationCenter+Additions.h"
 
 #pragma mark - MFQLPreviewItem
 
@@ -98,10 +99,10 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
 
         /// Listen for field editor notifications to reload source cell when editing begins/ends
         [[NSNotificationCenter defaultCenter]
-            addObserverForName: @"MFTextField_BecomeFirstResponder"
-            object:  nil
-            queue:  nil
-            usingBlock:^(NSNotification *note) {
+            mf_addObserverForName: @"MFTextField_BecomeFirstResponder"
+            object: nil
+            observee: self
+            block: ^(NSNotification *note, TableView *self) {
                 
                 /// Swap in MFInvisiblesTextView for @"source" column cell when the @"target" column cell is being edited
                 ///     (To be able to display invisibles just like our fieldEditor does on the @"target" cell being edited.) [Oct 2025]
@@ -112,9 +113,11 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                 ///     Alternative: Just make everything NSTextViews all the time and take the performance hit. Or just give up on invisibles.
                 
                 MFTextField *textField__ = note.object;
-                        
-                NSInteger row = [self rowForView: textField__]; /// Randomly returns -1 sometimes. Can't reproduce. In lldb it consistently returns -1 IIRC, so there is some weird state causing this, not just sporadic. [Oct 2025]
-                if (row == -1) { /// Handle gracefully since it'll probably happen sometimes in production. [Oct 2025]
+                
+                if (textField__.window != self.window) return; /// Since `object: nil` we receive this notification from *all* NSTextFields including ones in other windows.
+                
+                NSInteger row = [self rowForView: textField__];
+                if (row == -1) { /// Randomly returns -1 sometimes. Can't reproduce. In lldb it consistently returns -1 IIRC, so there is some weird state causing this, not just sporadic. [Oct 2025] Update: This may be fixed by the `textField__.window != self.window` check above.
                     assert(false);
                     textField__.hidden = NO;
                     return;
@@ -151,15 +154,17 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         ];
 
         [[NSNotificationCenter defaultCenter]
-            addObserverForName: @"MFTextField_ResignFirstResponder"
+            mf_addObserverForName: @"MFTextField_ResignFirstResponder"
             object: nil
-            queue: nil
-            usingBlock: ^(NSNotification *note) {
+            observee: self
+            block: ^(NSNotification *note, TableView *self) {
                 
                 /// Note:
                 ///     Using "MFSourceCellSister" associatedObject because `[self rowForView: textField__]` always returns zero in the `MFTextField_ResignFirstResponder` callback, when the firstResponder state was produced by `[XclocWindow -restoreStateWithCoder:]` [Oct 2025]
                 
                 MFTextField *textField__ = note.object;
+                if (textField__.window != self.window) return;
+                
                 MFTextField *sisterTextField = [textField__ mf_associatedObjectForKey: @"MFSourceCellSister"];
                 NSTextView *textView = [sisterTextField mf_associatedObjectForKey: @"MFInvisiblesTextView_Overlay"];
                 
