@@ -5,6 +5,8 @@
 //  Created by Noah Nübling on 11/1/25.
 //
 
+/// TODO: This is nice - Maybe move this into mac-mouse-fix
+
 #import <Foundation/Foundation.h>
 
 @interface NSNotificationCenter (Additions)

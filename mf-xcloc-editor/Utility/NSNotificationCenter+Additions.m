@@ -31,14 +31,15 @@
         /// Explanation:
         ///     The goal is to simplify lifetime management vs Apple's block-based NSNotificationCenter interface: `addObserverForName:object:queue:usingBlock:`.
         ///         Instead of having to manually store the observer and then call `removeObserver:` on it, you instead pass in an `observee` object which determines the lifetime of the observation.
-        ///         If you pass in nil as the `observee`, the observation lives as long as the observer (which is returned from the method – you'll have to retain it)
-        ///         In contrast to `addObserverForName:object:queue:usingBlock:`, you don't have to call `removeObserver:`, you can just let the observer get deallocated. (But you could also call `removeObserver:` on it)
+        ///         If you pass in nil as the `observee`, the observation lives as long as the observer (which is returned from the method – you'll then have to retain it)
+        ///         In contrast to `addObserverForName:object:queue:usingBlock:`, you don't have to call `removeObserver:` in any case, you can just let the observer get deallocated. (But you could also call `removeObserver:` on it to cancel it early.)
         /// Neat:
         ///     The observee is also passed to the callback-block making it easier to avoid retain-cycles, without doing the weak/strong dance.
+        ///
         /// Ownership graph:
         ///     observee (owns) observer (owns) block
-        ///         Or if you retain the observer (which is returned from this method): your stuff (owns) observer (owns) block
-        ///     -> As soon as the observer has no more owners, it'll get dealloc'd, and then the NSNotificationCenter will automatically cleanup the observation, the next time it tries to send to the observer
+        ///         Or if you retain the observer (which is returned from this method): your stuff (owns) observer (owns) block.
+        ///     -> As soon as the observer has no more owners, it'll get dealloc'd, and then the NSNotificationCenter will automatically cleanup the observation, the next time it tries to send to the observer.
         
         if (!block) {
             assert(false);
