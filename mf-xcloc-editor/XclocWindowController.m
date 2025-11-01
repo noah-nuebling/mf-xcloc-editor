@@ -155,13 +155,7 @@
             /// - [x] Change icon back
             /// - [x] Maybe implement glyphs for single-linebreak (/ other invisibles)
             
-            /// TODO: Make mf-xcloc-editor disappear from the UI (menubar)
             /// TODO: Maybe make Command-R work while editing.
-            
-            /// TODO:
-            ///     Crash when close window while editing first row, then reopen window from file picker, then start editing first row
-            ///         See `textField__.hidden = NO;` in code
-            ///         (DONE)
         
             /// TODO: Fix issue where double-clicking / triple-clicking /...  a row does nothing (instead of starting text-editing)
             ///     Tried to fix this but hard. Maybe just live with it.
