@@ -127,7 +127,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
 
                 NSTextView *textView = [cell.textField mf_associatedObjectForKey: @"MFInvisiblesTextView_Overlay"];
                 if (!textView) {
-                    textView = [[MFInvisiblesTextView alloc] initWithFrame: NSZeroRect];
+                    textView = [MFInvisiblesTextView new];
                     {
                         textView.translatesAutoresizingMaskIntoConstraints = NO;
                         textView.font = cell.textField.font;
