@@ -83,6 +83,9 @@ Overview: `MMF Xcloc Editor`
             no data will be lost. 
         - Small size – can be shipped in a bundle with your .xcloc files.
         - Window and column resizing is less annoying than in Xcode
+        - Text-substitutions can be turned off.
+            (E.g. smart-quotes, or "omw" -> "on my way". These always auto re-enable in Xcode.)
+        - Elegant '↩' marker so that localizers can easily distinguish between '\n' characters in the text vs line wrapping.
     
     Caveats:
         - I kinda hacked this together in a few days as a for-fun project. I made this specifically
@@ -90,8 +93,11 @@ Overview: `MMF Xcloc Editor`
                 and so this may not work correctly with other .xcloc files. If you find some bug or
                 incompatibility with your .xcloc files, feel free to let me know or open a pull request.
                 (as of [Oct 2025])
-        - Can't edit `pluralizable format string`s (but that shouldn't be necessary I
-            think – see above)
+        - Can't edit `pluralizable format string`s (but that isn't necessary I think – see above)
+        - Format specifiers like "%@" don't get a special color background like they do in Xcode.
+            - I don't think this is super helpful in Xcode especially since it also makes it impossible to edit the format specifier once it has the background which is a bit annoying. And for my project MMF, there are Javascript, Python and C format specifiers, which won't all get highlighted consistently by Xcode anyways.
+                So I decided to just leave this feature out.
+                Let me know if you want this feature.
 
 Building:
     Just open in Xcode and hit the play button. If there are problems let me know.

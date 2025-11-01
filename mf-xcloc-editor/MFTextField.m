@@ -45,7 +45,7 @@ double newlineMarkerWidth = 0.0 /*15.0*/; /// Try to stop newline marker from be
     ///     Can be attached to an NSTextView
     ///     (I also tried adding invisibles to NSTextField but could just not figure out where it does it's drawing – it's all private APIs) [Oct 2025]
 
-    unichar returnChar =
+    unichar newlineMarkerChar =
         //u'¬'
         //u'⏎'
         //u'￢'
@@ -152,15 +152,7 @@ double newlineMarkerWidth = 0.0 /*15.0*/; /// Try to stop newline marker from be
         ///     IN the SO solution, newlines aloso get cut-off
     
         mflog(@"drawGlyphsForGlyphRange: %@ atPoint: %@", NSStringFromRange(range), @(point));
-        
-        if ((0)) /// Crashes immediately
-        {
-            [self firstTextView].frame = MFInsetRect(
-                [self firstTextView].frame,
-                0, 0, 0, 10
-            );
-        }
-        
+
         if ((1))
         for (NSInteger i = range.location; i < NSMaxRange(range); i++) {
             
@@ -184,9 +176,9 @@ double newlineMarkerWidth = 0.0 /*15.0*/; /// Try to stop newline marker from be
             ) {
                 NSFont* font = [self.textStorage attribute: NSFontAttributeName atIndex: characterIndex effectiveRange: NULL];
                 
-                NSInteger markerSize = 9;
-                NSFontWeight markerWeight = NSFontWeightBold; /// Not sure it's affecting u'↩' – which we're currently using [Oct 2025]
-                NSColor *markerColor = [NSColor secondaryLabelColor]; /// I kinda want something in-between secondaryLabelColor and tertiaryLabelColor
+                NSInteger newlineMarkerSize = 9;
+                NSFontWeight newlineMarkerWeight = NSFontWeightBold; /// Not sure it's affecting u'↩' – which we're currently using [Oct 2025]
+                NSColor *newlineMarkerColor = [NSColor secondaryLabelColor]; /// I kinda want something in-between secondaryLabelColor and tertiaryLabelColor
                 
                 NSPoint glyphPoint = [self locationForGlyphAtIndex: i];
                 NSRect glyphRect = [self lineFragmentRectForGlyphAtIndex: i effectiveRange: NULL];
@@ -195,14 +187,39 @@ double newlineMarkerWidth = 0.0 /*15.0*/; /// Try to stop newline marker from be
                     glyphPoint.y = glyphRect.origin.y;
                 }
                 { /// Adjust position some by vibes
-                    glyphPoint.y += (font.pointSize - markerSize) / 2.0 + 1; /// Center
-                    glyphPoint.x += 2; /// Increase margin
+                    glyphPoint.y += (font.pointSize - newlineMarkerSize) / 2.0 + 1; /// Center
+                    glyphPoint.x += 1; /// Increase margin
                 }
-                [stringf(@"%C", returnChar) drawAtPoint: glyphPoint withAttributes: @{
-                    NSFontAttributeName: [NSFont systemFontOfSize: markerSize weight: markerWeight],
-                    NSForegroundColorAttributeName: markerColor
-                }];
+                /// Draw
+                /// On clipping: (We wanna allow the newlineMarkers to draw outside, so localizers don't miss them.)
+                ///     Observed view hierarchy
+                ///         - (@"source" col):                                   `MFInvisiblesTextView > MFTextField > NSTableCellView` [Oct 2025]
+                ///         - (@"target" col – while being edited):   `MFInvisiblesTextView > _NSKeyboardFocusClipView > MFTextField > NSTableCellView`
+                ///     For @"source" col, using `CGContextResetClip` seems enought to disable clipping.
+                ///     For @"target" col, the `_NSKeyboardFocusClipView` causes problems.
+                ///         `_NSKeyboardFocusClipView` naturally clips off any part of the *enclosing* tableRowView that it intersects with, and clips off any part of its subview (`MFInvisiblesTextView`) that it *doesn't* intersect with. Setting `clipsToBounds = NO` causes the *entire* tableRowView to be clipped out.
+                ///              No idea how it does this. Tried to turn this off for hours to no avail.
+                ///              Only solution I found: Remove the  `_NSKeyboardFocusClipView` from the view-hierarchy inside `[MFTextField addSubview:]`.
+                ///                 -> Everything was working, there was one small problem: When you create/remove a newlineMarker by entering a linebreak, the part of the newlineMarker drawn outside the MFTextView bounds doesn't update. (updates once you resize the column) -> Not sure how hard to fix.
+                ///                 -> Implementation details: We use `-[MFTextField layer]` to draw background and focusRing IIRC. (Setting background on MFTextField or MFInvisiblesTextView directly caused jank.)
+                ///                     (Normally `_NSKeyboardFocusClipView` indirectly draws background by clipping away the tableRowView selection. (Which we draw in `[TableRowView drawSelectionInRect:]`)) [Oct 2025]
+                ///         -> We just accept clipping on @"target" col, since newlineMarkers getting cut off in @"target" col is not too bad for UX since localizers will know whether they entered a newline or not.
+                ///     Alternative:
+                ///         - Could prevent newlineMarkers from drawing outside but then we'd have to make the textKit layout system aware of it, but tried that for whole day and didn't work (See `shouldGenerateGlyphs:`) (Also – if we keep the "Only swap in NSTextView when necessary, otherwise use NSTextField" optimization (Which I'm not even sure is necessary) we'd have to also make the MFTextField adopt that same textLayout, which I also spent hours on and may be impossible. -> Disable clipping is wayy easier.
+                ///     Also see:
+                ///         - https://claude.ai/share/45dc8084-70d8-495d-9a6b-6c34baaab22d
+                ///     Reflection:
+                ///         This 'newlineMarker' feature was like half of the development time of mf-xcloc editor. I was already done and thought 'ohh little extra bonus feature' and then it turned into this mess but I couldn't stop myself. [Nov 2025]
+                [NSGraphicsContext saveGraphicsState];
+                {
+                    CGContextResetClip([[NSGraphicsContext currentContext] CGContext]); /// Try disable clipping || WORKS!
 
+                    [stringf(@"%C", newlineMarkerChar) drawAtPoint: glyphPoint withAttributes: @{
+                        NSFontAttributeName: [NSFont systemFontOfSize: newlineMarkerSize weight: newlineMarkerWeight],
+                        NSForegroundColorAttributeName: newlineMarkerColor
+                    }];
+                }
+                [NSGraphicsContext restoreGraphicsState];
             }
         }
             
@@ -228,7 +245,6 @@ double newlineMarkerWidth = 0.0 /*15.0*/; /// Try to stop newline marker from be
         }
         [[self textContainer] replaceLayoutManager: [MFInvisiblesLayoutManager new]];
     }
-    
 @end
 
 @implementation MFTextField
