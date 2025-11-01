@@ -208,7 +208,7 @@
                     ({
                         auto sideBarItem = [NSSplitViewItem sidebarWithViewController: mfui_viewcontroller(({
                             auto v = mfui_scrollview(mfui_outlet(&self->out_sourceList, mfui_new(SourceList)));
-                            v.drawsBackground = YES; /// Turn off liquid glass - just make it sidebar white.
+                            v.drawsBackground = /*YES*/ NO; /// Turn off liquid glass - just make it sidebar white.
                             v;
                         }))];
                         sideBarItem.canCollapse = NO;
