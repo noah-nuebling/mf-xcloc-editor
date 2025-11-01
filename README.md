@@ -37,6 +37,9 @@ Lightweight clone of Xcode's .xcloc file editor for the Mac Mouse Fix project.
     - In Xcode, users have to go through two levels of '>' disclosure triangles to see pluralizable variants, which they may miss.
 - Only once all the pluralizable variants are marked as 'translated' does the entire string show up as 'translated'
     - In Xcode, the pluralizable string can be marked as 'translated' while the variants are still marked as 'needs_review'. This can make the strings hard to find.
+- Better comments for Interface Builder strings
+    - For localizable strings inside Interface Builder files, Xcode exports very long comments that are actually old-style plist dictionaries containing mostly redundant or irrelevant information such as "ObjectID", "Class" or "title" (which just repeats the English UI string). MMF Xcloc Editor filters out all this redundant stuff, so that localizers can focus on the hints that you wrote for them.
+- When you ship `MMF Xcloc Editor.app` next to .xcloc files, it will automatically show the user a picker between those .xcloc files.
 - Supports undo and redo for all edits.
 - Can be controlled and navigated completely via the keyboard.
 - Shift-Return enters a newline, for the ChatGPT users.
@@ -80,7 +83,6 @@ If there's a problem with your .xcloc files or if you'd like to see a feature, f
 ## Building
 
 Just open in Xcode and hit the play button. If there are problems let me know. 
-
 
 ## Shipping
 
