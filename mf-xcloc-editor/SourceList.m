@@ -37,8 +37,6 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
 
 @implementation SourceList
     {
-    
-
         NSMutableArray <File *> *files;
         NSArray<NSXMLElement *> *_transUnitsFromAllFiles; /// Gives each transUnit a unique ID, which we need for undo/redo [Oct 2025]
         BOOL justBecameFirstResponder;
@@ -75,6 +73,7 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
         ///     It seems you need to use nib files to use the native mechanism for reusing views? (`makeViewWithIdentifier:owner:`)
         [self registerNib: [[NSNib alloc] initWithNibNamed: @"ReusableViews" bundle: nil] forIdentifier:@"theReusableCell_Outline"];
         
+        /// Return
         return self;
     }
 
@@ -185,7 +184,14 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
         
         self->sourceLanguage = sourceLanguage;
         self->targetLanguage = targetLanguage;
+    }
+    
+    - (void)reloadData {
         
+        [super reloadData];
+        
+        /// Set initial selection to first real file (instead of `kMFPath_AllDocuments`)
+        [self selectRowIndexes: indexset(2) byExtendingSelection: NO];
     }
     
     - (void) showAllTransUnits {
@@ -280,7 +286,7 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
         mflog(@"becomeFirstResponder: %d", result);
         
         if (result) {
-            self->justBecameFirstResponder = YES; /// in mouseDown: it seems we're *always* already firstResponder. Could avoid this by always return YES from validateProposedFirstResponder: – but this seems more robust. [Nov 2025]
+            self->justBecameFirstResponder = YES; /// in mouseDown: it seems we're *always* already firstResponder. Could avoid this by always return YES from validateProposedFirstResponder: (for whatever reason) – but this seems more robust. [Nov 2025]
             runOnMain(0.0, ^{
                 self->justBecameFirstResponder = NO;
             });

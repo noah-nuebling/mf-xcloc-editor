@@ -220,6 +220,10 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
             
             /// Column sizing
             [self setColumnAutoresizingStyle: NSTableViewUniformColumnAutoresizingStyle];
+            
+            /// Sort by the table by @"id" column by default
+            [self setSortDescriptors: @[[NSSortDescriptor sortDescriptorWithKey: @"id" ascending: YES]]];
+            
         }
         
         /// Add right-click menu

@@ -151,10 +151,6 @@
         assert(!self.window);
         {
             
-            
-            
-            /// TODO: Sort by key by default
-            /// TODO: Select the first project file by default (instead of 'All Project Files')
             /// TODO: Make default width on small laptop screen better
             /// TODO: Maybe look into responsiveness of changing the sort / file
             /// TODO: Add "Show in 'filename'" to right-click menu.
