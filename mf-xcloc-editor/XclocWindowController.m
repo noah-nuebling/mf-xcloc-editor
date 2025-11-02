@@ -154,8 +154,6 @@
             /// - [x] Fix autolayout crash when toggling state while the cell is off-screen and then resizing the window so it's on-screen. (Fixed by using reloadItem:)
             /// - [x] Change icon back
             /// - [x] Maybe implement glyphs for single-linebreak (/ other invisibles)
-            
-            /// TODO: Maybe make Command-R work while editing.
         
             /// TODO: Fix issue where double-clicking / triple-clicking /...  a row does nothing (instead of starting text-editing)
             ///     Tried to fix this but hard. Maybe just live with it.

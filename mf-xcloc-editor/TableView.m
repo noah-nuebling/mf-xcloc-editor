@@ -742,8 +742,11 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         
         /// Reload state cell
         ///     - (Don't think this is necessary if we called `updateFilter:` or `showAllTransUnits` in `_revealTransUnit:`, cause those will already have reloaded the whole table [Oct 2025]
-        ///     - Used to use `reloadDataForRowIndexes:` but that caused weird crashes in the layout system when toggling state and then resizing the table. [Oct 2025]
-        ///         Also note that `reloadDataForRowIndexes:` is an NSTableView method not an NSOutlineView one - so maybe we're not supposed to call that.
+        ///     - Used to use `reloadDataForRowIndexes:` instead of `reloadItem:` but that caused weird crashes in the layout system when toggling state and then resizing the table. [Oct 2025] [macOS 26 Tahoe]
+        ///         Another detail: IIRC, the exception said something about trying to activate a constraint between a  tableRowView an the tableCellView that don't have a common ancestor.
+        ///         Fix idea: The crash might be related to us passing different IDs to `makeViewWithIdentifier:` depending on the state – that may confuse the layout system.
+        ///         Explanation idea: Also note that `reloadDataForRowIndexes:` is an NSTableView method not an NSOutlineView one - so maybe we're not supposed to call that.
+        ///         Problem: with `reloadItem:`: When toggling state via Command-R while editing the @"target" col textField, editing ends and it always sets the state to 'translated'. That's because `reloadItem:` reloads the entire row.
         {
             [self reloadItem: [self selectedItem] reloadChildren: NO]; /// `_revealTransUnit:` selects the desired row [Oct 2025]
             [self reloadItem: [self parentForItem: [self selectedItem]] reloadChildren: NO]; /// Update the parent as well – the state it displays depends on its children.

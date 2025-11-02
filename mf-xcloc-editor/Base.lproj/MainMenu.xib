@@ -103,6 +103,12 @@
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="WRV-NI-Exz"/>
+                            <menuItem title="Mark as Translated" image="checkmark.circle" catalog="system" keyEquivalent="r" id="HHf-Ss-wZo">
+                                <connections>
+                                    <action selector="markAsTranslatedMenuItemSelected:" target="Voe-Tx-rLC" id="9ve-Ep-4jE"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="2Sx-TC-Ld5"/>
                             <menuItem title="Cut" keyEquivalent="x" id="uRl-iY-unG">
                                 <connections>
                                     <action selector="cut:" target="-1" id="YJe-68-I9s"/>
@@ -136,12 +142,6 @@
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="uyl-h8-XO2"/>
-                            <menuItem title="Mark as Translated" image="checkmark.circle" catalog="system" keyEquivalent="r" id="HHf-Ss-wZo">
-                                <connections>
-                                    <action selector="markAsTranslatedMenuItemSelected:" target="Voe-Tx-rLC" id="9ve-Ep-4jE"/>
-                                </connections>
-                            </menuItem>
-                            <menuItem isSeparatorItem="YES" id="2Sx-TC-Ld5"/>
                             <menuItem title="Spelling and Grammar" id="Dv1-io-Yv7">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <menu key="submenu" title="Spelling" id="3IN-sU-3Bg">

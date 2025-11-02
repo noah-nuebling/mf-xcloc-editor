@@ -120,21 +120,25 @@
 
     - (BOOL) validateMenuItem: (NSMenuItem *)menuItem {
         
+        BOOL result = NO;
+        #define ret(res) { result = (res); goto end; }
+        
         auto doc = getdoc_frontmost();
-        if (!doc) return NO;    /// When no doc is open, none of these menu-items apply, also the `getdoc_frontmost()` calls would crash.  (When no doc is open, NSOpenPanel opens) [Oct 2025]
+        if (!doc) ret(NO);    /// When no doc is open, none of these menu-items apply, also the `getdoc_frontmost()->someIvar` calls would crash.  (When no doc is open, NSOpenPanel opens) [Oct 2025]
         
         if (menuItem.action == @selector(filterMenuItemSelected:)) {
-            return YES;
+            ret(YES);
         }
         else if (menuItem.action == @selector(quickLookMenuItemSelected:)) {
-            return YES;
+            ret(YES);
         }
         else if (menuItem.action == @selector(markAsTranslatedMenuItemSelected:)) {
             
             TableView *tableView = doc->ctrl->out_tableView;
             
-            if (![[tableView.window firstResponder] isEqual: tableView]) /// Ignore input when tableView is not firstResponder to prevent accidental input [Oct 2025]
-                return NO;
+            if (![(id)[tableView.window firstResponder] isDescendantOf: tableView]) { /// Ignore input when tableView is not firstResponder to prevent accidental input [Oct 2025] || isDescendantOf: is necessary when editing an NSTextField.
+                ret(NO);
+            }
             
             NSXMLElement *selectedTransUnit = [tableView selectedItem];
             if (
@@ -143,23 +147,30 @@
             ) {
                 menuItem.title = kMFStr_MarkAsTranslated; /// Setting the image/title here as well so they are not 'unitialized' raw values from the IB. [Oct 2025]
                 menuItem.image = [NSImage imageWithSystemSymbolName: kMFStr_MarkAsTranslated_Symbol accessibilityDescription: nil];
-                return NO;
+                ret(NO);
             }
             else if ([tableView rowIsTranslated: selectedTransUnit]) {
                 menuItem.title = kMFStr_MarkForReview;
                 menuItem.image = [NSImage imageWithSystemSymbolName: kMFStr_MarkForReview_Symbol accessibilityDescription: nil];
-                return YES;
+                ret(YES);
             }
             else {
                 menuItem.title = kMFStr_MarkAsTranslated;
                 menuItem.image = [NSImage imageWithSystemSymbolName: kMFStr_MarkAsTranslated_Symbol accessibilityDescription: nil];
-                return YES;
+                ret(YES);
             }
         
-            return YES;
+            ret(YES);
         }
         else
-            return [super validateMenuItem: menuItem];
+            ret([super validateMenuItem: menuItem]);
+            
+        end: {}
+        #undef ret
+        
+        mflog(@"validateMenuItem: %d", result);
+        
+        return result;
     }
 
     - (IBAction) filterMenuItemSelected: (id)sender {
