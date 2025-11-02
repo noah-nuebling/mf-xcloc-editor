@@ -20,5 +20,7 @@
 
     - (void) progressHasChanged;
     - (void) showAllTransUnits;
+    - (BOOL) allTransUnitsShown;
+    - (NSString *) filenameForTransUnit: (NSXMLElement *)transUnit;
 
 @end

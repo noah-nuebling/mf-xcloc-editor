@@ -194,6 +194,29 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
         [self selectRowIndexes: [NSIndexSet indexSetWithIndex: row] byExtendingSelection: NO];
     }
     
+    - (BOOL) allTransUnitsShown {
+        return [self selectedRow] == 0; /// Hardcode to first row [Oct 2025]
+    }
+    
+    - (NSString *) filenameForTransUnit: (NSXMLElement *)transUnit {
+        
+        /// TODO:
+        ///     Maybe just look at the parent node (for performance – if that matters)
+        ///         `<file original="App/UI/Main/Base.lproj/Main.storyboard"> <body> <trans-unit> ....`)
+        
+        for (int i = 0; i < files.count; i++) {
+            if (i == 0) continue; /// Skip the allTransUnits item  [Oct 2025]
+            if ([files[i] isEqual: @"separator"]) continue;
+            
+            if ([files[i]->transUnits containsObject: transUnit]) {
+                return [self uiStringForFile: files[i]];
+            };
+        }
+        
+        return @"<Error: no filename found>";
+        
+    }
+    
     
     - (void) progressHasChanged {
 

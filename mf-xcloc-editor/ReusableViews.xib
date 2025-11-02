@@ -91,37 +91,68 @@
             <point key="canvasLocation" x="-696" y="-77"/>
         </tableCellView>
         <tableCellView identifier="theReusableCell_TableID" verticalCompressionResistancePriority="1000" id="JTE-ER-1V4" userLabel="Table Cell - ID">
-            <rect key="frame" x="0.0" y="0.0" width="230" height="62"/>
+            <rect key="frame" x="0.0" y="0.0" width="230" height="86"/>
             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
             <subviews>
-                <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" verticalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="QQo-Qf-nO7" userLabel="Table View Cell">
-                    <rect key="frame" x="0.0" y="39" width="205" height="15"/>
-                    <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="Table View Cell - ID" id="TWI-eH-Nff">
-                        <font key="font" metaFont="cellTitle"/>
-                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
-                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                    </textFieldCell>
-                </textField>
-                <button identifier="quick-look-button" verticalHuggingPriority="750" horizontalCompressionResistancePriority="1000" verticalCompressionResistancePriority="1000" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="qr8-CF-vVi">
-                    <rect key="frame" x="124" y="39" width="20" height="16"/>
-                    <buttonCell key="cell" type="push" title="View Screenshot" bezelStyle="rounded" imagePosition="only" alignment="center" controlSize="mini" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="GSq-rv-bbb">
-                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                        <font key="font" metaFont="miniSystem"/>
-                        <imageReference key="image" image="eye" catalog="system" symbolScale="medium"/>
-                    </buttonCell>
-                    <constraints>
-                        <constraint firstAttribute="width" constant="20" id="Dtu-NQ-hC6"/>
-                    </constraints>
-                </button>
+                <stackView distribution="fill" orientation="horizontal" alignment="top" spacing="5" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="e6T-Ya-7cf">
+                    <rect key="frame" x="2" y="8" width="230" height="70"/>
+                    <subviews>
+                        <stackView distribution="fill" orientation="vertical" alignment="leading" spacing="5" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="mUK-84-VbT">
+                            <rect key="frame" x="0.0" y="0.0" width="205" height="70"/>
+                            <subviews>
+                                <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="1000" horizontalCompressionResistancePriority="250" verticalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="QQo-Qf-nO7" userLabel="Table View Cell">
+                                    <rect key="frame" x="-2" y="55" width="115" height="15"/>
+                                    <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="Table View Cell - ID" id="TWI-eH-Nff">
+                                        <font key="font" metaFont="cellTitle"/>
+                                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                    </textFieldCell>
+                                </textField>
+                                <textField identifier="filename-field" focusRingType="none" horizontalHuggingPriority="750" verticalHuggingPriority="1" horizontalCompressionResistancePriority="1" verticalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="JY0-q0-ncI">
+                                    <rect key="frame" x="-2" y="0.0" width="44" height="50"/>
+                                    <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" alignment="left" title="progress" id="yHe-d8-hMs">
+                                        <font key="font" metaFont="systemMedium" size="9"/>
+                                        <color key="textColor" name="secondaryLabelColor" catalog="System" colorSpace="catalog"/>
+                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                    </textFieldCell>
+                                </textField>
+                            </subviews>
+                            <visibilityPriorities>
+                                <integer value="1000"/>
+                                <integer value="1000"/>
+                            </visibilityPriorities>
+                            <customSpacing>
+                                <real value="3.4028234663852886e+38"/>
+                                <real value="3.4028234663852886e+38"/>
+                            </customSpacing>
+                        </stackView>
+                        <button identifier="quick-look-button" verticalHuggingPriority="750" horizontalCompressionResistancePriority="1000" verticalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="qr8-CF-vVi">
+                            <rect key="frame" x="210" y="54" width="20" height="16"/>
+                            <buttonCell key="cell" type="push" title="View Screenshot" bezelStyle="rounded" imagePosition="only" alignment="center" controlSize="mini" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="GSq-rv-bbb">
+                                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                <font key="font" metaFont="miniSystem"/>
+                                <imageReference key="image" image="eye" catalog="system" symbolScale="medium"/>
+                            </buttonCell>
+                            <constraints>
+                                <constraint firstAttribute="width" constant="20" id="Dtu-NQ-hC6"/>
+                            </constraints>
+                        </button>
+                    </subviews>
+                    <visibilityPriorities>
+                        <integer value="1000"/>
+                        <integer value="1000"/>
+                    </visibilityPriorities>
+                    <customSpacing>
+                        <real value="3.4028234663852886e+38"/>
+                        <real value="3.4028234663852886e+38"/>
+                    </customSpacing>
+                </stackView>
             </subviews>
             <constraints>
-                <constraint firstAttribute="trailing" secondItem="qr8-CF-vVi" secondAttribute="trailing" constant="2" id="3WN-Bb-bU0"/>
-                <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="QQo-Qf-nO7" secondAttribute="trailing" constant="2" id="D1U-fc-Xcs"/>
-                <constraint firstItem="QQo-Qf-nO7" firstAttribute="leading" secondItem="JTE-ER-1V4" secondAttribute="leading" constant="2" id="DMG-i7-9u2"/>
-                <constraint firstAttribute="bottom" relation="greaterThanOrEqual" secondItem="QQo-Qf-nO7" secondAttribute="bottom" constant="8" id="Hy3-oM-NUS"/>
-                <constraint firstItem="qr8-CF-vVi" firstAttribute="leading" secondItem="QQo-Qf-nO7" secondAttribute="trailing" constant="5" id="QbF-Kf-9HG"/>
-                <constraint firstItem="QQo-Qf-nO7" firstAttribute="top" secondItem="JTE-ER-1V4" secondAttribute="top" constant="8" id="nlz-Fe-swT"/>
-                <constraint firstItem="qr8-CF-vVi" firstAttribute="top" secondItem="JTE-ER-1V4" secondAttribute="top" constant="8" id="zKD-RU-5bf"/>
+                <constraint firstItem="e6T-Ya-7cf" firstAttribute="top" secondItem="JTE-ER-1V4" secondAttribute="top" constant="8" id="RyK-4S-ZXi"/>
+                <constraint firstAttribute="trailing" secondItem="e6T-Ya-7cf" secondAttribute="trailing" constant="-2" id="iCf-Qc-Ike"/>
+                <constraint firstItem="e6T-Ya-7cf" firstAttribute="leading" secondItem="JTE-ER-1V4" secondAttribute="leading" constant="2" id="iny-OA-1ft"/>
+                <constraint firstAttribute="bottom" secondItem="e6T-Ya-7cf" secondAttribute="bottom" constant="8" id="xTI-Xg-bPt"/>
             </constraints>
             <connections>
                 <outlet property="nextKeyView" destination="qr8-CF-vVi" id="1NF-S2-zpp"/>

@@ -20,6 +20,7 @@
 #import "MFTextField.h"
 #import "MFUI.h"
 #import "NSNotificationCenter+Additions.h"
+#import "NSView+Additions.h"
 
 #pragma mark - MFQLPreviewItem
 
@@ -928,13 +929,18 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
             }
         }
         
-        /// Special stuff for `<target>` column
+        /// Special stuff for @"target" column
         bool targetCellShouldBeEditable = true;
+        
+        /// Special stuff for @"id" column
+        bool shouldShowFilename = NO;
+        if (iscol(@"id")) shouldShowFilename = [getdoc(self)->ctrl->out_sourceList allTransUnitsShown];
         
         /// Handle pluralizable strings
         {
             if (rowModel_isParent(transUnit)) {
-                if      (iscol(@"id"))       {}
+                if ((0)) {}
+                else if (iscol(@"id"))       {}
                 else if (iscol(@"source"))   uiString = @"(pluralizable)";
                 else if (iscol(@"target")) { uiString = @"(pluralizable)"; targetCellShouldBeEditable = false; } /// We never want the `%#@formatSstring@` to be changed by the translators, so we override it.
                 else if (iscol(@"state"))    { if ((0)) uiString = @"(pluralizable)"; }
@@ -945,12 +951,15 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
             if ([xml_attr(transUnit, @"id").objectValue containsString: @"|==|"]) { /// This detects the pluralizable variants (child rows).
 
                 if (iscol(@"id")) {
+                    
                     NSArray *a = [xml_attr(transUnit, @"id").objectValue componentsSeparatedByString: @"|==|"];
                     assert(a.count == 2);
                     NSString *substitutionPath = a[1];
                     assert([substitutionPath hasPrefix: @"substitutions.pluralizable.plural."]);
                     NSString *pluralVariant = [substitutionPath substringFromIndex: @"substitutions.pluralizable.plural.".length];
                     uiString = pluralVariant; /// Just show the variant name (e.g. "one", "other") since it's a child row
+                    
+                    shouldShowFilename = NO;
                 }
                 else if (iscol(@"note")) uiString = @""; /// Delete the note cause the parent row already has it.
             }
@@ -1006,18 +1015,34 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
             }
             else {
                 auto matchingScreenshotPlistEntry = [self _localizedStringsDataPlist_GetEntryForRowModel: transUnit];
-
-                if (iscol(@"id")) {
-                    if (matchingScreenshotPlistEntry) {
-                        assert([reusableViewIDs containsObject: @"theReusableCell_TableID"]);
-                        cell = [outlineView makeViewWithIdentifier: @"theReusableCell_TableID" owner: self]; /// [Jun 2025] What to pass as owner here? Will this lead to retain cycle?
+                
+                if ((0)) {}
+                else if (iscol(@"id")) {
+                                        
+                    assert([reusableViewIDs containsObject: @"theReusableCell_TableID"]);
+                    cell = [outlineView makeViewWithIdentifier: @"theReusableCell_TableID" owner: self]; /// [Jun 2025] What to pass as owner here? Will this lead to retain cycle?
+                    
+                    /// Configure filename-field
+                    
+                    
+                    {
+                        NSTextField *filenameField = (id)[cell searchSubviewWithIdentifier: @"filename-field"];
+                        if (shouldShowFilename) {
+                            filenameField.hidden = NO;
+                            NSString *filename = [getdoc(self)->ctrl->out_sourceList filenameForTransUnit: transUnit];
+                            [filenameField setStringValue: filename];
+                        }
+                        else {
+                            filenameField.hidden = YES;
+                        }
                     }
-                    else {
-                        /// Use default text cell if there is no quickLook button
-                        assert([reusableViewIDs containsObject: @"theReusableCell_Table"]);
-                        cell = [outlineView makeViewWithIdentifier: @"theReusableCell_Table" owner: self];
-                    }
 
+                    /// Configure quicklook
+                    {
+                        NSButton *quickLookButton = (id)[cell searchSubviewWithIdentifier: @"quick-look-button"];
+                        mflog(@"quick-look-button base config: %p (row: %ld)", quickLookButton, [self rowForItem: transUnit]);
+                        quickLookButton.hidden = !matchingScreenshotPlistEntry;
+                    }
                 }
                 else if (iscol(@"target")) {
                     assert([reusableViewIDs containsObject: @"theReusableCell_TableTarget"]);
@@ -1035,7 +1060,8 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                     }
                     else if (iscol(@"id")) {
                         if (matchingScreenshotPlistEntry) {
-                            NSButton *quickLookButton = firstmatch(cell.subviews, cell.subviews.count, nil, sv, [sv.identifier isEqual: @"quick-look-button"]);
+                            NSButton *quickLookButton = (id)[cell searchSubviewWithIdentifier: @"quick-look-button"];
+                            mflog(@"quick-look-button special config: %p (row: %ld)", quickLookButton, [self rowForItem: transUnit]);
                             [quickLookButton setAction: @selector(quickLookButtonPressed:)];
                             [quickLookButton setTarget: self];
                             [quickLookButton mf_setAssociatedObject: @([outlineView rowForItem: item]) forKey: @"rowOfQuickLookButton"];
@@ -1223,7 +1249,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                 }
                 else {
                     NSTableCellView *cellView = [self viewAtColumn: [self columnWithIdentifier: @"id"] row: [self selectedRow] makeIfNecessary: NO];
-                    NSButton *quickLookButton = firstmatch(cellView.subviews, cellView.subviews.count, nil, sv, [sv.identifier isEqual: @"quick-look-button"]); /// We previously used `[cell nextKeyView];`. I thought it worked but here it didn't [Oct 2025]
+                    NSButton *quickLookButton = (id)[cellView searchSubviewWithIdentifier: @"quick-look-button"]; /// We previously used `[cell nextKeyView];`. I thought it worked but here it didn't [Oct 2025]
                     sourceFrame_Window = [quickLookButton.superview convertRect: quickLookButton.frame toView: nil];
                 }
                 
