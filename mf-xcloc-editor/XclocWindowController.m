@@ -5,6 +5,7 @@
 //  Created by Noah Nübling on 9/4/25.
 //
 
+#import "Constants.h"
 #import "XclocWindowController.h"
 #import "Utility.h"
 #import "Cocoa/Cocoa.h"
@@ -237,7 +238,7 @@
                 auto w = mfui_wrap(mfui_margins(5, 5, 5, 5), mfui_outlet(&self->out_filterField, ({
                     auto v = mfui_new(FilterField);
                     v.editable = YES;
-                    v.placeholderString = @"Filter Translations";
+                    v.placeholderString = kMFStr_FilterTranslations;
                     if ((0)) {
                         v.drawsBackground = YES;
                         v.backgroundColor = [NSColor systemOrangeColor];
@@ -319,7 +320,7 @@
         result.searchField.delegate = self;
         result.searchField = ({
             auto v = mfui_new(FilterField);
-            v.placeholderString = @"Filter Translations";
+            v.placeholderString = kMFStr_FilterTranslations;
             self->out_filterField = v;
             v;
         });
