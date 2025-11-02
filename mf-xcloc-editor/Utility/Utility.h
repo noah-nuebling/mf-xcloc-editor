@@ -234,6 +234,7 @@ static BOOL eventIsKey(NSEvent *event, unichar key) {
 static void runOnMain(double delay, void (^workload)(void)) {
     
     /// Delayed run on main for UI code [Oct 2025]
+    ///     If you pass 0.0 as the delay, the workload will be executed during the next iteration of main runLoop (I think) [Oct 2025]
     
     auto t = [NSTimer timerWithTimeInterval: delay repeats: NO block:^(NSTimer * _Nonnull timer) {
         workload();
@@ -245,6 +246,8 @@ static NSData *imageData(NSImage *image, NSBitmapImageFileType type, NSDictionar
         
     /// This implementation comes from the PackagedDocument sample project (https://developer.apple.com/library/archive/samplecode/PackagedDocument/Introduction/Intro.html#//apple_ref/doc/uid/DTS40012955-Intro-DontLinkElementID_2)
     /// Copying this here cause I'm often confused as to what is the right way to serialize an NSImage. [Oct 2025]
+    
+    /// TODO: Maybe copy this into mac-mouse-fix
     
     NSData *imageData = [NSBitmapImageRep /// I assume this is done for speed
         representationOfImageRepsInArray: image.representations
