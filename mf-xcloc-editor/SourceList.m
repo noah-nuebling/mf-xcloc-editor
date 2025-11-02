@@ -15,6 +15,7 @@
 #import "RowUtils.h"
 #import "MFUI.h"
 #import "NSObject+Additions.h"
+#import "Utility/ToString.m"
 
 @interface File : NSObject
     {
@@ -40,6 +41,7 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
 
         NSMutableArray <File *> *files;
         NSArray<NSXMLElement *> *_transUnitsFromAllFiles; /// Gives each transUnit a unique ID, which we need for undo/redo [Oct 2025]
+        BOOL justBecameFirstResponder;
     }
 
     #pragma mark - Lifecycle
@@ -246,12 +248,57 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
         });
     }
     
+    #pragma mark - Mouse Control
+    
+    - (BOOL)becomeFirstResponder {
+        
+        BOOL result = [super becomeFirstResponder];
+        
+        mflog(@"becomeFirstResponder: %d", result);
+        
+        if (result) {
+            self->justBecameFirstResponder = YES; /// in mouseDown: it seems we're *always* already firstResponder. Could avoid this by always return YES from validateProposedFirstResponder: – but this seems more robust. [Nov 2025]
+            runOnMain(0.0, ^{
+                self->justBecameFirstResponder = NO;
+            });
+        }
+        
+        return result;
+    }
+    
+    - (void) mouseDown: (NSEvent *)event {
+        
+        /// Reset filterField when user clicks already-selected file [Nov 2025]
+        {
+            mflog(@"mouseDown: firstResponder: %@, justBecame: %d", self.window.firstResponder, self->justBecameFirstResponder);
+            if (self.window.firstResponder == self && !self->justBecameFirstResponder) {
+                NSRect selectedRect = [self rectOfRow: [self selectedRow]];
+                NSPoint clickedPoint = [self convertPoint: event.locationInWindow fromView: nil];
+                if (NSPointInRect(clickedPoint, selectedRect)) {
+                    [getdoc(self)->ctrl->out_filterField setStringValue: @""];
+                    [getdoc(self)->ctrl->out_tableView updateFilter: @""];
+                }
+            }
+        }
+        
+        [super mouseDown: event];
+    }
+    
     #pragma mark - Keyboard Control
     
         - (void) keyDown: (NSEvent *)event {
             
-            /// Select the tableView if the user hits space, enter, or rightArrow
-            if (
+            if ( /// Reset filterField if the user hits enter or space
+                getdoc(self)->ctrl->out_filterField.stringValue.length &&
+                (
+                    eventIsKey(event, ' ') ||
+                    eventIsKey(event, '\r')
+                )
+            ) {
+                [getdoc(self)->ctrl->out_filterField setStringValue: @""];
+                [getdoc(self)->ctrl->out_tableView updateFilter: @""];
+            }
+            else if (        /// Select the tableView if the user hits space, enter, or rightArrow
                 eventIsKey(event, ' ') ||
                 eventIsKey(event, '\r') ||
                 eventIsKey(event, NSRightArrowFunctionKey)
@@ -385,7 +432,6 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
         File *file = self->files[self.selectedRow];
         [getdoc(self)->ctrl->out_tableView reloadWithNewData: file->transUnits];
     }
-    
     
     - (id)copy {
         return [super copy];

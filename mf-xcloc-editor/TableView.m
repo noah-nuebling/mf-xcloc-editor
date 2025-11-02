@@ -509,7 +509,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
 
     #pragma mark - Filtering
     - (void) updateFilter: (NSString *)filterString {
-        
+        if ([_filterString isEqual: filterString]) return; /// mouseDown: in SourceList.m relies on this to not change the scrollPosition randomly. [Nov 2025]
         _filterString = filterString;
         [self bigUpdateAndStuff];
     }
@@ -804,7 +804,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
             if (!topLevel) {
                 /// Remove the filter
                 [getdoc(self)->ctrl->out_filterField setStringValue: @""];
-                [self updateFilter: @""]; /// Maybe unnecessary - Updating `out_filterField` may call this automatically
+                [self updateFilter: @""]; /// Updating `out_filterField` should maybe call this automatically [Nov 2025]
                 /// Try again
                 topLevel = [self topLevelItemContainingItem: transUnit];
             }
