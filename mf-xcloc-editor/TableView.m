@@ -1121,7 +1121,15 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
     #pragma mark - Quick Look
     
         /// See Apple `QuickLookDownloader` sample project: https://developer.apple.com/library/archive/samplecode/QuickLookDownloader/Introduction/Intro.html
-    
+        
+        - (id) ql_selectedItem {
+            /// Use this instead of `[self selected...` for the quickLook logic. [Nov 2025]
+            return [self parentForItem: [self selectedItem]] ?: [self selectedItem];
+        }
+        - (NSInteger) ql_selectedRow {
+            return [self rowForItem: [self ql_selectedItem]];
+        }
+        
         - (NSDictionary *_Nullable) _localizedStringsDataPlist_GetEntryForRowModel: (NSXMLElement *)transUnit {
             
             /**
@@ -1237,18 +1245,17 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         
             - (NSRect) previewPanel: (QLPreviewPanel *)panel sourceFrameOnScreenForPreviewItem: (id <QLPreviewItem>)item {
                 
-                
                 NSRect sourceFrame_Window = {};
                 
                 if ((0))
                 {
                     NSRect colRect = [self rectOfColumn: [self columnWithIdentifier: @"id"]];
-                    NSRect rowRect = [self rectOfRow: [self selectedRow]];
+                    NSRect rowRect = [self rectOfRow: [self ql_selectedRow]];
                     NSRect sourceRect = NSIntersectionRect(colRect, rowRect);
                     sourceFrame_Window = [self convertRect: sourceRect toView: nil];
                 }
                 else {
-                    NSTableCellView *cellView = [self viewAtColumn: [self columnWithIdentifier: @"id"] row: [self selectedRow] makeIfNecessary: NO];
+                    NSTableCellView *cellView = [self viewAtColumn: [self columnWithIdentifier: @"id"] row: [self ql_selectedRow] makeIfNecessary: NO];
                     NSButton *quickLookButton = (id)[cellView searchSubviewWithIdentifier: @"quick-look-button"]; /// We previously used `[cell nextKeyView];`. I thought it worked but here it didn't [Oct 2025]
                     sourceFrame_Window = [quickLookButton.superview convertRect: quickLookButton.frame toView: nil];
                 }
@@ -1284,7 +1291,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
 
             - (NSInteger) numberOfPreviewItemsInPreviewPanel: (QLPreviewPanel *)panel {
                 
-                NSDictionary *plistEntry = [self _localizedStringsDataPlist_GetEntryForRowModel: [self selectedItem]];
+                NSDictionary *plistEntry = [self _localizedStringsDataPlist_GetEntryForRowModel: [self ql_selectedItem]];
                 return [plistEntry[@"screenshots"] count];
             };
 
@@ -1292,7 +1299,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                 
                 mflog(@"previewItemAtIndex: called with index: %ld", index);
                 
-                NSDictionary *plistEntry = [self _localizedStringsDataPlist_GetEntryForRowModel: [self selectedItem]];
+                NSDictionary *plistEntry = [self _localizedStringsDataPlist_GetEntryForRowModel: [self ql_selectedItem]];
                 NSDictionary *screenshotEntry = plistEntry[@"screenshots"][index];
                 
                 NSRect frame = NSRectFromString(screenshotEntry[@"frame"]);
