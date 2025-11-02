@@ -155,7 +155,10 @@
             /// TODO: Maybe look into responsiveness of changing the sort / file
             /// TODO: Add "Show in 'filename'" to right-click menu.
             /// TODO: Don't automatically set state to 'translated' unless the user stops editing via return key.
-            /// TODO: Make @"id" cell textField linebreak at periods (before hyphens)
+        
+            /// TODO: (Maybe) add some tooltips
+            ///    Ideas:
+            ///         - Click here or press space to see the translatable text in-context
         
             /// TODO: Fix issue where double-clicking / triple-clicking /...  a row does nothing (instead of starting text-editing)
             ///     Tried to fix this but hard. Maybe just live with it.

@@ -938,7 +938,10 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         
         /// Special stuff for @"id" column
         bool shouldShowFilename = NO;
-        if (iscol(@"id")) shouldShowFilename = [getdoc(self)->ctrl->out_sourceList allTransUnitsShown];
+        if (iscol(@"id")) {
+            shouldShowFilename = [getdoc(self)->ctrl->out_sourceList allTransUnitsShown];
+            uiString = [uiString stringByReplacingOccurrencesOfString: @"." withString: @".\u200B"]; /// Add zero-width spaces after periods in the string-key to make NSTextField wrap the lines there.
+        }
         
         /// Handle pluralizable strings
         {
