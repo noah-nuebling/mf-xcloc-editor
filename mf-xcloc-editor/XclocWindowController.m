@@ -151,10 +151,15 @@
         assert(!self.window);
         {
             
-            /// TODO:
-            /// - [x] Fix autolayout crash when toggling state while the cell is off-screen and then resizing the window so it's on-screen. (Fixed by using reloadItem:)
-            /// - [x] Change icon back
-            /// - [x] Maybe implement glyphs for single-linebreak (/ other invisibles)
+            
+            
+            /// TODO: Sort by key by default
+            /// TODO: Select the first project file by default (instead of 'All Project Files')
+            /// TODO: Make default width on small laptop screen better
+            /// TODO: Maybe look into responsiveness of changing the sort / file
+            /// TODO: Add "Show in 'filename'" to right-click menu.
+            /// TODO: Don't automatically set state to 'translated' unless the user stops editing via return key.
+            /// TODO: Make @"id" cell textField linebreak at periods (before hyphens)
         
             /// TODO: Fix issue where double-clicking / triple-clicking /...  a row does nothing (instead of starting text-editing)
             ///     Tried to fix this but hard. Maybe just live with it.
