@@ -527,113 +527,6 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         return [self itemAtRow: self.selectedRow];
     }
 
-    - (void) update_rowModels {
-
-        /// Build parent-child map for pluralizable strings
-        _childrenMap = [NSMutableDictionary new];
-        NSMutableSet<NSXMLElement *> *allChildTransUnits = [NSMutableSet new];
-
-        for (NSXMLElement *transUnit in self->transUnits) {
-            NSString *idStr = xml_attr(transUnit, @"id").objectValue;
-            if ([idStr containsString: @"|==|"]) {
-                /// This is a child variant
-                NSArray *parts = [idStr componentsSeparatedByString: @"|==|"];
-                NSString *baseKey = parts[0];
-
-                /// Find parent with matching baseKey
-                for (NSXMLElement *potentialParent in self->transUnits) {
-                    NSString *parentId = xml_attr(potentialParent, @"id").objectValue;
-                    if ([parentId isEqual: baseKey]) { /// Found parent
-                    
-                        assert(rowModel_isParent(potentialParent)); /// Make sure our utility function works.
-                        
-                        NSMutableArray *children = (NSMutableArray *)_childrenMap[potentialParent];
-                        if (!children) {
-                             children = [NSMutableArray new];
-                             _childrenMap[potentialParent] = children;
-                        }
-                        [children addObject: transUnit];
-                        [allChildTransUnits addObject: transUnit];
-                        break;
-                    }
-                }
-            }
-        }
-
-        /// Filter
-        _displayedTopLevelTransUnits = [NSMutableArray new];
-        for (NSXMLElement *transUnit in self->transUnits) {
-
-            { /// Validate
-                assert(isclass(transUnit, NSXMLElement));
-                assert([transUnit.name isEqual: @"trans-unit"]);
-            }
-
-            if ([allChildTransUnits containsObject: transUnit])
-                continue; /// Skip child variants - they'll be shown as children of their parent
-
-            if (![_filterString length])
-                [_displayedTopLevelTransUnits addObject: transUnit];
-            else {
-                #define combinedRowString(transUnit) stringf(@"%@\n%@\n%@\n%@", /** Note that we're searching cellModel strings which are a bit different than uiStrings. But this works fine. */\
-                    rowModel_getCellModel(transUnit, @"id"), \
-                    rowModel_getCellModel(transUnit, @"source"), \
-                    rowModel_getCellModel(transUnit, @"target"), \
-                    rowModel_getCellModel(transUnit, @"note") /** Note how we're omitting @"state" */\
-                )
-                
-                auto combinedTransUnitString = [NSMutableString new];
-                [combinedTransUnitString appendString: combinedRowString(transUnit)];
-                for (NSXMLElement *childTransUnit in _childrenMap[transUnit]) {
-                    [combinedTransUnitString appendString: @"\n"];
-                    [combinedTransUnitString appendString: combinedRowString(childTransUnit)];
-                }
-                
-                if (
-                    [combinedTransUnitString
-                        rangeOfString: _filterString
-                        options: (/*NSRegularExpressionSearch |*/ NSCaseInsensitiveSearch)
-                    ]
-                    .location != NSNotFound
-                ) {
-                    [(NSMutableArray *)_displayedTopLevelTransUnits addObject: transUnit];
-                }
-            }
-        }
-
-        /// Sort
-        [self update_rowModelSorting];
-    }
-    
-    - (void) update_rowModelSorting {
-    
-        mflog(@"Updating _rowToSortedRow with sortDescriptors: (only using the first one): %@", self.sortDescriptors);
-        
-        NSSortDescriptor *desc = self.sortDescriptors.firstObject;
-        if (!desc) { return; }
-        
-        #if 0
-            NSInteger rowCount = [self numberOfRowsInTableView: self]; /// -[numberOfRows] gives wrong results while swtiching files not sure what's going on [Oct 2025]
-        #endif
-        
-        [_displayedTopLevelTransUnits sortUsingComparator: ^NSComparisonResult(NSXMLElement *i, NSXMLElement *j) {
-            NSComparisonResult comp;
-            if ([desc.key isEqual: @"state"]) {
-                comp = (
-                    [_stateOrder indexOfObject: [self stateOfRowModel: i]] -
-                    [_stateOrder indexOfObject: [self stateOfRowModel: j]]
-                );
-            }
-            else {
-                comp = [
-                    rowModel_getCellModel(i, desc.key) compare:
-                    rowModel_getCellModel(j, desc.key)
-                ];
-            }
-            return desc.ascending ? comp : -comp;
-        }];
-    }
-
     - (NSXMLElement *) topLevelItemContainingItem: (NSXMLElement *)searchedItem {
         if ((0))
             return [self parentForItem: searchedItem] ?: searchedItem; /// This would probably also work. But maybe `self->_displayedTopLevelTransUnits` works better in some edge-cases where the table hasn't loaded the items, yet? Not sure that's relevant. [Oct 2025]
@@ -680,9 +573,115 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
             }
         }
         /// Do the actual updates
-        if (onlyUpdateSorting)  [self update_rowModelSorting];
-        else                    [self update_rowModels];
-        [self reloadData];
+        {
+            /// `update_rowModels`
+            if (!onlyUpdateSorting)
+            {
+                /// Build parent-child map for pluralizable strings
+                _childrenMap = [NSMutableDictionary new];
+                NSMutableSet<NSXMLElement *> *allChildTransUnits = [NSMutableSet new];
+
+                for (NSXMLElement *transUnit in self->transUnits) {
+                    NSString *idStr = xml_attr(transUnit, @"id").objectValue;
+                    if ([idStr containsString: @"|==|"]) {
+                        /// This is a child variant
+                        NSArray *parts = [idStr componentsSeparatedByString: @"|==|"];
+                        NSString *baseKey = parts[0];
+
+                        /// Find parent with matching baseKey
+                        for (NSXMLElement *potentialParent in self->transUnits) {
+                            NSString *parentId = xml_attr(potentialParent, @"id").objectValue;
+                            if ([parentId isEqual: baseKey]) { /// Found parent
+                            
+                                assert(rowModel_isParent(potentialParent)); /// Make sure our utility function works.
+                                
+                                NSMutableArray *children = (NSMutableArray *)_childrenMap[potentialParent];
+                                if (!children) {
+                                     children = [NSMutableArray new];
+                                     _childrenMap[potentialParent] = children;
+                                }
+                                [children addObject: transUnit];
+                                [allChildTransUnits addObject: transUnit];
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                /// Filter
+                _displayedTopLevelTransUnits = [NSMutableArray new];
+                for (NSXMLElement *transUnit in self->transUnits) {
+
+                    { /// Validate
+                        assert(isclass(transUnit, NSXMLElement));
+                        assert([transUnit.name isEqual: @"trans-unit"]);
+                    }
+
+                    if ([allChildTransUnits containsObject: transUnit])
+                        continue; /// Skip child variants - they'll be shown as children of their parent
+
+                    if (![_filterString length])
+                        [_displayedTopLevelTransUnits addObject: transUnit];
+                    else {
+                        #define combinedRowString(transUnit) stringf(@"%@\n%@\n%@\n%@", /** Note that we're searching cellModel strings which are a bit different than uiStrings. But this works fine. */\
+                            rowModel_getCellModel(transUnit, @"id"), \
+                            rowModel_getCellModel(transUnit, @"source"), \
+                            rowModel_getCellModel(transUnit, @"target"), \
+                            rowModel_getCellModel(transUnit, @"note") /** Note how we're omitting @"state" */\
+                        )
+                        
+                        auto combinedTransUnitString = [NSMutableString new];
+                        [combinedTransUnitString appendString: combinedRowString(transUnit)];
+                        for (NSXMLElement *childTransUnit in _childrenMap[transUnit]) {
+                            [combinedTransUnitString appendString: @"\n"];
+                            [combinedTransUnitString appendString: combinedRowString(childTransUnit)];
+                        }
+                        
+                        if (
+                            [combinedTransUnitString
+                                rangeOfString: _filterString
+                                options: (/*NSRegularExpressionSearch |*/ NSCaseInsensitiveSearch)
+                            ]
+                            .location != NSNotFound
+                        ) {
+                            [(NSMutableArray *)_displayedTopLevelTransUnits addObject: transUnit];
+                        }
+                    }
+                }
+            }
+            
+            /// `update_rowModelSorting`
+            {
+                mflog(@"Updating _rowToSortedRow with sortDescriptors: (only using the first one): %@", self.sortDescriptors);
+            
+                NSSortDescriptor *desc = self.sortDescriptors.firstObject;
+                if (!desc) { return; }
+                
+                #if 0
+                    NSInteger rowCount = [self numberOfRowsInTableView: self]; /// -[numberOfRows] gives wrong results while swtiching files not sure what's going on [Oct 2025]
+                #endif
+                
+                [_displayedTopLevelTransUnits sortUsingComparator: ^NSComparisonResult(NSXMLElement *i, NSXMLElement *j) {
+                    NSComparisonResult comp;
+                    if ([desc.key isEqual: @"state"]) {
+                        comp = (
+                            [_stateOrder indexOfObject: [self stateOfRowModel: i]] -
+                            [_stateOrder indexOfObject: [self stateOfRowModel: j]]
+                        );
+                    }
+                    else {
+                        comp = [
+                            rowModel_getCellModel(i, desc.key) compare:
+                            rowModel_getCellModel(j, desc.key)
+                        ];
+                    }
+                    return desc.ascending ? comp : -comp;
+                }];
+            }
+            
+            /// Do the reaload!!
+            [self reloadData];
+        }
         
         /// Restore the previous selection
         if (shouldRestore) {
