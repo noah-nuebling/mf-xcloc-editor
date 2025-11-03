@@ -152,19 +152,22 @@
         {
             
             /// TODO: Make default width on small laptop screen better
-            /// TODO: Maybe look into responsiveness of changing the sort / file
             /// TODO: Add "Show in 'filename'" to right-click menu.
             /// TODO: Don't automatically set state to 'translated' unless the user stops editing via return key.
-            /// TODO: Fix sorting by comment.
         
-            /// (((((((TODO: (Maybe) add some tooltips (But I'm slow at writing and really don't wanna spend time on this))))))
-            ///    Ideas:
-            ///         - Click here or press space to see the translatable text in-context
         
-            /// TODO: Fix issue where double-clicking / triple-clicking /...  a row does nothing (instead of starting text-editing)
-            ///     Tried to fix this but hard. Maybe just live with it.
-            /// TODO: Undo is a bit unresponsive (cause saving the doc on every edit is slow)
-            ///     Maybe we'll just live with that. (Do we even need undo? – All this NSDocument stuff may have been overkill. Things we so much simpler when we were just writing to disk directly. )
+            /// Abandoned TODOs:
+            
+                /// (((((((TODO: (Maybe) add some tooltips (But I'm slow at writing and really don't wanna spend time on this))))))
+                ///    Ideas:
+                ///         - Click here or press space to see the translatable text in-context
+                ///
+                /// TODO: Maybe look into responsiveness of changing the sort / file
+                ///     Overriding `heightOfRowByItem:` can improve things, but that's hard to do well – giving up. Performance is alright.
+                /// TODO: Fix issue where double-clicking / triple-clicking /...  a row does nothing (instead of starting text-editing)
+                ///     Tried to fix this but hard. Maybe just live with it.
+                /// TODO: Undo is a bit unresponsive (cause saving the doc on every edit is slow)
+                ///     Maybe we'll just live with that. (Do we even need undo? – All this NSDocument stuff may have been overkill. Things we so much simpler when we were just writing to disk directly. )
             
             window = [XclocWindow new];
             window.styleMask = 0

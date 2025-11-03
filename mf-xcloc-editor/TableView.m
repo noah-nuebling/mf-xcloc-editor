@@ -624,11 +624,12 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                     if (![_filterString length])
                         [_displayedTopLevelTransUnits addObject: transUnit];
                     else {
-                        #define combinedRowString(transUnit) stringf(@"%@\n%@\n%@\n%@", /** Note that we're searching cellModel strings which are a bit different than uiStrings. But this works fine. */\
-                            rowModel_getCellModel(transUnit, @"id"), \
-                            rowModel_getCellModel(transUnit, @"source"), \
-                            rowModel_getCellModel(transUnit, @"target"), \
-                            rowModel_getCellModel(transUnit, @"note") /** Note how we're omitting @"state" */\
+                    
+                        #define combinedRowString(transUnit) stringf(@"%@\n%@\n%@\n%@", /** Using `rowModel_getUIString` instead of `rowModel_getCellModel` cause of the filtering we do on the IB-generated @"note"-column strings [Nov 2025] */\
+                            rowModel_getUIString(self, transUnit, @"id"), \
+                            rowModel_getUIString(self, transUnit, @"source"), \
+                            rowModel_getUIString(self, transUnit, @"target"), \
+                            rowModel_getUIString(self, transUnit, @"note") /** Note how we're omitting @"state" */\
                         )
                         
                         auto combinedTransUnitString = [NSMutableString new];
@@ -672,8 +673,8 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                     }
                     else {
                         comp = [
-                            rowModel_getCellModel(i, desc.key) compare:
-                            rowModel_getCellModel(j, desc.key)
+                            rowModel_getUIString(self, i, desc.key) compare:
+                            rowModel_getUIString(self, j, desc.key)
                         ];
                     }
                     return desc.ascending ? comp : -comp;
@@ -920,24 +921,18 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         return [_childrenMap[item] count];
     }
 
-    NSTableCellView *_getCellView(TableView *self, NSTableColumn *tableColumn, id item, NSTableCellView *cellViewToReuse) {
-            
+
+    NSString *rowModel_getUIString(TableView *self, NSXMLElement *transUnit, NSString *columnID) {
     
-        #define iscol(colid) [[tableColumn identifier] isEqual: (colid)]
+        #define iscol(colid) [columnID isEqual: (colid)]
         
-        NSXMLElement *transUnit = item;
-            
-        /// Measure how many times this is invoked.
-        ///     `makeViewWithIdentifier:` is the biggest bottleneck to responsive switching between sidebar items. [Nov 2025]
-        mflog(@"viewForTableColumn: (%d)", __invocations++);
-            
         /// Get model value
-        NSString *uiString = rowModel_getCellModel(transUnit, [tableColumn identifier]);
+        NSString *uiString = rowModel_getCellModel(transUnit, columnID);
         
         /// Get proper model value for @"state"
         ///     This is a bit hacky
         if (iscol(@"state"))
-            uiString = [self stateOfRowModel: transUnit];
+            uiString = [self stateOfRowModel: transUnit]; /// This is the only use of `self` in `rowModel_getUIString` [Nov 2025]
         
         /// Remove redundant stuff from IB-generated notes
         if (iscol(@"note")) {
@@ -1018,31 +1013,50 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
             }
         }
         
+        return uiString;
+        #undef iscol
+    }
+
+
+    NSTableCellView *_getCellView(TableView *self, NSTableColumn *tableColumn, id item, NSTableCellView *cellViewToReuse) {
+            
+    
+        #define iscol(colid) [[tableColumn identifier] isEqual: (colid)]
+        
+        NSXMLElement *transUnit = item;
+            
+        /// Measure how many times this is invoked.
+        ///     `makeViewWithIdentifier:` is the biggest bottleneck to responsive switching between sidebar items. [Nov 2025]
+        mflog(@"viewForTableColumn: (%d)", __invocations++);
+            
+        NSString *uiString = rowModel_getUIString(self, item, tableColumn.identifier);
+        
         /// Override raw state string with colorful symbols / badges
-        
         NSAttributedString *uiStringAttributed  = [[NSAttributedString alloc] initWithString: (uiString ?: @"")];
-        if (iscol(@"state")) {
-            if ((0)) {}
-            else if ([uiString isEqual: kMFTransUnitState_Translated])      uiStringAttributed = make_green_checkmark(uiString);
-            else if ([uiString isEqual: kMFTransUnitState_DontTranslate])   uiStringAttributed = attributed(@"DON'T TRANSLATE");
-            else if ([uiString isEqual: kMFTransUnitState_New])             uiStringAttributed = attributed(@"NEW");
-            else if ([uiString isEqual: kMFTransUnitState_NeedsReview])     uiStringAttributed = attributed(@"NEEDS REVIEW");
-            else {
-                uiStringAttributed = attributed(stringf(@"Error: unknown state: %@", uiString));
-                assert(false);
-            }
-        }
-        
         NSColor *stateCellBackgroundColor = nil;
-        if (iscol(@"state")) {
-            if ((0)) {}
-            else if ([uiString isEqual: kMFTransUnitState_Translated])     stateCellBackgroundColor = nil;
-            else if ([uiString isEqual: kMFTransUnitState_DontTranslate])  stateCellBackgroundColor = [NSColor systemGrayColor];
-            else if ([uiString isEqual: kMFTransUnitState_New])            stateCellBackgroundColor = [NSColor systemBlueColor];
-            else if ([uiString isEqual: kMFTransUnitState_NeedsReview])    stateCellBackgroundColor = [NSColor systemOrangeColor];
-            else {
-                uiStringAttributed = attributed(stringf(@"Error: unknown state: %@", uiString));
-                assert(false);
+        {
+            if (iscol(@"state")) {
+                if ((0)) {}
+                else if ([uiString isEqual: kMFTransUnitState_Translated])      uiStringAttributed = make_green_checkmark(uiString);
+                else if ([uiString isEqual: kMFTransUnitState_DontTranslate])   uiStringAttributed = attributed(@"DON'T TRANSLATE");
+                else if ([uiString isEqual: kMFTransUnitState_New])             uiStringAttributed = attributed(@"NEW");
+                else if ([uiString isEqual: kMFTransUnitState_NeedsReview])     uiStringAttributed = attributed(@"NEEDS REVIEW");
+                else {
+                    uiStringAttributed = attributed(stringf(@"Error: unknown state: %@", uiString));
+                    assert(false);
+                }
+            }
+            
+            if (iscol(@"state")) {
+                if ((0)) {}
+                else if ([uiString isEqual: kMFTransUnitState_Translated])     stateCellBackgroundColor = nil;
+                else if ([uiString isEqual: kMFTransUnitState_DontTranslate])  stateCellBackgroundColor = [NSColor systemGrayColor];
+                else if ([uiString isEqual: kMFTransUnitState_New])            stateCellBackgroundColor = [NSColor systemBlueColor];
+                else if ([uiString isEqual: kMFTransUnitState_NeedsReview])    stateCellBackgroundColor = [NSColor systemOrangeColor];
+                else {
+                    uiString = stringf(@"Error: unknown state: %@", uiString);
+                    assert(false);
+                }
             }
         }
         
