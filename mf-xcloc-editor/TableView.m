@@ -506,13 +506,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
 
     - (void) outlineView: (NSOutlineView *)outlineView sortDescriptorsDidChange: (NSArray<NSSortDescriptor *> *)oldDescriptors { /// This is called when the user clicks the column headers to sort them.
         
-        auto previouslySelectedItem = [self selectedItem];
-        CGFloat previousMidYViewportOffset = NSMidY([self rectOfRowInViewport: [self selectedRow]]);
-        
-        [self update_rowModelSorting];
-        [self reloadData];
-        
-        [self restoreSelectionWithPreviouslySelectedItem: previouslySelectedItem previousMidYViewportOffset: previousMidYViewportOffset];
+        [self bigUpdateAndStuff_OnlyUpdateSorting: YES];
     }
 
     #pragma mark - Filtering
@@ -522,7 +516,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         
         mfdebounce(0.2, @"updateFilter", ^{ /// Keep typing in filterField responsive
             mflog(@"Debouncedd");
-            [self bigUpdateAndStuff];
+            [self bigUpdateAndStuff_OnlyUpdateSorting: NO];
         });
     }
 
@@ -652,81 +646,83 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         }
         return nil;
     };
-
-    - (void) restoreSelectionWithPreviouslySelectedItem: (NSXMLElement *)previouslySelectedItem previousMidYViewportOffset: (CGFloat)previousMidYViewportOffset {
-        
-        /// Restore the selection after reloadData resets it.
-        
-        [self expandItem: [self parentForItem: previouslySelectedItem]]; /// Not sure if necessary [Oct 2025]
-        
-        NSInteger newIndex = [self rowForItem: previouslySelectedItem];
-        
-        if (newIndex != -1) {
-            
-            /// Select
-            [self selectRowIndexes: indexset(newIndex) byExtendingSelection: NO];
-            
-            /// Initial restore pos
-            ///     Very old notes: ... still fails sometimes, though rarely. Maybe the APIs are broken? How do they even know how tall all the rows are? || Update: After switching to NSOutlineView, it seems to fail almost always. ... using NSTimer helps [Oct 2025]
-            [self scrollPoint: (CGPoint) { .y = NSMidY([self rectOfRow: newIndex]) - previousMidYViewportOffset }]; /// Move bounds of the enclosing clipView
-            
-            runOnMain(0.0, ^{ /// Delay helps with reliability & jank [Oct 2025]
-                mfanimate(mfanimate_args( .implicitAnimation = YES), ^{ /// At this point the UI has already displayed, so we need to animate to avoid flashing.
-                    [self scrollPoint: (CGPoint) { .y = NSMidY([self rectOfRow: newIndex]) - previousMidYViewportOffset }];
-                }, ^{
-                    mfanimate(mfanimate_args( .implicitAnimation = YES ), ^{ /// One more for reliability (Observed to be necessary for `15: tips` [Nov 2025])
-                        [self scrollRowToVisible: newIndex]; /// Only using scrollRowToVisibile (not scrollPoint:) – Avoids "double-animation" in the common case, while guaranteeing that the row is at least on-screen.
-                    }, nil);
-                });
-            });
-        }
-    }
     
-    - (NSRect) rectOfRowInViewport: (NSInteger)row {
+    - (void) bigUpdateAndStuff_OnlyUpdateSorting: (BOOL)onlyUpdateSorting {
         
-        /// Rect of the row relative to the visible area of the tableView
-        ///     See: https://stackoverflow.com/questions/11767557/scroll-an-nstableview-so-that-a-row-is-centered
-        ///     Not sure why this is different from: `[self convertRect: [self rectOfRow: row] toView: [[self enclosingScrollView] contentView]];`, but it works for `restoreSelectionWithPreviouslySelectedItem` [Nov 2025]
-    
-        NSRect result   = [self rectOfRow: row];
-        NSRect viewport = [self visibleRect]; /// Bounds of the enclosing clipView.
+        /// Fully update the table in a way that requires calling `reloadData`, but try to preserve the selection.
         
-        if (!NSIntersectsRect(viewport, result)) return NSZeroRect; /// row is completely off-screen.
-        
-        result.origin.x -= viewport.origin.x;
-        result.origin.y -= viewport.origin.y;
-        
-        return result;
-    }
-    
-    - (void) bigUpdateAndStuff {
-        
-        /// Fully update the table with new rows, but try to preserve the selection.
-        ///     Not sure this is a good abstraction to have, I don't really understand it [Oct 2025]
-        
+        /// Save the currently selected item and its position on-screen.
         auto previouslySelectedItem = [self selectedItem];
         CGFloat previousMidYViewportOffset = 0.0;
         BOOL shouldRestore = NO;
         {
-            NSRect r = [self rectOfRowInViewport: [self selectedRow]];
+            auto rectOfRowInViewport = ^ NSRect (TableView *self, NSInteger row) {
+                
+                /// Rect of the row relative to the visible area of the tableView
+                ///     See: https://stackoverflow.com/questions/11767557/scroll-an-nstableview-so-that-a-row-is-centered
+                ///     Not sure why this is different from: `[self convertRect: [self rectOfRow: row] toView: [[self enclosingScrollView] contentView]];`, but it works for `bigUpdateAndStuff_OnlyUpdateSorting`
+            
+                NSRect result   = [self rectOfRow: row];
+                NSRect viewport = [self visibleRect]; /// Bounds of the enclosing clipView.
+                
+                if (!NSIntersectsRect(viewport, result)) return NSZeroRect; /// row is completely off-screen.
+                
+                result.origin.x -= viewport.origin.x;
+                result.origin.y -= viewport.origin.y;
+                
+                return result;
+            };
+        
+            NSRect r = rectOfRowInViewport(self, [self selectedRow]);
             if (!NSEqualRects(r, NSZeroRect)) {
                 shouldRestore = YES;
                 previousMidYViewportOffset = NSMidY(r);
             }
         }
-        
-        [self update_rowModels];
+        /// Do the actual updates
+        if (onlyUpdateSorting)  [self update_rowModelSorting];
+        else                    [self update_rowModels];
         [self reloadData];
         
-        if (shouldRestore) { /// TODO: Refactor and move into `bigUpdateAndStuff`
-            [self restoreSelectionWithPreviouslySelectedItem: previouslySelectedItem previousMidYViewportOffset: previousMidYViewportOffset];
+        /// Restore the previous selection
+        if (shouldRestore) {
+            
+            if ((0))
+                [self expandItem: [self parentForItem: previouslySelectedItem]]; /// Not sure if necessary [Oct 2025]
+            
+            NSInteger newIndex = [self rowForItem: previouslySelectedItem];
+            
+            if (newIndex != -1) {
+                
+                /// Select
+                [self selectRowIndexes: indexset(newIndex) byExtendingSelection: NO];
+                
+                /// Restore position
+                ///     This is unreliable due to row-height being lazily computed I think.
+                ///         Currently not overriding `noteHeightOfRowsWithIndexesChanged:` and using `self.usesAutomaticRowHeights = YES` [Nov 2025]
+                ///     Very old notes: Update: After switching from NSTableView to NSOutlineView, it seems to fail almost always. ... using NSTimer helps [Oct 2025]
+                {
+                    /// Initial restore pos
+                    [self scrollPoint: (CGPoint) { .y = NSMidY([self rectOfRow: newIndex]) - previousMidYViewportOffset }]; /// `scrollPoint:` moves bounds of the enclosing clipView
+                    
+                    runOnMain(0.0, ^{ /// Delay helps with reliability & jank [Oct 2025]
+                        mfanimate(mfanimate_args(.implicitAnimation = YES), ^{ /// At this point the UI has already displayed, so we need to animate to avoid flashing.
+                            [self scrollPoint: (CGPoint) { .y = NSMidY([self rectOfRow: newIndex]) - previousMidYViewportOffset }];
+                        }, ^{
+                            mfanimate(mfanimate_args(.implicitAnimation = YES), ^{ /// One more for reliability (Observed to be necessary for `15: tips` [Nov 2025])
+                                [self scrollRowToVisible: newIndex]; /// Only using scrollRowToVisibile: (not scrollPoint:) – Avoids "double-animation" in the common case, while guaranteeing that the row is at least on-screen.
+                            }, nil);
+                        });
+                    });
+                }
+            }
         }
     }
 
     - (void) reloadWithNewData: (NSArray <NSXMLElement *> *)transUnits {
         
         self->transUnits = transUnits;
-        [self bigUpdateAndStuff];
+        [self bigUpdateAndStuff_OnlyUpdateSorting: NO];
             
         /// Update column names (weird place to do this) [Oct 2025]
         {
