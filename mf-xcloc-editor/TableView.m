@@ -1330,8 +1330,10 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                     NSRect sourceRect = NSIntersectionRect(colRect, rowRect);
                     sourceFrame_Window = [self convertRect: sourceRect toView: nil];
                 }
-                else { /// TODO: Just saw crash somewhere here. [self ql_selectedRow] returned -1 in lldb ... happens when no row is selected and then you click the x button on the QL panel.
-                    NSTableCellView *cellView = [self viewAtColumn: [self columnWithIdentifier: @"id"] row: [self ql_selectedRow] makeIfNecessary: NO];
+                else {
+                    auto selectedRow = [self ql_selectedRow];
+                    if (selectedRow == -1) return NSZeroRect; /// Happens when no row is selected and then you click the x button on the QL panel. [Nov 2025]
+                    NSTableCellView *cellView = [self viewAtColumn: [self columnWithIdentifier: @"id"] row: selectedRow makeIfNecessary: NO];
                     NSButton *quickLookButton = (id)[cellView searchSubviewWithIdentifier: @"quick-look-button"]; /// We previously used `[cell nextKeyView];`. I thought it worked but here it didn't [Oct 2025]
                     sourceFrame_Window = [quickLookButton.superview convertRect: quickLookButton.frame toView: nil];
                 }
