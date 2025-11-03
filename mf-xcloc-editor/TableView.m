@@ -23,6 +23,7 @@
 #import "NSView+Additions.h"
 
 static int __invocations = 0; /// Performance testing
+static int __invocation_rowheight = 0;
 
 #pragma mark - MFQLPreviewItem
 
@@ -919,7 +920,8 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         return [_childrenMap[item] count];
     }
 
-    - (NSView *) outlineView: (NSOutlineView *)outlineView viewForTableColumn: (NSTableColumn *)tableColumn item: (id)item {
+    NSTableCellView *_getCellView(TableView *self, NSTableColumn *tableColumn, id item, NSTableCellView *cellViewToReuse) {
+            
     
         #define iscol(colid) [[tableColumn identifier] isEqual: (colid)]
         
@@ -1045,15 +1047,17 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         }
         
         /// Create cell
-        NSTableCellView *cell;
+        NSTableCellView *cell = cellViewToReuse;
         {
             
             bool makeSelectable = YES;
             
             if (iscol(@"id")) {
-                                    
-                assert([reusableViewIDs containsObject: @"theReusableCell_TableID"]);
-                cell = [outlineView makeViewWithIdentifier: @"theReusableCell_TableID" owner: self]; /// [Jun 2025] What to pass as owner here? Will this lead to retain cycle?
+                
+                if (!cell) {
+                    assert([reusableViewIDs containsObject: @"theReusableCell_TableID"]);
+                    cell = [self makeViewWithIdentifier: @"theReusableCell_TableID" owner: self]; /// [Jun 2025] What to pass as owner here? Will this lead to retain cycle?
+                }
                 
                 /// Configure filename-field
                 {
@@ -1085,13 +1089,15 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                         mflog(@"quick-look-button special config: %p (row: %ld)", quickLookButton, [self rowForItem: transUnit]);
                         [quickLookButton setAction: @selector(quickLookButtonPressed:)];
                         [quickLookButton setTarget: self];
-                        [quickLookButton mf_setAssociatedObject: @([outlineView rowForItem: item]) forKey: @"rowOfQuickLookButton"];
+                        [quickLookButton mf_setAssociatedObject: @([self rowForItem: item]) forKey: @"rowOfQuickLookButton"];
                     }
                 }
             }
             else if (iscol(@"target")) {
-                assert([reusableViewIDs containsObject: @"theReusableCell_TableTarget"]);
-                cell = [outlineView makeViewWithIdentifier: @"theReusableCell_TableTarget" owner: self]; /// This contains an `MFTextField`
+                if (!cell) {
+                    assert([reusableViewIDs containsObject: @"theReusableCell_TableTarget"]);
+                    cell = [self makeViewWithIdentifier: @"theReusableCell_TableTarget" owner: self]; /// This contains an `MFTextField`
+                }
             
                 [cell.textField setEditable: !rowModel_isPluralParent(transUnit)];
             }
@@ -1099,16 +1105,20 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                 
                 if (!stateCellBackgroundColor) { /// This is for the `green_checkmark` (Other state cells are handled by `stateCellBackgroundColor`).
                     
-                    assert([reusableViewIDs containsObject: @"theReusableCell_Table"]);
-                    cell = [outlineView makeViewWithIdentifier: @"theReusableCell_Table" owner: self];
+                    if (!cell) {
+                        assert([reusableViewIDs containsObject: @"theReusableCell_Table"]);
+                        cell = [self makeViewWithIdentifier: @"theReusableCell_Table" owner: self];
+                    }
                     
                     makeSelectable = false;                 /// The `green_checkmark` disappears when selected, so we disable selection. [Oct 2025]
                 }
 
                 else {
                     
-                    assert([reusableViewIDs containsObject: @"theReusableCell_TableState"]);
-                    cell = [outlineView makeViewWithIdentifier: @"theReusableCell_TableState" owner: self];
+                    if (!cell) {
+                        assert([reusableViewIDs containsObject: @"theReusableCell_TableState"]);
+                        cell = [self makeViewWithIdentifier: @"theReusableCell_TableState" owner: self];
+                    }
                     
                     { /// Style copies Xcode xcloc editor. Rest of the style defined in IB.
                         cell.nextKeyView.wantsLayer = YES;
@@ -1122,12 +1132,14 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
             }
             
             else {
-                assert([reusableViewIDs containsObject: @"theReusableCell_Table"]);
-                cell = [outlineView makeViewWithIdentifier: @"theReusableCell_Table" owner: self];
+                if (!cell) {
+                    assert([reusableViewIDs containsObject: @"theReusableCell_Table"]);
+                    cell = [self makeViewWithIdentifier: @"theReusableCell_Table" owner: self];
+                }
             }
             
             /// Common config
-            cell.textField.delegate = (id)self;
+            cell.textField.delegate      = (id)self;
             cell.textField.lineBreakMode = NSLineBreakByWordWrapping;
             cell.textField.selectable    = makeSelectable;
             
@@ -1136,7 +1148,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         }
         
         /// Validate
-        if (cell == nil) {
+        if (!cell) {
             assert(false);
             mflog(@"nill cell %@", transUnit);
         }
@@ -1146,12 +1158,17 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         #undef iscol
     }
 
+    - (NSView *) outlineView: (NSOutlineView *)outlineView viewForTableColumn: (NSTableColumn *)tableColumn item: (id)item {
+        return _getCellView(self, tableColumn, item, nil); /// Factored out `_getCellView()` to implement `heightOfRowByItem:`, but gave up on that [Nov 2025]
+    }
+
     #pragma mark - NSOutlineView subclass
     
     - (void) reloadData {
         [super reloadData];
         [self expandItem: nil expandChildren: YES]; /// mfunexpand – Expand all items by default. || We're also using `reloadDataForRowIndexes:` additionally to `reloadData`, but overriding that doesn't seem necessary to keep the items expanded [Oct 2025]
         __invocations = 1;
+        __invocation_rowheight = 1;
     }
     
     - (void)reloadDataForRowIndexes:(NSIndexSet *)rowIndexes columnIndexes:(NSIndexSet *)columnIndexes {
@@ -1168,10 +1185,56 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         /// Also see: https://christiantietze.de/posts/2022/11/nstableview-variable-row-heights-broken-macos-ventura-13-0/
         ///   This says to use `noteHeightOfRowsWithIndexesChanged:` , but it won't do anything according to my testing and the heightOfRowByItem: docs.
         /// I also tried `prepareContentInRect:`, but This is only called while scrolling, not immediately after switching files. [Nov 2025]
-        /// TODO: Try to properly implement `heightOfRowByItem:` to make things more responsive without creating too much jitter. 
+        /// Tried actually calculating real rowHeights here to make things more responsive without creating too much jitter.
+        ///     Conclusion – giving up on this:
+        ///         - The tableView calls this for *all* rows before it displays, so this needs to be either very fast or you have to do lazy-loading yourself somehow.
+        ///         - The slowest part in the current impl [Nov 2025] is `layoutSubtreeIfNeeded`. If we calculated the textSizes directly it looks like we could make it a lot faster. (But not sure if fast enough to significantly improve UX) (And this would be annoying to do and maintain)
+        ///             -> Just turning this off and letting things be a little slow
+        ///     UPDATE:
+        ///         Actually the jitter is also really bad if we don't implement this [macOS Tahoe, Nov 2025], so maybe we should just return a constant to at least make it faster to load? ... ah I'll just keep the default behavior and hope Apple improves it in the future.
         
         - (CGFloat) outlineView: (NSOutlineView *)outlineView heightOfRowByItem: (id)item {
-            return 100; /// Not sure what best to return here. 100 seems to work even better than 50
+            
+            
+            if ((1)) {
+                return 100;
+            }
+            if ((0))
+            {
+            __invocation_rowheight++;
+            
+            static NSMutableDictionary *storage = nil;
+            if (!storage) {
+                storage = [NSMutableDictionary new];
+                {
+                    storage[@"id"]      = [self makeViewWithIdentifier: @"theReusableCell_TableID" owner: self];
+                    storage[@"source"]  = [self makeViewWithIdentifier: @"theReusableCell_Table" owner: self];
+                    storage[@"target"]  = [self makeViewWithIdentifier: @"theReusableCell_TableTarget" owner: self];
+                    storage[@"note"]    = [self makeViewWithIdentifier: @"theReusableCell_Table" owner: self];
+                }
+                /// We ignore the `@"state"` column, since that should never affect the height of the row [Nov 2025]
+            }
+            
+            CGFloat rowHeight = 0;
+            
+            auto colids = @[@"id", @"source", @"target", @"note"];
+            for (NSString *colid in colids) {
+            
+                NSTableCellView *cellView = _getCellView(self, [self tableColumnWithIdentifier: colid], item, storage[colid]);
+                
+                { /// Not sure if necessary
+                    [cellView setNeedsLayout: YES];
+                    [cellView layoutSubtreeIfNeeded];
+                }
+                
+                rowHeight = MAX(rowHeight, cellView.frame.size.height);
+                
+            }
+            
+            mflog(@"Calculated rowHeight: %f (row: %ld) (%d)", rowHeight, [self rowForItem: item], __invocation_rowheight);
+            
+            return rowHeight;
+            }
         }
         
     #endif
