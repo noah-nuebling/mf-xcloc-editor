@@ -155,8 +155,9 @@
             /// TODO: Maybe look into responsiveness of changing the sort / file
             /// TODO: Add "Show in 'filename'" to right-click menu.
             /// TODO: Don't automatically set state to 'translated' unless the user stops editing via return key.
+            /// TODO: Fix sorting by comment.
         
-            /// TODO: (Maybe) add some tooltips
+            /// (((((((TODO: (Maybe) add some tooltips (But I'm slow at writing and really don't wanna spend time on this))))))
             ///    Ideas:
             ///         - Click here or press space to see the translatable text in-context
         

@@ -18,7 +18,7 @@
     }
     
     - (void) callback: (NSNotification *)notification {
-        id strongObservee = weakObservee; /// This can be nil if the observee has died but the observation is kept alive because the user is retaining the observer. [Oct 2025]
+        id strongObservee = weakObservee;
         self->block(notification, strongObservee);
     }
     
@@ -40,6 +40,9 @@
         ///     observee (owns) observer (owns) block
         ///         Or if you retain the observer (which is returned from this method): your stuff (owns) observer (owns) block.
         ///     -> As soon as the observer has no more owners, it'll get dealloc'd, and then the NSNotificationCenter will automatically cleanup the observation, the next time it tries to send to the observer.
+        ///
+        /// Update: [Nov 2025]
+        ///     The name `observee` makes no sense,  but the API is good. Claude suggests `owner` instead.
         
         if (!block) {
             assert(false);

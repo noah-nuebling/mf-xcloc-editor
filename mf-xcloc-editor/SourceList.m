@@ -191,6 +191,7 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
         [super reloadData];
         
         /// Set initial selection to first real file (instead of `kMFPath_AllDocuments`)
+        ///     `kMFPath_AllDocuments` is primarily for cross referencing I think. Starting here also has bit of a teaching effect for UI,  when you select a row and then click `kMFPath_AllDocuments` and then see that same row in the new context.
         [self selectRowIndexes: indexset(2) byExtendingSelection: NO];
     }
     

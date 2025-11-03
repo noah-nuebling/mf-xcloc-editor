@@ -22,6 +22,8 @@
 #import "NSNotificationCenter+Additions.h"
 #import "NSView+Additions.h"
 
+static int __invocations = 0; /// Performance testing
+
 #pragma mark - MFQLPreviewItem
 
 @interface MFQLPreviewItem : NSObject<QLPreviewItem>
@@ -505,18 +507,23 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
     - (void) outlineView: (NSOutlineView *)outlineView sortDescriptorsDidChange: (NSArray<NSSortDescriptor *> *)oldDescriptors { /// This is called when the user clicks the column headers to sort them.
         
         auto previouslySelectedItem = [self selectedItem];
+        CGFloat previousMidYViewportOffset = NSMidY([self rectOfRowInViewport: [self selectedRow]]);
         
         [self update_rowModelSorting];
         [self reloadData];
         
-        [self restoreSelectionWithPreviouslySelectedItem: previouslySelectedItem];
+        [self restoreSelectionWithPreviouslySelectedItem: previouslySelectedItem previousMidYViewportOffset: previousMidYViewportOffset];
     }
 
     #pragma mark - Filtering
     - (void) updateFilter: (NSString *)filterString {
         if ([_filterString isEqual: filterString]) return; /// mouseDown: in SourceList.m relies on this to not change the scrollPosition randomly. [Nov 2025]
         _filterString = filterString;
-        [self bigUpdateAndStuff];
+        
+        mfdebounce(0.2, @"updateFilter", ^{ /// Keep typing in filterField responsive
+            mflog(@"Debouncedd");
+            [self bigUpdateAndStuff];
+        });
     }
 
     #pragma mark - Data
@@ -646,32 +653,74 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         return nil;
     };
 
-    - (void) restoreSelectionWithPreviouslySelectedItem: (NSXMLElement *)previouslySelectedItem {
+    - (void) restoreSelectionWithPreviouslySelectedItem: (NSXMLElement *)previouslySelectedItem previousMidYViewportOffset: (CGFloat)previousMidYViewportOffset {
         
         /// Restore the selection after reloadData resets it.
         
         [self expandItem: [self parentForItem: previouslySelectedItem]]; /// Not sure if necessary [Oct 2025]
         
         NSInteger newIndex = [self rowForItem: previouslySelectedItem];
+        
         if (newIndex != -1) {
-            [self selectRowIndexes: [NSIndexSet indexSetWithIndex: newIndex] byExtendingSelection: NO];
-            runOnMain(0.0, ^{ /// Delay helps with reliability [Oct 2025]
-                [self scrollRowToVisible: newIndex]; /// Tried to do a better job of keeping the row in the same position than `scrollRowToVisible:` but can't get it to work. Coordinates flip and `rectOfRow:` result seems inconsistent. [Oct 2025] || ... update: This still fails sometimes, though rarely. Maybe the APIs are broken? How do they even know how tall all the rows are? || Update: After switching to NSOutlineView, it seems to fail almost always. ... using NSTimer helps [Oct 2025]
+            
+            /// Select
+            [self selectRowIndexes: indexset(newIndex) byExtendingSelection: NO];
+            
+            /// Initial restore pos
+            ///     Very old notes: ... still fails sometimes, though rarely. Maybe the APIs are broken? How do they even know how tall all the rows are? || Update: After switching to NSOutlineView, it seems to fail almost always. ... using NSTimer helps [Oct 2025]
+            [self scrollPoint: (CGPoint) { .y = NSMidY([self rectOfRow: newIndex]) - previousMidYViewportOffset }]; /// Move bounds of the enclosing clipView
+            
+            runOnMain(0.0, ^{ /// Delay helps with reliability & jank [Oct 2025]
+                mfanimate(mfanimate_args( .implicitAnimation = YES), ^{ /// At this point the UI has already displayed, so we need to animate to avoid flashing.
+                    [self scrollPoint: (CGPoint) { .y = NSMidY([self rectOfRow: newIndex]) - previousMidYViewportOffset }];
+                }, ^{
+                    mfanimate(mfanimate_args( .implicitAnimation = YES ), ^{ /// One more for reliability (Observed to be necessary for `15: tips` [Nov 2025])
+                        [self scrollRowToVisible: newIndex]; /// Only using scrollRowToVisibile (not scrollPoint:) – Avoids "double-animation" in the common case, while guaranteeing that the row is at least on-screen.
+                    }, nil);
+                });
             });
         }
     }
-
+    
+    - (NSRect) rectOfRowInViewport: (NSInteger)row {
+        
+        /// Rect of the row relative to the visible area of the tableView
+        ///     See: https://stackoverflow.com/questions/11767557/scroll-an-nstableview-so-that-a-row-is-centered
+        ///     Not sure why this is different from: `[self convertRect: [self rectOfRow: row] toView: [[self enclosingScrollView] contentView]];`, but it works for `restoreSelectionWithPreviouslySelectedItem` [Nov 2025]
+    
+        NSRect result   = [self rectOfRow: row];
+        NSRect viewport = [self visibleRect]; /// Bounds of the enclosing clipView.
+        
+        if (!NSIntersectsRect(viewport, result)) return NSZeroRect; /// row is completely off-screen.
+        
+        result.origin.x -= viewport.origin.x;
+        result.origin.y -= viewport.origin.y;
+        
+        return result;
+    }
+    
     - (void) bigUpdateAndStuff {
         
         /// Fully update the table with new rows, but try to preserve the selection.
         ///     Not sure this is a good abstraction to have, I don't really understand it [Oct 2025]
         
         auto previouslySelectedItem = [self selectedItem];
+        CGFloat previousMidYViewportOffset = 0.0;
+        BOOL shouldRestore = NO;
+        {
+            NSRect r = [self rectOfRowInViewport: [self selectedRow]];
+            if (!NSEqualRects(r, NSZeroRect)) {
+                shouldRestore = YES;
+                previousMidYViewportOffset = NSMidY(r);
+            }
+        }
         
-        [self update_rowModels];;
+        [self update_rowModels];
         [self reloadData];
         
-        [self restoreSelectionWithPreviouslySelectedItem:  previouslySelectedItem];
+        if (shouldRestore) { /// TODO: Refactor and move into `bigUpdateAndStuff`
+            [self restoreSelectionWithPreviouslySelectedItem: previouslySelectedItem previousMidYViewportOffset: previousMidYViewportOffset];
+        }
     }
 
     - (void) reloadWithNewData: (NSArray <NSXMLElement *> *)transUnits {
@@ -876,11 +925,15 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
     }
 
     - (NSView *) outlineView: (NSOutlineView *)outlineView viewForTableColumn: (NSTableColumn *)tableColumn item: (id)item {
-
+    
         #define iscol(colid) [[tableColumn identifier] isEqual: (colid)]
-
-        NSXMLElement *transUnit = item;
         
+        NSXMLElement *transUnit = item;
+            
+        /// Measure how many times this is invoked.
+        ///     `makeViewWithIdentifier:` is the biggest bottleneck to responsive switching between sidebar items. [Nov 2025]
+        mflog(@"viewForTableColumn: (%d)", __invocations++);
+            
         /// Get model value
         NSString *uiString = rowModel_getCellModel(transUnit, [tableColumn identifier]);
         
@@ -1108,6 +1161,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
     - (void) reloadData {
         [super reloadData];
         [self expandItem: nil expandChildren: YES]; /// mfunexpand – Expand all items by default. || We're also using `reloadDataForRowIndexes:` additionally to `reloadData`, but overriding that doesn't seem necessary to keep the items expanded [Oct 2025]
+        __invocations = 1;
     }
     
     - (void)reloadDataForRowIndexes:(NSIndexSet *)rowIndexes columnIndexes:(NSIndexSet *)columnIndexes {
@@ -1116,6 +1170,21 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
     }
 
     #pragma mark - NSOutlineViewDelegate
+    
+    #if 0
+        /// Returning 50 here makes `viewForTableColumn:` be called much less after switching files, which makes the sidebar more responsive. Not sure why it causes `viewForTableColumn:` to be called so much less. We are using `self.usesAutomaticRowHeights = YES` [Nov 2025, macOS 26 Tahoe]
+        /// Downside:
+        ///   Scrolling *up* into unloaded rows is jittery when you do this.
+        /// Also see: https://christiantietze.de/posts/2022/11/nstableview-variable-row-heights-broken-macos-ventura-13-0/
+        ///   This says to use `noteHeightOfRowsWithIndexesChanged:` , but it won't do anything according to my testing and the heightOfRowByItem: docs.
+        /// I also tried `prepareContentInRect:`, but This is only called while scrolling, not immediately after switching files. [Nov 2025]
+        /// TODO: Try to properly implement `heightOfRowByItem:` to make things more responsive without creating too much jitter. 
+        
+        - (CGFloat) outlineView: (NSOutlineView *)outlineView heightOfRowByItem: (id)item {
+            return 100; /// Not sure what best to return here. 100 seems to work even better than 50
+        }
+        
+    #endif
 
     - (void) outlineViewSelectionDidChange: (NSNotification *)notification {
         [QLPreviewPanel.sharedPreviewPanel reloadData];
@@ -1261,7 +1330,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                     NSRect sourceRect = NSIntersectionRect(colRect, rowRect);
                     sourceFrame_Window = [self convertRect: sourceRect toView: nil];
                 }
-                else {
+                else { /// TODO: Just saw crash somewhere here. [self ql_selectedRow] returned -1 in lldb ... happens when no row is selected and then you click the x button on the QL panel.
                     NSTableCellView *cellView = [self viewAtColumn: [self columnWithIdentifier: @"id"] row: [self ql_selectedRow] makeIfNecessary: NO];
                     NSButton *quickLookButton = (id)[cellView searchSubviewWithIdentifier: @"quick-look-button"]; /// We previously used `[cell nextKeyView];`. I thought it worked but here it didn't [Oct 2025]
                     sourceFrame_Window = [quickLookButton.superview convertRect: quickLookButton.frame toView: nil];
@@ -1334,7 +1403,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                 /// Get `annotatedImagePath`
                 ///     We have to write the annotated image to a file to get the QLPreviewPanel to load it.
                 ///         Xcode's xcloc editor circumvents this somehow (But it's also buggy and doesn't update the annotations correctly)
-                ///         If the `annotatedImagePath` is a unique identifier for the annotated image, we could use it to cache the annotatedImage. [Oct 2025]
+                ///         If the `annotatedImagePath` is a unique identifier for the annotated image, we can  use it to cache the annotatedImage. [Oct 2025]
                 
                 auto annotatedImagePath = [[[[NSFileManager defaultManager] temporaryDirectory] path] stringByAppendingPathComponent: stringf(@"%@%@%@%@%@%@",
                     @"/mf-xcloc-editor/annotated-screenshots/",
@@ -1360,8 +1429,6 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                     if (err) assert(false);
                     
                     /// Write `annotatedImage` to `annotatedImagePath`
-                    ///     I'm not sure what's the proper way to do this.
-                    ///         (Tried `representationOfImageRepsInArray:` and it didn't work)
                     err = nil;
                     auto jpegData = imageData(annotatedImage, NSBitmapImageFileTypeJPEG, @{});
                     [jpegData writeToFile: annotatedImagePath options: NSDataWritingAtomic error: &err];

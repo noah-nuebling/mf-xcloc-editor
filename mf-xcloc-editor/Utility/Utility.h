@@ -242,6 +242,40 @@ static void runOnMain(double delay, void (^workload)(void)) {
     [[NSRunLoop mainRunLoop] addTimer: t forMode: NSRunLoopCommonModes];
 }
 
+static void mfdebounce(double delay, NSString *identifier, void (^block)(void)) {
+    
+    /// Only for the main thread! (Which is the only thread we use in mf-xcloc-editor)
+    
+    static NSMutableDictionary *storage = nil;
+    if (!storage) storage = [NSMutableDictionary new];
+    
+    NSTimer *t = storage[identifier];
+    if (t) [t invalidate];
+    
+    storage[identifier] = [NSTimer timerWithTimeInterval: delay repeats: NO block:^(NSTimer * _Nonnull timer) { block(); }];
+    [[NSRunLoop mainRunLoop] addTimer: storage[identifier] forMode: NSRunLoopCommonModes];
+}
+
+struct mfanimate_args {
+    NSTimeInterval duration;
+    CAMediaTimingFunction *curve;
+    BOOL implicitAnimation;
+};
+#define mfanimate_args(args...) (struct mfanimate_args) { .duration = NAN, ## args }
+
+
+static void mfanimate(struct mfanimate_args args, void (^block)(void), void (^completion)(void)) { /// Not sure this is useful.
+    
+    [NSAnimationContext runAnimationGroup:^(NSAnimationContext * _Nonnull context) {
+        
+        if (args.implicitAnimation) context.allowsImplicitAnimation = args.implicitAnimation;
+        if (args.curve)             context.timingFunction          = args.curve;
+        if (!isnan(args.duration))  context.duration                = args.duration; /// 0 is actually a valid duration different from the default, so we're using nan as sentinel
+        
+        block();
+    } completionHandler: completion];
+};
+
 static NSData *imageData(NSImage *image, NSBitmapImageFileType type, NSDictionary *properties) {
         
     /// This implementation comes from the PackagedDocument sample project (https://developer.apple.com/library/archive/samplecode/PackagedDocument/Introduction/Intro.html#//apple_ref/doc/uid/DTS40012955-Intro-DontLinkElementID_2)
