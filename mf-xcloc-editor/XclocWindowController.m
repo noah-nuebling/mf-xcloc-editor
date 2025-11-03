@@ -157,13 +157,6 @@
             /// TODO: Don't automatically set state to 'translated' unless the user stops editing via return key. (DONE)
                 
             /// TODO: (DONE)
-            ///     Fix freeze when changing text and then hitting Command-R
-            ///         Can currently reproduce on all commits back to 987de9cec3653933a7824442a92303a33a495bdb
-            ///         (Document saving endlessly waits on some internal semaphore)
-            ///         (This only happens if the *first* save after opening the doc is Command-R after having changed text (but not committed, yet) – super weird)
-            ///         [Nov 2025]
-                
-            /// TODO: (DONE)
             ///     Bug: `72q-sS-xMS.​title` -> Cycle through states changes comment
             
         

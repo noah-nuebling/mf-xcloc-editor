@@ -44,8 +44,23 @@
     - (void) writeTranslationDataToFile {
         /// Our code calls this whenever an edit is made
         if (!useNativeSaving) {
-            mfdebounce(0.0, @"writeTranslationDataToFile", ^{ /// HACK: Only do this once per runLoop to prevent strange freezing bug. It seems when you save twice in one runLoop, without saving before, then some internal API in NSDocument infinitely waits on some semaphore or something. After you've successfully save, this isn't necessary anymore. I guess the API gets initialized or something. This currently happens when editing a translation and then hitting Command-R. Observed on macOS 26 Tahoe [Nov 2025]
+            static int savesThisRunLoop = 0;
+            runOnMain(0.0, ^{
+                savesThisRunLoop = 0;
+            });
+        
+            mfdebounce(0.0, @"writeTranslationDataToFile", ^{
+                /// HACK: Only do this once per runLoop to prevent strange freezing bug. It seems when you save twice in one runLoop, without saving before, then some internal API in NSDocument infinitely waits on some semaphore or something. After you've successfully save, this isn't necessary anymore. I guess the API gets initialized or something. This currently happens when editing a translation and then hitting Command-R. Observed on macOS 26 Tahoe [Nov 2025]
+                /// Update: TODO: oh no, just saw the freeze again, after using the program for a while (and saving a few times) `[_NSDocumentSerializationSemaphore wait]` hangs forever ... I can't reproduce it though.
+                /// Old TODO notes about the original Command-R bug:
+                ///     Fix freeze when changing text and then hitting Command-R
+                ///         Can currently reproduce on all commits back to 987de9cec3653933a7824442a92303a33a495bdb
+                ///         (Document saving endlessly waits on some internal semaphore)
+                ///         (This only happens if the *first* save after opening the doc is Command-R after having changed text (but not committed, yet) – super weird)
+                ///         [Nov 2025]
                 [self saveDocument: nil];
+                savesThisRunLoop++;
+                mflog(@"Save no %d during this runLoop iteration", savesThisRunLoop); /// Check that the debouncing works [Nov 2025]
             });
         }
     }

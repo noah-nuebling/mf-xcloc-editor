@@ -802,6 +802,14 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
     
     - (void) setIsTranslatedState: (BOOL)newIsTranslatedState onRowModel:(NSXMLElement *)transUnit {
         
+        {
+            auto oldIsTranslated = [[self stateOfRowModel: transUnit] isEqual: kMFTransUnitState_Translated];
+            if (oldIsTranslated == newIsTranslatedState) {
+                assert(false); /// We only use this for toggling currently [Nov 2025]
+                return;
+            }
+        }
+        
         /// Register undo / redo
         {
             auto undoManager = [getdoc(self) undoManager];
@@ -822,7 +830,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         [getdoc(self)->ctrl->out_sourceList progressHasChanged]; /// Update the progress percentage indicators
         
         /// Show edited row to user
-        [self _revealTransUnit: transUnit];
+        [self _revealTransUnit: transUnit columns: @[@"state"]];
         
         /// Reload state cell
         ///     - (Don't think this is necessary if we called `updateFilter:` or `showAllTransUnits` in `_revealTransUnit:`, cause those will already have reloaded the whole table [Oct 2025]
@@ -846,11 +854,16 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         if ([rowModel_getCellModel(transUnit, @"target") isEqual: newString])
             return; /// `controlTextDidBeginEditing:` doesn't work so we do this here. [Oct 2025]
         
+        /// Get current state
+        auto oldIsTranslated = [[self stateOfRowModel: transUnit] isEqual: kMFTransUnitState_Translated];
+        auto oldString = rowModel_getCellModel(transUnit, @"target");
+        
+        /// Get thing
+        auto reallyModifyIsTranslated = modifyIsTranslated && (isTranslated != oldIsTranslated);
+        
         /// Prepare undo
         {
             auto undoManager = [getdoc(self) undoManager];
-            auto oldString = rowModel_getCellModel(transUnit, @"target");
-            auto oldIsTranslated = [[self stateOfRowModel: transUnit] isEqual: kMFTransUnitState_Translated];
             [[undoManager prepareWithInvocationTarget: self]
                 setTranslation: oldString
                 alsoModifyIsTranslated: modifyIsTranslated
@@ -872,7 +885,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         [getdoc(self)->ctrl->out_sourceList progressHasChanged]; /// Only necessary if the state actually changed [Oct 2025]
         
         /// Show edited row to user
-         [self _revealTransUnit: transUnit];
+         [self _revealTransUnit: transUnit columns: @[reallyModifyIsTranslated ? @"state" : @"", @"target"]]; /// Order is important. Last takes precedence (I think) [Nov 2025]
              
         /// Reload cells
         {
@@ -881,7 +894,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         }
     }
     
-    - (void) _revealTransUnit: (NSXMLElement *)transUnit {
+    - (void) _revealTransUnit: (NSXMLElement *)transUnit columns: (NSArray *)colids {
     
         /// Helper made for when our editing methods are called by undoManager [Oct 2025]
     
@@ -926,14 +939,12 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         ];
         runOnMain(0.0, ^{ /// See other uses of `scrollRowToVisible:` [Oct 2025]
             [self scrollRowToVisible: [self rowForItem: transUnit]];
+            { /// Idea: Also scroll the state-column into-view when toggling it. [Oct 2025]
+                for (NSString *colid in colids)
+                    if (colid.length)
+                        [self scrollColumnToVisible: [self columnWithIdentifier: colid]];
+            }
         });
-        
-        { /// Idea: Also scroll the state-column into-view when toggling it. [Oct 2025]
-            NSString *col = nil;
-            if (col)
-                [self scrollColumnToVisible: [self columnWithIdentifier: col]];
-        }
-
     }
     
     #pragma mark - Selection
