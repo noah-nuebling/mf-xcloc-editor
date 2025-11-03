@@ -196,12 +196,13 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
     - (void) showAllTransUnits {
     
         NSInteger row = 0; /// Hardcode to first row. [Oct 2025]
+        
         [self selectRowIndexes: indexset(row) byExtendingSelection: NO];
     }
     
-    - (void) showFileOfTransUnit: (NSXMLNode *)transUnit {
-        File *file = [self fileForTransUnit: transUnit];
-        [self selectRowIndexes: indexset([self rowForItem: file]) byExtendingSelection: NO];
+    - (void) showFileOfTransUnit: (NSXMLElement *)transUnit {
+        NSInteger row = [self rowForItem: [self fileForTransUnit: transUnit]]; /// Problem: When programmatically switching, the sidebar highlight is so faint that you can't really see it in your peripheral vision [macOS 26 Tahoe] – this would help with understanding / reinforcing context I think. [Nov 2025]
+        [self selectRowIndexes: indexset(row) byExtendingSelection: NO];
     }
     
     - (BOOL) allTransUnitsShown {
