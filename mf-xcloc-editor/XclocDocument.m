@@ -43,8 +43,11 @@
     
     - (void) writeTranslationDataToFile {
         /// Our code calls this whenever an edit is made
-        if (!useNativeSaving)
-            [self saveDocument: nil];
+        if (!useNativeSaving) {
+            mfdebounce(0.0, @"writeTranslationDataToFile", ^{ /// HACK: Only do this once per runLoop to prevent strange freezing bug. It seems when you save twice in one runLoop, without saving before, then some internal API in NSDocument infinitely waits on some semaphore or something. After you've successfully save, this isn't necessary anymore. I guess the API gets initialized or something. This currently happens when editing a translation and then hitting Command-R. Observed on macOS 26 Tahoe [Nov 2025]
+                [self saveDocument: nil];
+            });
+        }
     }
     #if !useNativeSaving
         - (void)_updateDocumentEditedAndAnimate:(BOOL)flag {

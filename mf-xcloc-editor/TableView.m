@@ -89,6 +89,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         NSMutableDictionary<NSXMLElement *, NSArray<NSXMLElement *> *> *_childrenMap; /// Maps topLevel transUnits to their pluralizable variant children
         id _lastQLPanelDisplayState;
         NSString *_lastTargetCellString;
+        BOOL didJustEndEditingWithReturnKey;
     }
 
     #pragma mark - Lifecycle
@@ -108,52 +109,72 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
             observee: self
             block: ^(NSNotification *note, TableView *self) {
                 
-                /// Swap in MFInvisiblesTextView for @"source" column cell when the @"target" column cell is being edited
-                ///     (To be able to display invisibles just like our fieldEditor does on the @"target" cell being edited.) [Oct 2025]
-                /// Note: We used to reload the tableCells here to display the `MFTextField`, but reloading here seems to break our firstResponder tracking in MFTextField (See `MFTextField_BecomeFirstResponder`) – I hope it doesn't break due to other random stuff. (Now we're applying the overlay directly here instead of reloading the table)
-                ///
-                /// High-level:
-                ///     We're trying to dynamically swap in invisibles-drawing NSTextVIew for the MFTextField for performance, while the MFTextField in the @"target" col is firstResponder (being edited) but both firstResponder tracking and retrieving the reference to the @"source" column views is brittle and doesn't work 100% reliably right now [Oct 2025]
-                ///     Alternative: Just make everything NSTextViews all the time and take the performance hit. Or just give up on invisibles.
-                
-                MFTextField *textField__ = note.object;
-                
-                if (textField__.window != self.window) return; /// Since `object: nil` we receive this notification from *all* NSTextFields including ones in other windows.
-                
-                NSInteger row = [self rowForView: textField__];
-                if (row == -1) { /// Randomly returns -1 sometimes. Can't reproduce. In lldb it consistently returns -1 IIRC, so there is some weird state causing this, not just sporadic. [Oct 2025] Update: This may be fixed by the `textField__.window != self.window` check above.
-                    assert(false);
-                    textField__.hidden = NO;
-                    return;
+                /// Former content of `controlTextDidBeginEditing:`
+                if ((0)) /// Disable cause we assume this would never be called when it was still in `controlTextDidBeginEditing:`
+                {
+                    
+                    /// CAUTION: This is not called
+                    ///     See:
+                    ///     - https://developer.apple.com/documentation/objectivec/nsobject/1428847-controltextdidendediting?language=objc
+                    ///     ... Update: We stopped relying on this [Oct 2025]
+                    
+                    NSTextField *textField = note.object;
+                    self->_lastTargetCellString = textField.stringValue; /// Track whether textField content was actually changed inside `controlTextDidEndEditing:`. Would be nicer if we could use callbacks instead of ivars. [Oct 2025]
+                    mflog(@"controlTextDidBeginEditing: %@", self->_lastTargetCellString);
                 }
                 
-                NSTableCellView *cell = [self viewAtColumn: [self columnWithIdentifier: @"source"] row: row makeIfNecessary: NO];
-                
-                /// Show MFInvisiblesTextView with newline glyphs
-                cell.textField.hidden = YES /*NO*/; /// Set to YES overlays the MFTextField and MFInvisiblesTextView, making text darker – useful as debugging tool (or to keep usable if there are bugs)
+                /// Swap in `MFInvisiblesTextView_Overlay`
+                {
+                    /// Swap in MFInvisiblesTextView for @"source" column cell when the @"target" column cell is being edited
+                    ///     (To be able to display invisibles just like our fieldEditor does on the @"target" cell being edited.) [Oct 2025]
+                    /// Note: We used to reload the tableCells here to display the `MFTextField`, but reloading here seems to break our firstResponder tracking in MFTextField (See `MFTextField_BecomeFirstResponder`) – I hope it doesn't break due to other random stuff. (Now we're applying the overlay directly here instead of reloading the table)
+                    ///
+                    /// High-level:
+                    ///     We're trying to dynamically swap in invisibles-drawing NSTextVIew for the MFTextField for performance, while the MFTextField in the @"target" col is firstResponder (being edited) but both firstResponder tracking and retrieving the reference to the @"source" column views is brittle and doesn't work 100% reliably right now [Oct 2025]
+                    ///     Alternative: Just make everything NSTextViews all the time and take the performance hit. Or just give up on invisibles.
+                    
+                    MFTextField *textField__ = note.object;
+                    
+                    if (textField__.window != self.window) return; /// Since `object: nil` we receive this notification from *all* NSTextFields including ones in other windows.
+                    
+                    NSInteger row = [self rowForView: textField__];
+                    if (row == -1) { /// Randomly returns -1 sometimes. Can't reproduce. In lldb it consistently returns -1 IIRC, so there is some weird state causing this, not just sporadic. [Oct 2025] Update: This may be fixed by the `textField__.window != self.window` check above.
+                        assert(false);
+                        textField__.hidden = NO;
+                        return;
+                    }
+                    
+                    NSTableCellView *cell = [self viewAtColumn: [self columnWithIdentifier: @"source"] row: row makeIfNecessary: NO];
+                    [textField__ mf_setAssociatedObject: cell.textField forKey: @"MFSourceCellSister"]; /// Do this every time cause cells get swapped out by the tableView[Nov 2025]
+                    
+                    /// Show MFInvisiblesTextView with newline glyphs
+                    cell.textField.hidden = YES /*NO*/; /// Set to YES overlays the MFTextField and MFInvisiblesTextView, making text darker – useful as debugging tool (or to keep usable if there are bugs)
+                    
+                    
+                    NSTextView *textView = [cell.textField mf_associatedObjectForKey: @"MFInvisiblesTextView_Overlay"];
+                    if (!textView) {
+                        textView = [MFInvisiblesTextView new];
+                        {
+                            textView.translatesAutoresizingMaskIntoConstraints = NO;
+                            textView.font = cell.textField.font;
+                            textView.textColor = cell.textField.textColor ?: [NSColor labelColor];
+                            textView.editable = NO;
+                            textView.selectable = YES;
+                            textView.drawsBackground = NO;
+                            textView.textContainer.lineFragmentPadding = 0;
+                            
+                        }
 
-                NSTextView *textView = [cell.textField mf_associatedObjectForKey: @"MFInvisiblesTextView_Overlay"];
-                if (!textView) {
-                    textView = [MFInvisiblesTextView new];
-                    {
-                        textView.translatesAutoresizingMaskIntoConstraints = NO;
-                        textView.font = cell.textField.font;
-                        textView.textColor = cell.textField.textColor ?: [NSColor labelColor];
-                        textView.editable = NO;
-                        textView.selectable = YES;
-                        textView.drawsBackground = NO;
-                        textView.textContainer.lineFragmentPadding = 0;
-                        
+                        [cell addSubview: textView];
+                        mfui_setmargins(cell, mfui_margins(8,8,2,2), textView); /// Margins match constraints on cell.textField in IB [Oct 2025]
+                        [cell.textField mf_setAssociatedObject: textView forKey: @"MFInvisiblesTextView_Overlay"];
                     }
 
-                    [cell addSubview: textView];
-                    mfui_setmargins(cell, mfui_margins(8,8,2,2), textView); /// Margins match constraints on cell.textField in IB [Oct 2025]
-                    [cell.textField mf_setAssociatedObject: textView forKey: @"MFInvisiblesTextView_Overlay"];
-                    [textField__ mf_setAssociatedObject: cell.textField forKey: @"MFSourceCellSister"];
+                    textView.hidden = NO;
+                    textView.string = cell.textField.stringValue;
+                    
+                    mflog(@"MFInvisiblesTextView_Overlay Showing for row %ld (views: %p|%p)", row, textField__, textView);
                 }
-
-                textView.hidden = NO;
-                textView.string = cell.textField.stringValue;
             }
         ];
 
@@ -162,18 +183,48 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
             object: nil
             observee: self
             block: ^(NSNotification *note, TableView *self) {
-                
+    
+    
+                /// Cleanup `MFInvisiblesTextView_Overlay`
                 /// Note:
                 ///     Using "MFSourceCellSister" associatedObject because `[self rowForView: textField__]` always returns zero in the `MFTextField_ResignFirstResponder` callback, when the firstResponder state was produced by `[XclocWindow -restoreStateWithCoder:]` [Oct 2025]
-                
-                MFTextField *textField__ = note.object;
-                if (textField__.window != self.window) return;
-                
-                MFTextField *sisterTextField = [textField__ mf_associatedObjectForKey: @"MFSourceCellSister"];
-                NSTextView *textView = [sisterTextField mf_associatedObjectForKey: @"MFInvisiblesTextView_Overlay"];
-                
-                if (sisterTextField) sisterTextField.hidden = NO;
-                if (textView)        textView.hidden = YES;
+                {
+                    
+                    MFTextField *textField__ = note.object;
+                    if (textField__.window != self.window) return;
+                    
+                    MFTextField *sisterTextField = [textField__ mf_associatedObjectForKey: @"MFSourceCellSister"];
+                    NSTextView *textView = [sisterTextField mf_associatedObjectForKey: @"MFInvisiblesTextView_Overlay"];
+                    
+                    if (sisterTextField) sisterTextField.hidden = NO;
+                    if (textView)        textView.hidden = YES;
+                    
+                    mflog(@"MFInvisiblesTextView_Overlay Hiding  for row %ld (views: %p|%p)", [self rowForView: sisterTextField], textField__, textView);
+                }
+    
+                /// Former content of `controlTextDidEndEditing:`
+                ///     (Several comments elsewhere talk about `controlTextDidEndEditing:`, so don't delete this. [Nov 2025])
+                {
+                    mflog(@"controlTextDidEndEditing: %@, self->didJustEndEditingWithReturnKey: %d",
+                        [[note object] stringValue], self->didJustEndEditingWithReturnKey);
+                    
+                    NSTextField *textField = note.object;
+                    
+                    {
+                        if (!textField.editable) return;  /// This is also called for selectable textFields.
+                        assert(isclass(textField, MFTextField));
+                    }
+                    
+                    if (![self selectedItem]) { [self reloadData]; return; } /// This happens when macOS restores the user interface after a crash while a row was being edited. [reloadData] to make sure the user is editing up-to-date data. Update: [Nov 2025] This might not apply anymore after fixing bug where XclocWindow wasn't released after being closed.
+                    
+                    if (![self->_lastTargetCellString isEqual: textField.stringValue]) /// `_lastTargetCellString` is never set [Nov 2025]
+                        [self                                               /// We also save if the user cancels editing by pressing escape – but they can always Command-Z to undo. [Oct 2025]
+                            setTranslation:         textField.stringValue   /// Saving can reload tableCells so we wanna cleanup the `MFInvisiblesTextView_Overlay` before this [Nov 2025]
+                            alsoModifyIsTranslated: self->didJustEndEditingWithReturnKey
+                            isTranslated:           self->didJustEndEditingWithReturnKey
+                            onRowModel:             [self selectedItem]
+                        ];
+                }
             }
         ];
         
@@ -451,13 +502,21 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                     }
                     goto end;
                     end_editing: {
-                        [textView insertNewline: self];
-                        didHandle = YES;
                         
-                        if (koption && kshift)
+                        if (koption && kshift) {
+                            [textView insertNewline: self];
                             [self editPreviousRow];
-                        else
+                        }
+                        else {
+                        
+                            self->didJustEndEditingWithReturnKey = YES;
+                            
+                            [textView insertNewline: self]; /// Calls `controlTextDidEndEditing:`, where we use `didJustEndEditingWithReturnKey`
                             [self editNextRow];
+
+                            self->didJustEndEditingWithReturnKey = NO;
+                        }
+                        didHandle = YES;
                     }
                     end: {}
                     
@@ -476,32 +535,6 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
          
             return didHandle;
         }
-        
-    #pragma mark - NSControlTextEditingDelegate (Callbacks for the MFTextField)
-    
-    - (void) controlTextDidBeginEditing: (NSNotification *)notification {
-        /// CAUTION: This is not called
-        ///     See:
-        ///     - https://developer.apple.com/documentation/objectivec/nsobject/1428847-controltextdidendediting?language=objc
-        ///     ... Update: We stopped relying on this [Oct 2025]
-        NSTextField *textField = notification.object;
-        _lastTargetCellString = textField.stringValue; /// Track whether textField content was actually changed inside `controlTextDidEndEditing:`. Would be nicer if we could use callbacks instead of ivars. [Oct 2025]
-        mflog(@"controlTextDidBeginEditing: %@", _lastTargetCellString);
-    }
-    - (void) controlTextDidEndEditing: (NSNotification *)notification {
-        
-        
-        mflog(@"controlTextDidEndEditing: %@", [[notification object] stringValue]);
-        
-        NSTextField *textField = notification.object;
-        if (!textField.editable) return;  /// This is also called for selectable textFields.
-        assert(isclass(textField, MFTextField));
-        auto selectedItem = [self selectedItem];
-        if (!selectedItem) { [self reloadData]; return; } /// This happens when macOS restores the user interface after a crash while a row was being edited. [reloadData] to make sure the user is editing up-to-date data.
-        assert(selectedItem);
-        if (![_lastTargetCellString isEqual: textField.stringValue])
-            [self setTranslation: textField.stringValue andIsTranslated: YES onRowModel: [self selectedItem]]; /// We also save if the user cancels editing by pressing escape – but they can always Command-Z to undo. [Oct 2025]
-    }
     
     #pragma mark - Sorting
 
@@ -804,7 +837,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         }
         
     }
-    - (void) setTranslation: (NSString *)newString andIsTranslated: (BOOL)isTranslated onRowModel: (NSXMLElement *)transUnit {
+    - (void) setTranslation: (NSString *)newString alsoModifyIsTranslated: (BOOL)modifyIsTranslated isTranslated: (BOOL)isTranslated onRowModel: (NSXMLElement *)transUnit {
         
         /// Log
         mflog(@"setTranslation: %@", newString);
@@ -818,13 +851,19 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
             auto undoManager = [getdoc(self) undoManager];
             auto oldString = rowModel_getCellModel(transUnit, @"target");
             auto oldIsTranslated = [[self stateOfRowModel: transUnit] isEqual: kMFTransUnitState_Translated];
-            [[undoManager prepareWithInvocationTarget: self] setTranslation: oldString andIsTranslated: oldIsTranslated onRowModel: transUnit];
+            [[undoManager prepareWithInvocationTarget: self]
+                setTranslation: oldString
+                alsoModifyIsTranslated: modifyIsTranslated
+                isTranslated: oldIsTranslated
+                onRowModel: transUnit
+            ];
             [undoManager setActionName: @"Edit Translation"];
         }
         
         /// Update datamodel
         _rowModel_setCellModel(transUnit, @"target", newString);
-        _rowModel_setCellModel(transUnit, @"state", isTranslated ? kMFTransUnitState_Translated : kMFTransUnitState_NeedsReview);
+        if (modifyIsTranslated)
+            _rowModel_setCellModel(transUnit, @"state", isTranslated ? kMFTransUnitState_Translated : kMFTransUnitState_NeedsReview);
         
         /// Save to disk
         [getdoc(self) writeTranslationDataToFile];
@@ -1018,7 +1057,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
     }
 
 
-    NSTableCellView *_getCellView(TableView *self, NSTableColumn *tableColumn, id item, NSTableCellView *cellViewToReuse) {
+    NSTableCellView *_getCellView(TableView *self, NSTableColumn *tableColumn, id item) {
             
     
         #define iscol(colid) [[tableColumn identifier] isEqual: (colid)]
@@ -1061,17 +1100,15 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         }
         
         /// Create cell
-        NSTableCellView *cell = cellViewToReuse;
+        NSTableCellView *cell = nil;
         {
             
             bool makeSelectable = YES;
             
             if (iscol(@"id")) {
                 
-                if (!cell) {
-                    assert([reusableViewIDs containsObject: @"theReusableCell_TableID"]);
-                    cell = [self makeViewWithIdentifier: @"theReusableCell_TableID" owner: self]; /// [Jun 2025] What to pass as owner here? Will this lead to retain cycle?
-                }
+                assert([reusableViewIDs containsObject: @"theReusableCell_TableID"]);
+                cell = [self makeViewWithIdentifier: @"theReusableCell_TableID" owner: self]; /// [Jun 2025] What to pass as owner here? Will this lead to retain cycle?
                 
                 /// Configure filename-field
                 {
@@ -1108,10 +1145,9 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                 }
             }
             else if (iscol(@"target")) {
-                if (!cell) {
-                    assert([reusableViewIDs containsObject: @"theReusableCell_TableTarget"]);
-                    cell = [self makeViewWithIdentifier: @"theReusableCell_TableTarget" owner: self]; /// This contains an `MFTextField`
-                }
+
+                assert([reusableViewIDs containsObject: @"theReusableCell_TableTarget"]);
+                cell = [self makeViewWithIdentifier: @"theReusableCell_TableTarget" owner: self]; /// This contains an `MFTextField`
             
                 [cell.textField setEditable: !rowModel_isPluralParent(transUnit)];
             }
@@ -1119,20 +1155,16 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                 
                 if (!stateCellBackgroundColor) { /// This is for the `green_checkmark` (Other state cells are handled by `stateCellBackgroundColor`).
                     
-                    if (!cell) {
-                        assert([reusableViewIDs containsObject: @"theReusableCell_Table"]);
-                        cell = [self makeViewWithIdentifier: @"theReusableCell_Table" owner: self];
-                    }
+                    assert([reusableViewIDs containsObject: @"theReusableCell_Table"]);
+                    cell = [self makeViewWithIdentifier: @"theReusableCell_Table" owner: self];
                     
                     makeSelectable = false;                 /// The `green_checkmark` disappears when selected, so we disable selection. [Oct 2025]
                 }
 
                 else {
                     
-                    if (!cell) {
-                        assert([reusableViewIDs containsObject: @"theReusableCell_TableState"]);
-                        cell = [self makeViewWithIdentifier: @"theReusableCell_TableState" owner: self];
-                    }
+                    assert([reusableViewIDs containsObject: @"theReusableCell_TableState"]);
+                    cell = [self makeViewWithIdentifier: @"theReusableCell_TableState" owner: self];
                     
                     { /// Style copies Xcode xcloc editor. Rest of the style defined in IB.
                         cell.nextKeyView.wantsLayer = YES;
@@ -1146,10 +1178,20 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
             }
             
             else {
-                if (!cell) {
-                    assert([reusableViewIDs containsObject: @"theReusableCell_Table"]);
-                    cell = [self makeViewWithIdentifier: @"theReusableCell_Table" owner: self];
+                
+                assert(iscol(@"source") || iscol(@"note"));
+            
+                assert([reusableViewIDs containsObject: @"theReusableCell_Table"]);
+                cell = [self makeViewWithIdentifier: @"theReusableCell_Table" owner: self];
+                
+                /// Clean up `@"MFInvisiblesTextView_Overlay"`
+                MFInvisiblesTextView *overlay = [cell.textField mf_associatedObjectForKey: @"MFInvisiblesTextView_Overlay"];
+                if ((overlay && !overlay.hidden) || cell.textField.hidden) {
+                    assert(false); /// Shouldn't happen if our code works correctly.
+                    [overlay setHidden: YES];
+                    [cell.textField setHidden: NO];
                 }
+                
             }
             
             /// Common config
@@ -1173,7 +1215,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
     }
 
     - (NSView *) outlineView: (NSOutlineView *)outlineView viewForTableColumn: (NSTableColumn *)tableColumn item: (id)item {
-        return _getCellView(self, tableColumn, item, nil); /// Factored out `_getCellView()` to implement `heightOfRowByItem:`, but gave up on that [Nov 2025]
+        return _getCellView(self, tableColumn, item); /// Factored out `_getCellView()` to implement `heightOfRowByItem:`, but gave up on that [Nov 2025]
     }
 
     #pragma mark - NSOutlineView subclass

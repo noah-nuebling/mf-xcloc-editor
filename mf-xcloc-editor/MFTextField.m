@@ -315,7 +315,7 @@ double newlineMarkerWidth = 0.0 /*15.0*/; /// Try to stop newline marker from be
         }
 
         - (void)textDidEndEditing:(NSNotification *)notification {
-            [super textDidEndEditing: notification];
+            [super textDidEndEditing: notification]; /// This sends `controlTextDidEndEditing:` notification but we should instead just use our `cool` methods for reliable [Nov 2025]
 
             mflog(@"Raw textEndEditing (%p)", self);
             
