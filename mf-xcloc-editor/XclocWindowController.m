@@ -155,7 +155,6 @@
             /// TODO: Add "Show in 'filename'" to right-click menu.
             
             /// TODO: Don't automatically set state to 'translated' unless the user stops editing via return key. (DONE)
-                
             /// TODO: (DONE)
             ///     Bug: `72q-sS-xMS.​title` -> Cycle through states changes comment
             

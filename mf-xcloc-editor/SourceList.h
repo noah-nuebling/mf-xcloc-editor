@@ -22,5 +22,6 @@
     - (void) showAllTransUnits;
     - (BOOL) allTransUnitsShown;
     - (NSString *) filenameForTransUnit: (NSXMLElement *)transUnit;
+    - (void) showFileOfTransUnit: (NSXMLNode *)transUnit;
 
 @end

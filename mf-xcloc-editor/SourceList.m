@@ -16,6 +16,7 @@
 #import "MFUI.h"
 #import "NSObject+Additions.h"
 #import "Utility/ToString.m"
+#import "Constants.h"
 
 @interface File : NSObject
     {
@@ -31,9 +32,6 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
     f->path = path;
     return f;
 }
-
-#define kMFPath_AllDocuments @"All Project Files"
-
 
 @implementation SourceList
     {
@@ -198,14 +196,19 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
     - (void) showAllTransUnits {
     
         NSInteger row = 0; /// Hardcode to first row. [Oct 2025]
-        [self selectRowIndexes: [NSIndexSet indexSetWithIndex: row] byExtendingSelection: NO];
+        [self selectRowIndexes: indexset(row) byExtendingSelection: NO];
+    }
+    
+    - (void) showFileOfTransUnit: (NSXMLNode *)transUnit {
+        File *file = [self fileForTransUnit: transUnit];
+        [self selectRowIndexes: indexset([self rowForItem: file]) byExtendingSelection: NO];
     }
     
     - (BOOL) allTransUnitsShown {
         return [self selectedRow] == 0; /// Hardcode to first row [Oct 2025]
     }
     
-    - (NSString *) filenameForTransUnit: (NSXMLElement *)transUnit {
+    - (File *) fileForTransUnit: (NSXMLElement *)transUnit {
         
         /// TODO:
         ///     Maybe just look at the parent node (for performance – if that matters)
@@ -216,12 +219,14 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
             if ([files[i] isEqual: @"separator"]) continue;
             
             if ([files[i]->transUnits containsObject: transUnit]) {
-                return [self uiStringForFile: files[i]];
+                return files[i];
             };
         }
-        
-        return @"<Error: no filename found>";
-        
+        return nil;
+    }
+    
+    - (NSString *) filenameForTransUnit: (NSXMLElement *)transUnit {
+        return [self uiStringForFile: [self fileForTransUnit: transUnit]] ?: @"<Error: no filename found>";
     }
     
     
@@ -360,7 +365,8 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
     
     - (NSString *) uiStringForFile: (File *)file {
         
-        if ([file isEqual: @"separator"]) return @"";
+        if (!file) return nil;
+        if ([file isEqual: @"separator"]) return nil;
         
         NSMutableArray *allUIStrings = [NSMutableArray new];
         for (File *f in self->files) {

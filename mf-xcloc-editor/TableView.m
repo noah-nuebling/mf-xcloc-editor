@@ -296,10 +296,16 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                 v.target = self;
                 return v;
             };
+            auto mfui_sepitem = ^{
+                return [NSMenuItem separatorItem];
+            };
+            
             
             self.menu = mfui_menu(@[
                 mfui_item(@"mark_as_translated", kMFStr_MarkAsTranslated_Symbol, kMFStr_MarkAsTranslated),
                 mfui_item(@"mark_for_review",    kMFStr_MarkForReview_Symbol, kMFStr_MarkForReview),
+                mfui_sepitem(),
+                mfui_item(@"reveal_in_file",     @"", @""),                                         /// UIStrings generated in `validateMenuItem:`
             ]);
         }
         
@@ -331,28 +337,73 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         return -1;
     }
     - (void) tableMenuItemClicked: (NSMenuItem *)menuItem {
-        [self toggleIsTranslatedState: [self itemAtRow: [self clickedRow]]]; /// All our menuItems are for toggling and `validateMenuItem:` makes it so we can only toggle [Oct 2025]
+        
+        if (
+            [menuItem.identifier isEqual: @"mark_as_translated"] ||
+            [menuItem.identifier isEqual: @"mark_for_review"]
+        ) {
+            [self toggleIsTranslatedState: [self itemAtRow: [self clickedRow]]]; /// All our menuItems are for toggling and `validateMenuItem:` makes it so we can only toggle [Oct 2025]
+        }
+        
+        else if ([menuItem.identifier isEqual: @"reveal_in_file"]) {
+        
+            NSXMLElement *transUnit = [self itemAtRow: [self clickedRow]];
+            [self selectRowIndexes: indexset([self rowForItem: transUnit]) byExtendingSelection: NO]; /// When you switch files with a visible row selected, our code will automatically try to reveal that row after the file-switch. [Nov 2025]
+            
+            if ([getdoc(self)->ctrl->out_sourceList allTransUnitsShown]) {
+                [getdoc(self)->ctrl->out_sourceList showFileOfTransUnit: transUnit];
+            } else {
+                [getdoc(self)->ctrl->out_sourceList showAllTransUnits];
+            }
+        }
+        else {
+            assert(false);
+        }
     }
     
     - (BOOL) validateMenuItem: (NSMenuItem *)menuItem {
         
         NSXMLElement *transUnit = [self itemAtRow: [self clickedRow]]; /// This is a right-click menu so we use `clickedRow` instead of `selectedItem`
         
-        if ([[self stateOfRowModel: transUnit] isEqual: @"mf_dont_translate"])
-            return NO;
-        if (rowModel_isPluralParent(transUnit))
-            return NO;
+        if ([[self stateOfRowModel: transUnit] isEqual: @"mf_dont_translate"]) return NO;
+        
+        /// Handle review-items
+        
         if (
-            [[self stateOfRowModel: transUnit] isEqual: kMFTransUnitState_Translated] &&
-            [menuItem.identifier isEqual: @"mark_as_translated"]
-        ) {
-            return NO;
-        }
-        if (
-            ![[self stateOfRowModel: transUnit] isEqual: kMFTransUnitState_Translated] && /// `tableMenuItemClicked:` expects us to only allow toggling (only one of the two items may be active) [Oct 2025]. (This may be stupid)
+            [menuItem.identifier isEqual: @"mark_as_translated"] ||
             [menuItem.identifier isEqual: @"mark_for_review"]
         ) {
-            return NO;
+            
+            if (rowModel_isPluralParent(transUnit))                                return NO;
+        
+            if (
+                [[self stateOfRowModel: transUnit] isEqual: kMFTransUnitState_Translated] &&
+                [menuItem.identifier isEqual: @"mark_as_translated"]
+            ) {
+                return NO;
+            }
+            if (
+                ![[self stateOfRowModel: transUnit] isEqual: kMFTransUnitState_Translated] && /// `tableMenuItemClicked:` expects us to only allow toggling (only one of the two items may be active) [Oct 2025]. (This may be stupid)
+                [menuItem.identifier isEqual: @"mark_for_review"]
+            ) {
+                return NO;
+            }
+        }
+        /// Handle reveal-items
+        {
+            if ([menuItem.identifier isEqual: @"reveal_in_file"]) {
+            
+                if ([getdoc(self)->ctrl->out_sourceList allTransUnitsShown]) {
+                    NSString *uiString = stringf(@"Show in '%@'", [getdoc(self)->ctrl->out_sourceList filenameForTransUnit: transUnit]);
+                    menuItem.title = uiString;
+                    menuItem.image = [NSImage imageWithSystemSymbolName: @"document" accessibilityDescription: uiString];
+                }
+                else {
+                    NSString *uiString = stringf(@"Show in %@", kMFPath_AllDocuments);
+                    menuItem.title = uiString;
+                    menuItem.image = [NSImage imageWithSystemSymbolName: @"document.on.document"/*@"document.viewfinder"*/ accessibilityDescription: uiString];
+                }
+            }
         }
         
         return YES;
