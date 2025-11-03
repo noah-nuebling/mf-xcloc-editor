@@ -70,9 +70,13 @@
         else assert(false); /// Only handle @"target" and @"state" cause we never wanna edit the other stuff [Oct 2025]
     };
     
-    static BOOL rowModel_isParent(NSXMLElement *transUnit) { /// Detects the `%#@formatSstring@` of pluralizable strings (parent row)
+    static BOOL rowModel_isPluralParent(NSXMLElement *transUnit) { /// Detects the `%#@formatSstring@` of pluralizable strings (parent row)
         return [rowModel_getCellModel(transUnit, @"source") containsString: @"%#@"];
     }
+    static BOOL rowModel_isPluralChild(NSXMLElement *transUnit) { /// Detects the `|==|` separator found in pluralizable variants (child rows). We also expect the children to always be preceeded by parent. [Nov 2025]]
+        return [xml_attr(transUnit, @"id").objectValue containsString: @"|==|"];
+    }
+        
 
 #pragma mark - Other utils shared between TableView.m and SourceList.m
 

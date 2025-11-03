@@ -288,7 +288,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         
         if ([[self stateOfRowModel: transUnit] isEqual: @"mf_dont_translate"])
             return NO;
-        if (rowModel_isParent(transUnit))
+        if (rowModel_isPluralParent(transUnit))
             return NO;
         if (
             [[self stateOfRowModel: transUnit] isEqual: kMFTransUnitState_Translated] &&
@@ -362,7 +362,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         
             if (self.selectedRow == -1) return;
             auto nextRow = self.selectedRow + 1;
-            if (rowModel_isParent([self itemAtRow: nextRow])) nextRow += 1; /// Skip over parents
+            if (rowModel_isPluralParent([self itemAtRow: nextRow])) nextRow += 1; /// Skip over parents
             if ([self numberOfRows] <= nextRow) return;
             [self selectRowIndexes: indexset(nextRow) byExtendingSelection: NO];
             
@@ -372,7 +372,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         
             if (self.selectedRow == -1) return;
             auto nextRow = self.selectedRow - 1;
-            if (rowModel_isParent([self itemAtRow: nextRow])) nextRow -= 1; /// Skip over parents
+            if (rowModel_isPluralParent([self itemAtRow: nextRow])) nextRow -= 1; /// Skip over parents
             if (0 > nextRow) return;
             [self selectRowIndexes: indexset(nextRow) byExtendingSelection: NO];
             
@@ -593,7 +593,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                             NSString *parentId = xml_attr(potentialParent, @"id").objectValue;
                             if ([parentId isEqual: baseKey]) { /// Found parent
                             
-                                assert(rowModel_isParent(potentialParent)); /// Make sure our utility function works.
+                                assert(rowModel_isPluralParent(potentialParent)); /// Make sure our utility function works.
                                 
                                 NSMutableArray *children = (NSMutableArray *)_childrenMap[potentialParent];
                                 if (!children) {
@@ -932,7 +932,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         /// Get model value
         NSString *uiString = rowModel_getCellModel(transUnit, [tableColumn identifier]);
         
-        /// Get propery model value for @"state"
+        /// Get proper model value for @"state"
         ///     This is a bit hacky
         if (iscol(@"state"))
             uiString = [self stateOfRowModel: transUnit];
@@ -981,71 +981,63 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
             }
         }
         
-        /// Special stuff for @"target" column
-        bool targetCellShouldBeEditable = true;
-        
-        /// Special stuff for @"id" column
-        bool shouldShowFilename = NO;
-        if (iscol(@"id")) {
-            shouldShowFilename = [getdoc(self)->ctrl->out_sourceList allTransUnitsShown];
-            uiString = [uiString stringByReplacingOccurrencesOfString: @"." withString: @".\u200B"]; /// Add zero-width spaces after periods in the string-key to make NSTextField wrap the lines there.
-        }
+        /// Add zero-width spaces after periods in the string-key to make NSTextField wrap the lines there.
+        if (iscol(@"id"))
+            uiString = [uiString stringByReplacingOccurrencesOfString: @"." withString: @".\u200B"];
         
         /// Handle pluralizable strings
         {
-            if (rowModel_isParent(transUnit)) {
+            if (rowModel_isPluralParent(transUnit)) {
                 if ((0)) {}
                 else if (iscol(@"id"))       {}
                 else if (iscol(@"source"))   uiString = @"(pluralizable)";
-                else if (iscol(@"target")) { uiString = @"(pluralizable)"; targetCellShouldBeEditable = false; } /// We never want the `%#@formatSstring@` to be changed by the translators, so we override it.
+                else if (iscol(@"target")) { uiString = @"(pluralizable)"; } /// We never want the `%#@formatSstring@` to be changed by the translators, so we override it.
                 else if (iscol(@"state"))    { if ((0)) uiString = @"(pluralizable)"; }
                 else if (iscol(@"note"))     {}
                 else                         assert(false);
             }
 
-            if ([xml_attr(transUnit, @"id").objectValue containsString: @"|==|"]) { /// This detects the pluralizable variants (child rows).
+            if (rowModel_isPluralChild(transUnit)) {
 
                 if (iscol(@"id")) {
                     
                     NSArray *a = [xml_attr(transUnit, @"id").objectValue componentsSeparatedByString: @"|==|"];
                     assert(a.count == 2);
+                    
                     NSString *substitutionPath = a[1];
                     assert([substitutionPath hasPrefix: @"substitutions.pluralizable.plural."]);
-                    NSString *pluralVariant = [substitutionPath substringFromIndex: @"substitutions.pluralizable.plural.".length];
-                    uiString = pluralVariant; /// Just show the variant name (e.g. "one", "other") since it's a child row
                     
-                    shouldShowFilename = NO;
+                    NSString *pluralVariant = [substitutionPath substringFromIndex: @"substitutions.pluralizable.plural.".length];
+                    
+                    uiString = pluralVariant; /// Just show the variant name (e.g. "one", "other") since it's a child row
                 }
-                else if (iscol(@"note")) uiString = @""; /// Delete the note cause the parent row already has it.
+                else if (iscol(@"note"))
+                    uiString = @""; /// Delete the note cause the parent row already has it.
             }
         }
         
         /// Override raw state string with colorful symbols / badges
         
         NSAttributedString *uiStringAttributed  = [[NSAttributedString alloc] initWithString: (uiString ?: @"")];
-        #define attributed(str) [[NSAttributedString alloc] initWithString: (str)]
+        if (iscol(@"state")) {
+            if ((0)) {}
+            else if ([uiString isEqual: kMFTransUnitState_Translated])      uiStringAttributed = make_green_checkmark(uiString);
+            else if ([uiString isEqual: kMFTransUnitState_DontTranslate])   uiStringAttributed = attributed(@"DON'T TRANSLATE");
+            else if ([uiString isEqual: kMFTransUnitState_New])             uiStringAttributed = attributed(@"NEW");
+            else if ([uiString isEqual: kMFTransUnitState_NeedsReview])     uiStringAttributed = attributed(@"NEEDS REVIEW");
+            else {
+                uiStringAttributed = attributed(stringf(@"Error: unknown state: %@", uiString));
+                assert(false);
+            }
+        }
+        
         NSColor *stateCellBackgroundColor = nil;
         if (iscol(@"state")) {
             if ((0)) {}
-                else if ([uiString isEqual: kMFTransUnitState_Translated]) {
-                    uiStringAttributed = make_green_checkmark(uiString);
-                    stateCellBackgroundColor = nil;
-                }
-                else if ([uiString isEqual: kMFTransUnitState_DontTranslate]) {
-                    uiStringAttributed = attributed(@"DON'T TRANSLATE");
-                    stateCellBackgroundColor = [NSColor systemGrayColor];
-                }
-                else if ([uiString isEqual: kMFTransUnitState_New]) {
-                    uiStringAttributed = attributed(@"NEW");
-                    stateCellBackgroundColor = [NSColor systemBlueColor];
-                }
-                else if ([uiString isEqual: kMFTransUnitState_NeedsReview]) {
-                    uiStringAttributed = attributed(@"NEEDS REVIEW");
-                    stateCellBackgroundColor = [NSColor systemOrangeColor];
-                }
-                else if ([uiString isEqual: @"(pluralizable)"]) { /// Unused now [Oct 2025]
-                    uiStringAttributed = attributed(@"");
-                }
+            else if ([uiString isEqual: kMFTransUnitState_Translated])     stateCellBackgroundColor = nil;
+            else if ([uiString isEqual: kMFTransUnitState_DontTranslate])  stateCellBackgroundColor = [NSColor systemGrayColor];
+            else if ([uiString isEqual: kMFTransUnitState_New])            stateCellBackgroundColor = [NSColor systemBlueColor];
+            else if ([uiString isEqual: kMFTransUnitState_NeedsReview])    stateCellBackgroundColor = [NSColor systemOrangeColor];
             else {
                 uiStringAttributed = attributed(stringf(@"Error: unknown state: %@", uiString));
                 assert(false);
@@ -1055,88 +1047,91 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         /// Create cell
         NSTableCellView *cell;
         {
-            if (stateCellBackgroundColor) {
-                assert([reusableViewIDs containsObject: @"theReusableCell_TableState"]);
-                cell = [outlineView makeViewWithIdentifier: @"theReusableCell_TableState" owner: self];
-                { /// Style copies Xcode xcloc editor. Rest of the style defined in IB.
-                    cell.nextKeyView.wantsLayer = YES;
-                    cell.nextKeyView.layer.cornerRadius = 3;
-                    cell.nextKeyView.layer.borderWidth  = 1;
-                }
-
-                cell.nextKeyView.layer.borderColor     = [stateCellBackgroundColor CGColor];
-                cell.nextKeyView.layer.backgroundColor = [[stateCellBackgroundColor colorWithAlphaComponent: 0.15] CGColor];
+            
+            bool makeSelectable = YES;
+            
+            if (iscol(@"id")) {
+                                    
+                assert([reusableViewIDs containsObject: @"theReusableCell_TableID"]);
+                cell = [outlineView makeViewWithIdentifier: @"theReusableCell_TableID" owner: self]; /// [Jun 2025] What to pass as owner here? Will this lead to retain cycle?
                 
-            }
-            else {
-                auto matchingScreenshotPlistEntry = [self _localizedStringsDataPlist_GetEntryForRowModel: transUnit];
-                
-                if ((0)) {}
-                else if (iscol(@"id")) {
-                                        
-                    assert([reusableViewIDs containsObject: @"theReusableCell_TableID"]);
-                    cell = [outlineView makeViewWithIdentifier: @"theReusableCell_TableID" owner: self]; /// [Jun 2025] What to pass as owner here? Will this lead to retain cycle?
-                    
-                    /// Configure filename-field
-                    
-                    
-                    {
-                        NSTextField *filenameField = (id)[cell searchSubviewWithIdentifier: @"filename-field"];
-                        if (shouldShowFilename) {
-                            filenameField.hidden = NO;
-                            NSString *filename = [getdoc(self)->ctrl->out_sourceList filenameForTransUnit: transUnit];
-                            [filenameField setStringValue: filename];
-                        }
-                        else {
-                            filenameField.hidden = YES;
-                        }
-                    }
-
-                    /// Configure quicklook
-                    {
-                        NSButton *quickLookButton = (id)[cell searchSubviewWithIdentifier: @"quick-look-button"];
-                        mflog(@"quick-look-button base config: %p (row: %ld)", quickLookButton, [self rowForItem: transUnit]);
-                        quickLookButton.hidden = !matchingScreenshotPlistEntry;
-                    }
-                }
-                else if (iscol(@"target")) {
-                    assert([reusableViewIDs containsObject: @"theReusableCell_TableTarget"]);
-                    cell = [outlineView makeViewWithIdentifier: @"theReusableCell_TableTarget" owner: self]; /// This contains an `MFTextField`
-                }
-                else {
-                    assert([reusableViewIDs containsObject: @"theReusableCell_Table"]);
-                    cell = [outlineView makeViewWithIdentifier: @"theReusableCell_Table" owner: self];
-                }
-
-                /// Special config
+                /// Configure filename-field
                 {
-                    if (iscol(@"target")) {
-                        [cell.textField setEditable: targetCellShouldBeEditable];
-                    }
-                    else if (iscol(@"id")) {
-                        if (matchingScreenshotPlistEntry) {
-                            NSButton *quickLookButton = (id)[cell searchSubviewWithIdentifier: @"quick-look-button"];
-                            mflog(@"quick-look-button special config: %p (row: %ld)", quickLookButton, [self rowForItem: transUnit]);
-                            [quickLookButton setAction: @selector(quickLookButtonPressed:)];
-                            [quickLookButton setTarget: self];
-                            [quickLookButton mf_setAssociatedObject: @([outlineView rowForItem: item]) forKey: @"rowOfQuickLookButton"];
-                        }
+                    NSTextField *filenameField = (id)[cell searchSubviewWithIdentifier: @"filename-field"];
+                    if ( /// shouldShowFilename
+                        [getdoc(self)->ctrl->out_sourceList allTransUnitsShown] &&
+                        !rowModel_isPluralChild(transUnit)
+                    ) {
+                        filenameField.hidden = NO;
+                        NSString *filename = [getdoc(self)->ctrl->out_sourceList filenameForTransUnit: transUnit];
+                        [filenameField setStringValue: filename];
                     }
                     else {
-                        
+                        filenameField.hidden = YES;
+                    }
+                }
+
+                /// Configure quicklook
+                {
+                    auto matchingScreenshotPlistEntry = [self _localizedStringsDataPlist_GetEntryForRowModel: transUnit];
+                
+                    NSButton *quickLookButton = (id)[cell searchSubviewWithIdentifier: @"quick-look-button"];
+                    mflog(@"quick-look-button base config: %p (row: %ld)", quickLookButton, [self rowForItem: transUnit]);
+                    
+                    quickLookButton.hidden = !matchingScreenshotPlistEntry;
+
+                    if (matchingScreenshotPlistEntry) {
+                        NSButton *quickLookButton = (id)[cell searchSubviewWithIdentifier: @"quick-look-button"];
+                        mflog(@"quick-look-button special config: %p (row: %ld)", quickLookButton, [self rowForItem: transUnit]);
+                        [quickLookButton setAction: @selector(quickLookButtonPressed:)];
+                        [quickLookButton setTarget: self];
+                        [quickLookButton mf_setAssociatedObject: @([outlineView rowForItem: item]) forKey: @"rowOfQuickLookButton"];
                     }
                 }
             }
-            /// Common config
-            cell.textField.delegate = (id)self; /// Optimization: Could prolly set this once in IB [Oct 2025]
-            cell.textField.lineBreakMode = NSLineBreakByWordWrapping;
-            cell.textField.selectable = YES;
+            else if (iscol(@"target")) {
+                assert([reusableViewIDs containsObject: @"theReusableCell_TableTarget"]);
+                cell = [outlineView makeViewWithIdentifier: @"theReusableCell_TableTarget" owner: self]; /// This contains an `MFTextField`
             
-            /// Special override config
-            if (iscol(@"state") && !stateCellBackgroundColor) { /// This is only called for the `green_checkmark` (Other state cells are handled by `stateCellBackgroundColor`).
-                cell.textField.selectable = NO;                 /// The `green_checkmark` disappears when selected, so we disable selection. [Oct 2025]
+                [cell.textField setEditable: !rowModel_isPluralParent(transUnit)];
             }
+            else if (iscol(@"state")) {
+                
+                if (!stateCellBackgroundColor) { /// This is for the `green_checkmark` (Other state cells are handled by `stateCellBackgroundColor`).
+                    
+                    assert([reusableViewIDs containsObject: @"theReusableCell_Table"]);
+                    cell = [outlineView makeViewWithIdentifier: @"theReusableCell_Table" owner: self];
+                    
+                    makeSelectable = false;                 /// The `green_checkmark` disappears when selected, so we disable selection. [Oct 2025]
+                }
 
+                else {
+                    
+                    assert([reusableViewIDs containsObject: @"theReusableCell_TableState"]);
+                    cell = [outlineView makeViewWithIdentifier: @"theReusableCell_TableState" owner: self];
+                    
+                    { /// Style copies Xcode xcloc editor. Rest of the style defined in IB.
+                        cell.nextKeyView.wantsLayer = YES;
+                        cell.nextKeyView.layer.cornerRadius = 3;
+                        cell.nextKeyView.layer.borderWidth  = 1;
+                    }
+
+                    cell.nextKeyView.layer.borderColor     = [stateCellBackgroundColor CGColor];
+                    cell.nextKeyView.layer.backgroundColor = [[stateCellBackgroundColor colorWithAlphaComponent: 0.15] CGColor];
+                }
+            }
+            
+            else {
+                assert([reusableViewIDs containsObject: @"theReusableCell_Table"]);
+                cell = [outlineView makeViewWithIdentifier: @"theReusableCell_Table" owner: self];
+            }
+            
+            /// Common config
+            cell.textField.delegate = (id)self;
+            cell.textField.lineBreakMode = NSLineBreakByWordWrapping;
+            cell.textField.selectable    = makeSelectable;
+            
+            /// SEt da string!!
             [cell.textField setAttributedStringValue: uiStringAttributed];
         }
         

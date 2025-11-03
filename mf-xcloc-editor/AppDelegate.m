@@ -143,7 +143,7 @@
             NSXMLElement *selectedTransUnit = [tableView selectedItem];
             if (
                 selectedTransUnit == nil ||
-                rowModel_isParent(selectedTransUnit) /// Pluralizable string is selected
+                rowModel_isPluralParent(selectedTransUnit) /// Pluralizable string is selected
             ) {
                 menuItem.title = kMFStr_MarkAsTranslated; /// Setting the image/title here as well so they are not 'unitialized' raw values from the IB. [Oct 2025]
                 menuItem.image = [NSImage imageWithSystemSymbolName: kMFStr_MarkAsTranslated_Symbol accessibilityDescription: nil];

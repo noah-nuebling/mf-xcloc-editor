@@ -16,6 +16,7 @@
 #define isclass(obj,  classname)        ({ [[(obj) class] isSubclassOfClass: [classname class]]; })
 #define isclassd(obj, classname_str)     ({ [[(obj) class] isSubclassOfClass: NSClassFromString(classname_str)]; })
 #define stringf(format, args...)        [NSString stringWithFormat: (format), ## args]
+#define attributed(str) [[NSMutableAttributedString alloc] initWithString: (str)]
 
 #define arrcount(x...) (sizeof ((x)) / sizeof (x)[0])
         
