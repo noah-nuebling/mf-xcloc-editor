@@ -132,6 +132,27 @@
         else if (menuItem.action == @selector(quickLookMenuItemSelected:)) {
             ret(YES);
         }
+        else if (menuItem.action == @selector(showInFilenameMenuItemSelected:)) {
+            
+            TableView *tableView = doc->ctrl->out_tableView;
+            NSXMLElement *selectedTransUnit = [tableView selectedItem];
+            
+            if (selectedTransUnit == nil) {
+                menuItem.title = kMFStr_RevealInAll;  /// Setting the image/title here as well so they are not 'unitialized' raw values from the IB. [Oct 2025]
+                menuItem.image = [NSImage imageWithSystemSymbolName: kMFStr_RevealInAll_Symbol accessibilityDescription: kMFStr_RevealInAll];
+                ret(NO);
+            }
+            else if ([doc->ctrl->out_sourceList allTransUnitsShown]) {
+                menuItem.title = kMFStr_RevealInFile(doc, selectedTransUnit);
+                menuItem.image = [NSImage imageWithSystemSymbolName: kMFStr_RevealInFile_Symbol accessibilityDescription: kMFStr_RevealInFile(doc, selectedTransUnit)];
+                ret(YES);
+            }
+            else {
+                menuItem.title = kMFStr_RevealInAll;
+                menuItem.image = [NSImage imageWithSystemSymbolName: kMFStr_RevealInAll_Symbol accessibilityDescription: kMFStr_RevealInAll];
+                ret(YES);
+            }
+        }
         else if (menuItem.action == @selector(markAsTranslatedMenuItemSelected:)) {
             
             TableView *tableView = doc->ctrl->out_tableView;
@@ -159,8 +180,6 @@
                 menuItem.image = [NSImage imageWithSystemSymbolName: kMFStr_MarkAsTranslated_Symbol accessibilityDescription: nil];
                 ret(YES);
             }
-        
-            ret(YES);
         }
         else
             ret([super validateMenuItem: menuItem]);
@@ -184,6 +203,19 @@
     - (IBAction) markAsTranslatedMenuItemSelected: (id)sender {
         auto tableView = getdoc_frontmost()->ctrl->out_tableView;
         [tableView toggleIsTranslatedState: [tableView selectedItem]];
+    }
+    - (IBAction) showInFilenameMenuItemSelected: (id)sender {
+        
+        XclocDocument *doc = getdoc_frontmost();
+        
+        auto transUnit = [doc->ctrl->out_tableView selectedItem];
+    
+        if ([doc->ctrl->out_sourceList allTransUnitsShown]) {
+            [doc->ctrl->out_sourceList showFileOfTransUnit: transUnit];
+        } else {
+            [doc->ctrl->out_sourceList showAllTransUnits];
+        }
+    
     }
 
 

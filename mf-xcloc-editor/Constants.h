@@ -10,6 +10,12 @@
 #define kMFPath_AllDocuments            @"All Project Files"
 #define kMFStr_FilterTranslations       @"Filter Translations (⌘F)"
 #define kMFStr_MarkForReview            @"Mark for Review"
-#define kMFStr_MarkAsTranslated         @"Mark as Reviewed" /// Formerly 'Mark as Translated' – use "Review" in both variants so it's searchable.
+#define kMFStr_MarkAsTranslated         @"Mark as Translated" /// @"Mark as Reviewed" | Formerly 'Mark as Translated' – use "Review" in both variants so it's searchable.
+#define kMFStr_RevealInFile(doc, transUnit)     stringf(@"Show in '%@'", [(doc)->ctrl->out_sourceList filenameForTransUnit: (transUnit)])
+#define kMFStr_RevealInAll                      stringf(@"Show in '%@'", kMFPath_AllDocuments)
+
 #define kMFStr_MarkForReview_Symbol     @"circle"
 #define kMFStr_MarkAsTranslated_Symbol  @"checkmark.circle"
+#define kMFStr_RevealInFile_Symbol      @"document"
+#define kMFStr_RevealInAll_Symbol       (@"document.on.document"/*@"document.viewfinder"*/)
+

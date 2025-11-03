@@ -394,14 +394,12 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
             if ([menuItem.identifier isEqual: @"reveal_in_file"]) {
             
                 if ([getdoc(self)->ctrl->out_sourceList allTransUnitsShown]) {
-                    NSString *uiString = stringf(@"Show in '%@'", [getdoc(self)->ctrl->out_sourceList filenameForTransUnit: transUnit]);
-                    menuItem.title = uiString;
-                    menuItem.image = [NSImage imageWithSystemSymbolName: @"document" accessibilityDescription: uiString];
+                    menuItem.title = kMFStr_RevealInFile(getdoc(self), transUnit);
+                    menuItem.image = [NSImage imageWithSystemSymbolName: kMFStr_RevealInFile_Symbol accessibilityDescription: kMFStr_RevealInFile(getdoc(self), transUnit)];
                 }
                 else {
-                    NSString *uiString = stringf(@"Show in %@", kMFPath_AllDocuments);
-                    menuItem.title = uiString;
-                    menuItem.image = [NSImage imageWithSystemSymbolName: @"document.on.document"/*@"document.viewfinder"*/ accessibilityDescription: uiString];
+                    menuItem.title = kMFStr_RevealInAll;
+                    menuItem.image = [NSImage imageWithSystemSymbolName: kMFStr_RevealInAll_Symbol accessibilityDescription: kMFStr_RevealInAll];
                 }
             }
         }
