@@ -157,18 +157,20 @@ double newlineMarkerWidth = 0.0 /*15.0*/; /// Try to stop newline marker from be
         if ((1))
         for (NSInteger i = range.location; i < NSMaxRange(range); i++) {
             
+            
+            auto findNextNonSpaceChar = ^unichar (NSString *s, NSInteger characterIndex, int searchdir) {
+                for (int i = 1; ; i++) {
+                    NSInteger j = characterIndex + (searchdir*i);
+                    if (!NSLocationInRange(j, NSMakeRange(0, s.length))) return 0; /// null char as sentinel for endofstring.
+                    unichar result = [s characterAtIndex: j];
+                    if (result != ' ') return result; /// Only return once we find non-space char.
+                }
+            };
+            
             NSInteger characterIndex    = [self characterIndexForGlyphAtIndex: i];
             unichar character           = [self.textStorage.string characterAtIndex: characterIndex];
-            unichar nextCharacter       =
-                (characterIndex+1 >= self.textStorage.string.length) ?
-                0 :
-                [self.textStorage.string characterAtIndex: characterIndex+1]
-            ;
-            unichar lastCharacter =
-                (characterIndex-1 < 0) ?
-                0 :
-                [self.textStorage.string characterAtIndex: characterIndex-1]
-            ;
+            unichar nextCharacter       = findNextNonSpaceChar(self.textStorage.string, characterIndex, +1); /// Skip spaces so also catch blank lines that contain spaces. (Currently Localizable.xcstrings in mac-mouse-fix has a bunch of blank-lines with a single space for some reason [Nov 2025])
+            unichar lastCharacter       = findNextNonSpaceChar(self.textStorage.string, characterIndex, -1);
             
             if (
                 character == '\n' &&

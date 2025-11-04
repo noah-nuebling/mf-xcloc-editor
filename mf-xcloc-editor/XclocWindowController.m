@@ -155,7 +155,8 @@
             
             /// TODO: Fix Command-J while editing selection (DONE)
             /// TODO: Disable type-to-search on the TableView (DONE)
-            /// TODO: Look into why all the blank lines actually contain a single space.
+            /// TODO: Look into why all the blank lines actually contain a single space. (DONE)
+            ///         -> It's not all of them. They're defined like that in our .xcstrings file, should maybe fix that (or omit the `newlineMarkers` for those cases)
             
         
             /// Abandoned TODOs:
