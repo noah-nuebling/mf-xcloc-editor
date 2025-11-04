@@ -227,7 +227,7 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
     }
     
     - (NSString *) filenameForTransUnit: (NSXMLElement *)transUnit {
-        return [self uiStringForFile: [self fileForTransUnit: transUnit]] ?: @"<Error: no filename found>";
+        return [self uiStringForFile: [self fileForTransUnit: transUnit]];
     }
     
     

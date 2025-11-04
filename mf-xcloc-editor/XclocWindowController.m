@@ -152,10 +152,10 @@
         {
             
             /// TODO: Make default width on small laptop screen better
-            /// TODO: Add "Show in 'filename'" to right-click menu.
+            /// TODO: Add "Show in 'filename'" to right-click menu. (DONE)
             
             /// TODO: Fix Command-J while editing selection
-            /// TODO: Maybe Make Command-J -> Command-G so all the shortcuts are reachable through lefthand?
+            /// TODO: Maybe Make Command-J -> Command-G so all the shortcuts are reachable through lefthand? (NO)
             /// TODO: Disable type-to-search on the TableView
                 
             /// TODO: Don't automatically set state to 'translated' unless the user stops editing via return key. (DONE)

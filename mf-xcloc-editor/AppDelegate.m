@@ -121,7 +121,7 @@
     - (BOOL) validateMenuItem: (NSMenuItem *)menuItem {
         
         BOOL result = NO;
-        #define ret(res) { result = (res); goto end; }
+        #define ret(res) ({ result = (res); goto end; })
         
         auto doc = getdoc_frontmost();
         if (!doc) ret(NO);    /// When no doc is open, none of these menu-items apply, also the `getdoc_frontmost()->someIvar` calls would crash.  (When no doc is open, NSOpenPanel opens) [Oct 2025]
@@ -137,32 +137,26 @@
             TableView *tableView = doc->ctrl->out_tableView;
             NSXMLElement *selectedTransUnit = [tableView selectedItem];
             
-            if (selectedTransUnit == nil) {
-                menuItem.title = kMFStr_RevealInAll;  /// Setting the image/title here as well so they are not 'unitialized' raw values from the IB. [Oct 2025]
-                menuItem.image = [NSImage imageWithSystemSymbolName: kMFStr_RevealInAll_Symbol accessibilityDescription: kMFStr_RevealInAll];
-                ret(NO);
-            }
-            else if ([doc->ctrl->out_sourceList allTransUnitsShown]) {
-                menuItem.title = kMFStr_RevealInFile(doc, selectedTransUnit);
-                menuItem.image = [NSImage imageWithSystemSymbolName: kMFStr_RevealInFile_Symbol accessibilityDescription: kMFStr_RevealInFile(doc, selectedTransUnit)];
-                ret(YES);
-            }
-            else {
+            if ([menuItem.identifier isEqual: @"show_in_all"]) {
                 menuItem.title = kMFStr_RevealInAll;
                 menuItem.image = [NSImage imageWithSystemSymbolName: kMFStr_RevealInAll_Symbol accessibilityDescription: kMFStr_RevealInAll];
-                ret(YES);
             }
+            else {
+                menuItem.title = kMFStr_RevealInFile(doc, selectedTransUnit);
+                menuItem.image = [NSImage imageWithSystemSymbolName: kMFStr_RevealInFile_Symbol accessibilityDescription: kMFStr_RevealInFile(doc, selectedTransUnit)];
+            }
+            
+            if      ([tableView selectedItem] == nil)                                                                  ret (NO);
+            else if (![doc->ctrl->out_sourceList allTransUnitsShown] && [menuItem.identifier isEqual: @"show_in_all"]) ret (YES);
+            else if ([doc->ctrl->out_sourceList allTransUnitsShown] && [menuItem.identifier isEqual: @"show_in_file"]) ret (YES);
+            else                                                                                                       ret (NO);
         }
         else if (menuItem.action == @selector(markAsTranslatedMenuItemSelected:)) {
             
             TableView *tableView = doc->ctrl->out_tableView;
             
-            if (![(id)[tableView.window firstResponder] isDescendantOf: tableView]) { /// Ignore input when tableView is not firstResponder to prevent accidental input [Oct 2025] || isDescendantOf: is necessary when editing an NSTextField.
-                ret(NO);
-            }
             
             if ([menuItem.identifier isEqual: @"mark_for_review"]) {
-        
                 menuItem.title = kMFStr_MarkForReview;
                 menuItem.image = [NSImage imageWithSystemSymbolName: kMFStr_MarkForReview_Symbol accessibilityDescription: nil];
             }
@@ -171,22 +165,12 @@
                 menuItem.image = [NSImage imageWithSystemSymbolName: kMFStr_MarkAsTranslated_Symbol accessibilityDescription: nil];
             }
             
-            NSXMLElement *selectedTransUnit = [tableView selectedItem];
-            if (
-                selectedTransUnit == nil ||
-                rowModel_isPluralParent(selectedTransUnit) /// Pluralizable string is selected
-            ) {
-                ret (NO);
-            }
-            else if ([tableView rowIsTranslated: selectedTransUnit] && [menuItem.identifier isEqual: @"mark_for_review"]) {
-                ret (YES);
-            }
-            else if (![tableView rowIsTranslated: selectedTransUnit] && [menuItem.identifier isEqual: @"mark_as_translated"]) {
-                ret (YES);
-            }
-            else {
-                ret (NO);
-            }
+            if      (![(id)[tableView.window firstResponder] isDescendantOf: tableView])                                                ret (NO); /// Ignore input when tableView is not firstResponder to prevent accidental input [Oct 2025] || isDescendantOf: is necessary when editing an NSTextField.
+            else if ([tableView selectedItem] == nil)                                                                                   ret (NO);
+            else if (rowModel_isPluralParent([tableView selectedItem]))                                                                 ret (NO);
+            else if ([tableView rowIsTranslated: [tableView selectedItem]] && [menuItem.identifier isEqual: @"mark_for_review"])        ret (YES);
+            else if (![tableView rowIsTranslated: [tableView selectedItem]] && [menuItem.identifier isEqual: @"mark_as_translated"])    ret (YES);
+            else                                                                                                                        ret (NO);
             
         }
         else

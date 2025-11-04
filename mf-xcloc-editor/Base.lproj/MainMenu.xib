@@ -85,9 +85,15 @@
                                     <action selector="filterMenuItemSelected:" target="Voe-Tx-rLC" id="p2x-Zl-doG"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Show in 'filename'" image="magnifyingglass" catalog="system" keyEquivalent="j" id="2k6-4K-CWc">
+                            <menuItem isSeparatorItem="YES" id="ox6-AG-2iq"/>
+                            <menuItem title="Show in 'filename'" image="magnifyingglass" catalog="system" keyEquivalent="j" identifier="show_in_all" id="2k6-4K-CWc">
                                 <connections>
                                     <action selector="showInFilenameMenuItemSelected:" target="Voe-Tx-rLC" id="OVb-Bz-tE8"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Show in 'filename'" image="magnifyingglass" catalog="system" keyEquivalent="j" identifier="show_in_file" id="knV-8Y-Uvv">
+                                <connections>
+                                    <action selector="showInFilenameMenuItemSelected:" target="Voe-Tx-rLC" id="X5z-CC-AuP"/>
                                 </connections>
                             </menuItem>
                         </items>

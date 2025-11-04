@@ -11,7 +11,11 @@
 #define kMFStr_FilterTranslations       @"Filter Translations (⌘F)"
 #define kMFStr_MarkForReview            @"Mark for Review"
 #define kMFStr_MarkAsTranslated         @"Mark as Translated" /// @"Mark as Reviewed" | Formerly 'Mark as Translated' – use "Review" in both variants so it's searchable.
-#define kMFStr_RevealInFile(doc, transUnit)     stringf(@"Show in '%@'", [(doc)->ctrl->out_sourceList filenameForTransUnit: (transUnit)])
+#define kMFStr_RevealInFile(doc, transUnit) ({ \
+    auto _name = [(doc)->ctrl->out_sourceList filenameForTransUnit: (transUnit)]; \
+    _name ? stringf(@"Show in '%@'", _name) : @"Show in File";      /** The fallback is for `[AppDelegate validateMenuItem:]` [Nov 2025] */\
+})
+    
 #define kMFStr_RevealInAll                      stringf(@"Show in '%@'", kMFPath_AllDocuments)
 
 #define kMFStr_MarkForReview_Symbol     @"circle"

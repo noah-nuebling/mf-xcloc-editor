@@ -302,10 +302,9 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
             
             
             self.menu = mfui_menu(@[
-                mfui_item(@"mark_as_translated", kMFStr_MarkAsTranslated_Symbol, kMFStr_MarkAsTranslated),
-                mfui_item(@"mark_for_review",    kMFStr_MarkForReview_Symbol, kMFStr_MarkForReview),
+                mfui_item(@"mark_for_review",    @"", @""),
                 mfui_sepitem(),
-                mfui_item(@"reveal_in_file",     @"", @""),                                         /// UIStrings generated in `validateMenuItem:`
+                mfui_item(@"reveal_in_file",     @"", @""),                                         /// UIStrings now generated in `validateMenuItem:`
             ]);
         }
         
@@ -338,10 +337,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
     }
     - (void) tableMenuItemClicked: (NSMenuItem *)menuItem {
         
-        if (
-            [menuItem.identifier isEqual: @"mark_as_translated"] ||
-            [menuItem.identifier isEqual: @"mark_for_review"]
-        ) {
+        if ([menuItem.identifier isEqual: @"mark_for_review"]) {
             [self toggleIsTranslatedState: [self itemAtRow: [self clickedRow]]]; /// All our menuItems are for toggling and `validateMenuItem:` makes it so we can only toggle [Oct 2025]
         }
         
@@ -369,42 +365,36 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         
         /// Handle review-items
         
-        if (
-            [menuItem.identifier isEqual: @"mark_as_translated"] ||
-            [menuItem.identifier isEqual: @"mark_for_review"]
-        ) {
+        if ([menuItem.identifier isEqual: @"mark_for_review"]) {
             
-            if (rowModel_isPluralParent(transUnit))                                return NO;
-        
-            if (
-                [[self stateOfRowModel: transUnit] isEqual: kMFTransUnitState_Translated] &&
-                [menuItem.identifier isEqual: @"mark_as_translated"]
-            ) {
-                return NO;
+            if ([[self stateOfRowModel: transUnit] isEqual: kMFTransUnitState_Translated]) {
+                menuItem.title = kMFStr_MarkForReview;
+                menuItem.image = [NSImage imageWithSystemSymbolName: kMFStr_MarkForReview_Symbol accessibilityDescription:kMFStr_MarkForReview];
             }
-            if (
-                ![[self stateOfRowModel: transUnit] isEqual: kMFTransUnitState_Translated] && /// `tableMenuItemClicked:` expects us to only allow toggling (only one of the two items may be active) [Oct 2025]. (This may be stupid)
-                [menuItem.identifier isEqual: @"mark_for_review"]
-            ) {
-                return NO;
+            else {
+                menuItem.title = kMFStr_MarkAsTranslated;
+                menuItem.image = [NSImage imageWithSystemSymbolName: kMFStr_MarkAsTranslated_Symbol accessibilityDescription: kMFStr_MarkAsTranslated];
             }
+            
+            if (rowModel_isPluralParent(transUnit)) return NO;
+            else                                    return YES;
         }
         /// Handle reveal-items
-        {
-            if ([menuItem.identifier isEqual: @"reveal_in_file"]) {
-            
-                if ([getdoc(self)->ctrl->out_sourceList allTransUnitsShown]) {
-                    menuItem.title = kMFStr_RevealInFile(getdoc(self), transUnit);
-                    menuItem.image = [NSImage imageWithSystemSymbolName: kMFStr_RevealInFile_Symbol accessibilityDescription: kMFStr_RevealInFile(getdoc(self), transUnit)];
-                }
-                else {
-                    menuItem.title = kMFStr_RevealInAll;
-                    menuItem.image = [NSImage imageWithSystemSymbolName: kMFStr_RevealInAll_Symbol accessibilityDescription: kMFStr_RevealInAll];
-                }
+        if ([menuItem.identifier isEqual: @"reveal_in_file"]) {
+        
+            if ([getdoc(self)->ctrl->out_sourceList allTransUnitsShown]) {
+                menuItem.title = kMFStr_RevealInFile(getdoc(self), transUnit);
+                menuItem.image = [NSImage imageWithSystemSymbolName: kMFStr_RevealInFile_Symbol accessibilityDescription: kMFStr_RevealInFile(getdoc(self), transUnit)];
             }
+            else {
+                menuItem.title = kMFStr_RevealInAll;
+                menuItem.image = [NSImage imageWithSystemSymbolName: kMFStr_RevealInAll_Symbol accessibilityDescription: kMFStr_RevealInAll];
+            }
+            
+            return YES;
         }
         
-        return YES;
+        return [super validateMenuItem: menuItem];
     }
     
     #pragma mark - Mouse Control
