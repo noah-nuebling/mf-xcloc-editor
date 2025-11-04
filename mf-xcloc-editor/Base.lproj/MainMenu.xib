@@ -95,7 +95,7 @@
                 </menuItem>
                 <menuItem title="Edit" id="5QF-Oa-p0T">
                     <modifierMask key="keyEquivalentModifierMask"/>
-                    <menu key="submenu" title="Edit" id="W48-6f-4Dl">
+                    <menu key="submenu" title="Edit" identifier="mark_for_review" id="W48-6f-4Dl">
                         <items>
                             <menuItem title="Undo" keyEquivalent="z" id="dRJ-4n-Yzg">
                                 <connections>
@@ -108,9 +108,14 @@
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="WRV-NI-Exz"/>
-                            <menuItem title="Mark as Translated" image="checkmark.circle" catalog="system" keyEquivalent="r" id="HHf-Ss-wZo">
+                            <menuItem title="Mark as Translated" image="checkmark.circle" catalog="system" keyEquivalent="r" identifier="mark_as_translated" id="HHf-Ss-wZo">
                                 <connections>
                                     <action selector="markAsTranslatedMenuItemSelected:" target="Voe-Tx-rLC" id="9ve-Ep-4jE"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Mark for Review" image="checkmark.circle" catalog="system" keyEquivalent="r" identifier="mark_for_review" id="Atd-mJ-VFj">
+                                <connections>
+                                    <action selector="markAsTranslatedMenuItemSelected:" target="Voe-Tx-rLC" id="8Su-yx-C7B"/>
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="2Sx-TC-Ld5"/>

@@ -161,25 +161,33 @@
                 ret(NO);
             }
             
+            if ([menuItem.identifier isEqual: @"mark_for_review"]) {
+        
+                menuItem.title = kMFStr_MarkForReview;
+                menuItem.image = [NSImage imageWithSystemSymbolName: kMFStr_MarkForReview_Symbol accessibilityDescription: nil];
+            }
+            else {
+                menuItem.title = kMFStr_MarkAsTranslated;
+                menuItem.image = [NSImage imageWithSystemSymbolName: kMFStr_MarkAsTranslated_Symbol accessibilityDescription: nil];
+            }
+            
             NSXMLElement *selectedTransUnit = [tableView selectedItem];
             if (
                 selectedTransUnit == nil ||
                 rowModel_isPluralParent(selectedTransUnit) /// Pluralizable string is selected
             ) {
-                menuItem.title = kMFStr_MarkAsTranslated; /// Setting the image/title here as well so they are not 'unitialized' raw values from the IB. [Oct 2025]
-                menuItem.image = [NSImage imageWithSystemSymbolName: kMFStr_MarkAsTranslated_Symbol accessibilityDescription: nil];
-                ret(NO);
+                ret (NO);
             }
-            else if ([tableView rowIsTranslated: selectedTransUnit]) {
-                menuItem.title = kMFStr_MarkForReview;
-                menuItem.image = [NSImage imageWithSystemSymbolName: kMFStr_MarkForReview_Symbol accessibilityDescription: nil];
-                ret(YES);
+            else if ([tableView rowIsTranslated: selectedTransUnit] && [menuItem.identifier isEqual: @"mark_for_review"]) {
+                ret (YES);
+            }
+            else if (![tableView rowIsTranslated: selectedTransUnit] && [menuItem.identifier isEqual: @"mark_as_translated"]) {
+                ret (YES);
             }
             else {
-                menuItem.title = kMFStr_MarkAsTranslated;
-                menuItem.image = [NSImage imageWithSystemSymbolName: kMFStr_MarkAsTranslated_Symbol accessibilityDescription: nil];
-                ret(YES);
+                ret (NO);
             }
+            
         }
         else
             ret([super validateMenuItem: menuItem]);
