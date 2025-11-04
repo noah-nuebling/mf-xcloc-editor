@@ -153,7 +153,7 @@
             
             /// TODO: Make default width on small laptop screen better
             
-            /// TODO: Fix Command-J while editing selection
+            /// TODO: Fix Command-J while editing selection (DONE)
             /// TODO: Disable type-to-search on the TableView (DONE)
             /// TODO: Look into why all the blank lines actually contain a single space.
             

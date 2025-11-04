@@ -622,6 +622,14 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         
         mflog(@"onlySorting %d", onlyUpdateSorting);
         
+        /// Stop editing before the reload
+        ///     We do this so that `MFTextField_ResignFirstResponder` is called which saves the edits that the user made, otherwise they are lost. [Nov 2025]
+        ///     This happens when you edit a row and then hit Command-J (`Show in 'All Project Files'`) or click a column header to change the sorting [Nov 2025]
+        if (isclass([[self window] firstResponder], NSTextView)) {
+            [[self window] makeFirstResponder: self];
+        
+        }
+        
         /// Save the currently selected item and its position on-screen.
         auto previouslySelectedItem = [self selectedItem];
         CGFloat previousMidYViewportOffset = 0.0;
