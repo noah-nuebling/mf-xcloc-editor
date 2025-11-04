@@ -1321,6 +1321,12 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
 
     #pragma mark - NSOutlineViewDelegate
     
+    - (BOOL)outlineView:(NSOutlineView *)outlineView shouldTypeSelectForEvent:(NSEvent *)event withCurrentSearchString:(NSString *)searchString {
+    
+        return NO; /// Turn off type-to-select. Not useful here I think and sometimes trigger it accidentally [Nov 2025]
+    
+    }
+
     #if 1
         /// Returning 50 here makes `viewForTableColumn:` be called much less after switching files, which makes the sidebar more responsive. Not sure why it causes `viewForTableColumn:` to be called so much less. We are using `self.usesAutomaticRowHeights = YES` [Nov 2025, macOS 26 Tahoe]
         /// Downside:
@@ -1340,7 +1346,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
             
             
             if ((1)) {
-                return 75 /*100*/; /// Tradeoff: higher -> faster load times, too-high -> 'fights you' when scrolling up (not just jitter), 100 'fights you' 75 is fine. [NOv 2025] 
+                return 75 /*100*/; /// Tradeoff: higher -> faster load times, too-high -> 'fights you' when scrolling up (not just jitter), 100 'fights you' 75 is fine. [NOv 2025]
             }
             #if 0
                 if ((0))

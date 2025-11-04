@@ -154,7 +154,7 @@
             /// TODO: Make default width on small laptop screen better
             
             /// TODO: Fix Command-J while editing selection
-            /// TODO: Disable type-to-search on the TableView
+            /// TODO: Disable type-to-search on the TableView (DONE)
             
         
             /// Abandoned TODOs:

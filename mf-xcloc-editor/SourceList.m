@@ -325,6 +325,7 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
         - (void) keyDown: (NSEvent *)event {
             
             if ( /// Reset filterField if the user hits enter or space
+                (0) && /// Turn off – doing this on `mouseDown:` is enough, too obscure and risk to do accidentally. Also if user is so familiar with app to use keyboard controls, they can just Command-F > Backspace which is the same thing [Nov 2025]
                 getdoc(self)->ctrl->out_filterField.stringValue.length &&
                 (
                     eventIsKey(event, ' ') ||
@@ -466,8 +467,11 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
     }
 
     - (void) outlineViewSelectionDidChange: (NSNotification *)notification {
-        File *file = self->files[self.selectedRow];
-        [getdoc(self)->ctrl->out_tableView reloadWithNewData: file->transUnits];
+        runOnMain(0.0, ^{ /// Defer so our selection drawing can update first, making things feel more responsive [Nov 2025]
+            File *file = self->files[self.selectedRow];
+            [getdoc(self)->ctrl->out_tableView reloadWithNewData: file->transUnits];
+        });
+
     }
     
     - (id)copy {
