@@ -249,11 +249,11 @@
     #if 0
         
         - (void)encodeRestorableStateWithCoder:(NSCoder *)coder backgroundQueue:(NSOperationQueue *)queue {
-            mflog(@"encodeRestorableStateWithCoder:backgroundQueue:");
+            mflog(@"");
             [super encodeRestorableStateWithCoder: coder  backgroundQueue: queue];
         }
         - (void)encodeRestorableStateWithCoder:(NSCoder *)coder {
-            mflog(@"encodeRestorableStateWithCoder:");
+            mflog(@"");
             [super encodeRestorableStateWithCoder: coder];
         }
     
@@ -261,18 +261,18 @@
             /// Observations:
             ///     - This calls `[NSWindow restoreStateWithCoder:]`
             ///     - This is called by: `[NSDocumentController restoreWindowWithIdentifier:state:completionHandler:]` (Override in `XclocDocumentController`)
-            mflog(@"restoreDocumentWindowWithIdentifier:");
+            mflog(@"");
             [super restoreDocumentWindowWithIdentifier: identifier state: state completionHandler: completionHandler];
         }
         - (void)restoreStateWithCoder:(NSCoder *)coder {
             /// Called by `restoreDocumentWindowWithIdentifier:`
-            mflog(@"restoreStateWithCoder:");
+            mflog(@"");
             [super restoreStateWithCoder: coder];
         }
 
         - (void)restoreUserActivityState:(NSUserActivity *)userActivity {
             assert(false); /// Never called
-            mflog(@"active restore");
+            mflog(@"");
             [super restoreUserActivityState: userActivity];
         }
     #endif

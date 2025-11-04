@@ -36,7 +36,7 @@
         
         XclocDocument *result = nil;
         
-        if      (isclass(item, XclocWindowController))   result = [item document];
+        if      (isclass(item, XclocWindowController))  result = [item document];
         else if (isclass(item, NSWindow))               result = [[item windowController] document];
         else if (isclass(item, NSView))                 result = [[[item window] windowController] document];
         else if (isclass(item, NSMenuItem))             result = [[[[item view] window] windowController] document];

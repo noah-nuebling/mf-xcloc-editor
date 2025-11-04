@@ -85,11 +85,11 @@
         ///     Apple's `PackagedDocument` sample project - to test what is the default behavior.
         ///     On  `close windows when quitting an application` option: https://stackoverflow.com/a/12894388)
         
-        mflog(@"restoreWindowWithIdentifier: %@", identifier);
+        mflog(@"%@", identifier);
         _restoringWindows++;
         [super restoreWindowWithIdentifier: identifier state: state completionHandler: ^void (NSWindow * _Nullable window, NSError * _Nullable error) {
             
-            mflog(@"restoreWindowWithIdentifier completion: %@, error: %@", window, error);
+            mflog(@"completion: %@, error: %@", window, error);
             completionHandler(window, error);
             assert(_restoringWindows >= 1);
             _restoringWindows--;
@@ -106,7 +106,7 @@
             ///         ->>> Can turn this off using `applicationShouldOpenUntitledFile:`
             
             
-            mflog(@"openUntitledDocumentAndDisplay:");
+            mflog(@"");
             
             if ((0)) return [super openUntitledDocumentAndDisplay: displayDocument error: outError];
 

@@ -21,9 +21,7 @@
 /// General convenience
 ///
 
-
 #define auto __auto_type                /// `auto` keyword is unused in C, so overriding with CPP-style `__auto_type` should be fine.
-#define mflog(msg...)                   NSLog(@"%20s: %@", __FILE_NAME__, stringf(@"" msg))
 #define isclass(obj,  classname)        ({ [[(obj) class] isSubclassOfClass: [classname class]]; })
 #define isclassd(obj, classname_str)     ({ [[(obj) class] isSubclassOfClass: NSClassFromString(classname_str)]; })
 #define stringf(format, args...)        [NSString stringWithFormat: (format), ## args]
@@ -73,6 +71,8 @@
 
 #define toset(arr...) [NSSet setWithArray: (arr)]
 
+#define charset(str) [NSCharacterSet characterSetWithCharactersInString: (str)]
+
 #define indexset(indexes...) ({ \
     NSInteger _arr[] = { indexes }; \
     indexSetWithIndexArray(_arr, arrcount(_arr)); \
@@ -85,6 +85,36 @@ static NSMutableIndexSet *indexSetWithIndexArray(NSInteger arr[], int len) {
             [set addIndex: arr[i]];
     
     return set;
+}
+
+///
+/// Logging
+///
+
+#define mflog(msg...)  NSLog(@"%@: %@", /*__FILE_NAME__,*/ _shorten__func__(__func__), stringf(@"" msg))
+
+static NSString *_shorten__func__(const char *func) {
+    
+    /// Help make mflogs scannable / filterable
+    /// Example
+    ///     Input:      `-[TableView initWithFrame:andSomeOtherStuff:]_block_invoke_2`
+    ///     Output:    `-TableView.initWithFrame`
+    
+    if (!func || !strlen(func)) return @""; /// Can this happen?
+    
+    if (func[0] == '-' || func[0] == '+') { /// Objc method – shorten
+        
+        auto split = [@(func) componentsSeparatedByString: @" "];
+        assert(split.count == 2);
+        auto pref = [split[0] substringFromIndex: 2];               /// Skip the `-[` or `+[`
+        
+        auto suff = [split[1] componentsSeparatedByCharactersInSet: charset(@":]")][0]; /// Cut off everything after the first selector component
+        return stringf(@"%C%@.%@", func[0], pref, suff);
+        
+    }
+    else { /// C function - use directly
+        return @(func);
+    }
 }
 
 ///
@@ -281,10 +311,9 @@ struct mfanimate_args {
     CAMediaTimingFunction *curve;
     BOOL implicitAnimation;
 };
-#define mfanimate_args(args...) \
-    nowarn_push(-Winitializer-overrides) \
+#define mfanimate_args(args...) nowarn_push(-Winitializer-overrides) \
     (struct mfanimate_args) { .duration = NAN, ## args } \
-    nowarn_pop() \
+nowarn_pop() \
 
 
 static void mfanimate(struct mfanimate_args args, void (^block)(void), void (^completion)(void)) { /// Not sure this is useful.
@@ -296,6 +325,7 @@ static void mfanimate(struct mfanimate_args args, void (^block)(void), void (^co
         if (!isnan(args.duration))  context.duration                = args.duration; /// 0 is actually a valid duration different from the default, so we're using nan as sentinel
         
         block();
+        
     } completionHandler: completion];
 };
 

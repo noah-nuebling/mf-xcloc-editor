@@ -152,7 +152,7 @@ double newlineMarkerWidth = 0.0 /*15.0*/; /// Try to stop newline marker from be
         /// Source: https://stackoverflow.com/a/29681234
         ///     IN the SO solution, newlines aloso get cut-off
     
-        mflog(@"drawGlyphsForGlyphRange: %@ atPoint: %@", NSStringFromRange(range), @(point));
+        mflog(@"%@ atPoint: %@", NSStringFromRange(range), @(point));
 
         if ((1))
         for (NSInteger i = range.location; i < NSMaxRange(range); i++) {

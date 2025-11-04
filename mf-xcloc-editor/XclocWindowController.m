@@ -100,7 +100,7 @@
     
         - (BOOL)makeFirstResponder:(NSResponder *)responder {
         
-            mflog("makeFirstResponder: %@ with self->isRestoringState: %d", responder, self->isRestoringState);
+            mflog("%@ with self->isRestoringState: %d", responder, self->isRestoringState);
             
             if (self->isRestoringState) /// See `restoreStateWithCoder:` [Oct 2025]
                 return NO;
@@ -126,13 +126,13 @@
 
         - (void)encodeRestorableStateWithCoder:(NSCoder *)coder backgroundQueue:(NSOperationQueue *)queue {
         
-            mflog(@"encodeRestorableStateWithCoder:backgroundQueue: %@", coder);
+            mflog(@"%@", coder);
             [super encodeRestorableStateWithCoder: coder backgroundQueue: queue];
         }
         
         - (void)encodeRestorableStateWithCoder:(NSCoder *)coder {
         
-            mflog(@"encodeRestorableStateWithCoder: %@", coder);
+            mflog(@"%@", coder);
             [super encodeRestorableStateWithCoder: coder];
         }
 
@@ -155,6 +155,7 @@
             
             /// TODO: Fix Command-J while editing selection
             /// TODO: Disable type-to-search on the TableView (DONE)
+            /// TODO: Look into why all the blank lines actually contain a single space.
             
         
             /// Abandoned TODOs:

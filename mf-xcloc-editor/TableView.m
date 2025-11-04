@@ -215,7 +215,10 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                         assert(isclass(textField, MFTextField));
                     }
                     
-                    if (![self selectedItem]) { [self reloadData]; return; } /// This happens when macOS restores the user interface after a crash while a row was being edited. [reloadData] to make sure the user is editing up-to-date data. Update: [Nov 2025] This might not apply anymore after fixing bug where XclocWindow wasn't released after being closed.
+                    if (![self selectedItem]) { /// This happens when macOS restores the user interface after a crash while a row was being edited. [reloadData] to make sure the user is editing up-to-date data. Update: [Nov 2025] This might not apply anymore after fixing bug where XclocWindow wasn't released after being closed.
+                        [self reloadData];
+                        return;
+                    }
                     
                     if (![self->_lastTargetCellString isEqual: textField.stringValue]) /// `_lastTargetCellString` is never set [Nov 2025]
                         [self                                               /// We also save if the user cancels editing by pressing escape – but they can always Command-Z to undo. [Oct 2025]
@@ -617,6 +620,8 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         
         /// Fully update the table in a way that requires calling `reloadData`, but try to preserve the selection.
         
+        mflog(@"onlySorting %d", onlyUpdateSorting);
+        
         /// Save the currently selected item and its position on-screen.
         auto previouslySelectedItem = [self selectedItem];
         CGFloat previousMidYViewportOffset = 0.0;
@@ -772,6 +777,8 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
             
             NSInteger newIndex = [self rowForItem: previouslySelectedItem];
             
+            mflog(@"restoring selection of item: %@ | newIndex: %ld ...", previouslySelectedItem, newIndex);
+            
             if (newIndex != -1) {
                 
                 /// Select
@@ -783,8 +790,10 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                 /// Restore position
                 ///     This is unreliable due to row-height being lazily computed and the table height changing as new rows get on-screen. As workaround, we use recursive `__restorePosition` function that tries a few times.
                 ///         Currently not overriding `noteHeightOfRowsWithIndexesChanged:` and using `self.usesAutomaticRowHeights = YES` [Nov 2025]
-                ///     Very old notes: Update: After switching from NSTableView to NSOutlineView, it seems to fail almost always. ... using NSTimer helps [Oct 2025]
+                ///     Very old notes: Update: After switching from NSTableView to NSOutlineView, it seems to fail almost always [Oct 2025]
                 __restorePosition(0, self, previousMidYViewportOffset, newIndex, ^{
+                    mflog(@"restored selection of item: %@ | newIndex: %ld", previouslySelectedItem, newIndex);
+                    //[self selectRowIndexes: indexset(newIndex) byExtendingSelection: NO]; /// Select again | Necessary when hitting Command-J while editing [Nov 2025] ... but thats also buggy in other ways we gota fix
                     restoreAlpha();
                 });
             }
@@ -811,13 +820,10 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         }
         [self scrollPoint: (CGPoint) { .y = NSMidY([self rectOfRow: newIndex]) - previousMidYViewportOffset }]; /// `scrollPoint:` moves bounds of the enclosing clipView
         runOnMain(0.0, ^{
-            if (
-                fabs(
-                    [self visibleRect].origin.y -
-                    (NSMidY([self rectOfRow: newIndex]) - previousMidYViewportOffset)
-                )
-                < 5
-            ) {
+            if (5 > fabs(
+                [self visibleRect].origin.y -
+                (NSMidY([self rectOfRow: newIndex]) - previousMidYViewportOffset)
+            )) {
                 completionCallback();
                 return;
             }
