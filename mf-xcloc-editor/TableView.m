@@ -767,6 +767,13 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
             [self reloadData];
         }
         
+        /// Helper block
+        auto restoreAlpha = ^{
+            mfanimate(mfanimate_args(.duration = 0.25), ^{
+                self.animator.alphaValue = 1.0;
+            }, nil);
+        };
+        
         /// Restore the previous selection
         if (shouldRestore) {
             
@@ -780,29 +787,57 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                 /// Select
                 [self selectRowIndexes: indexset(newIndex) byExtendingSelection: NO];
                 
+                /// Fade out to hide jank
+                self.alphaValue = 0.0;
+                
                 /// Restore position
-                ///     This is unreliable due to row-height being lazily computed I think.
+                ///     This is unreliable due to row-height being lazily computed and the table height changing as new rows get on-screen. As workaround, we use recursive `__restorePosition` function that tries a few times.
                 ///         Currently not overriding `noteHeightOfRowsWithIndexesChanged:` and using `self.usesAutomaticRowHeights = YES` [Nov 2025]
                 ///     Very old notes: Update: After switching from NSTableView to NSOutlineView, it seems to fail almost always. ... using NSTimer helps [Oct 2025]
-                {
-                    /// Initial restore pos
-                    [self scrollPoint: (CGPoint) { .y = NSMidY([self rectOfRow: newIndex]) - previousMidYViewportOffset }]; /// `scrollPoint:` moves bounds of the enclosing clipView
-                    
-                    runOnMain(0.0, ^{ /// Delay helps with reliability & jank [Oct 2025]
-                        mfanimate(mfanimate_args(.implicitAnimation = YES), ^{ /// At this point the UI has already displayed, so we need to animate to avoid flashing.
-                            [self scrollPoint: (CGPoint) { .y = NSMidY([self rectOfRow: newIndex]) - previousMidYViewportOffset }];
-                        }, ^{
-                            mfanimate(mfanimate_args(.implicitAnimation = YES), ^{ /// One more for reliability (Observed to be necessary for `15: tips` [Nov 2025])
-                                [self scrollRowToVisible: newIndex]; /// Only using scrollRowToVisibile: (not scrollPoint:) – Avoids "double-animation" in the common case, while guaranteeing that the row is at least on-screen.
-                            }, nil);
-                        });
-                    });
-                }
+                __restorePosition(0, self, previousMidYViewportOffset, newIndex, ^{
+                    restoreAlpha();
+                });
+            }
+            else {
+                [self scrollToBeginningOfDocument: nil]; /// Is this really good? Not native macOS behavior
+                restoreAlpha(); /// This this is necessary here I think, not sure why [Nov 2025]
             }
         }
+        else {
+            [self scrollToBeginningOfDocument: nil]; /// Is this really good? Not native macOS behavior
+            restoreAlpha(); /// This this is necessary here I think, not sure why [Nov 2025]
+        }
     }
+    
+    static void __restorePosition (int iteration, TableView *self, CGFloat previousMidYViewportOffset, NSInteger newIndex, void (^completionCallback)(void)) {
+        
+        /// Helper for `bigUpdateAndStuff_OnlyUpdateSorting`.
+        ///     Define here since recursive blocks are annoying and clang doesn't support local functions. [Nov 2025]
+        ///         Also see how to do recursive blocks: http://blog.hyperjeff.net/code?id=335
+    
+        if (iteration > 5) {
+            completionCallback();
+            return;
+        }
+        [self scrollPoint: (CGPoint) { .y = NSMidY([self rectOfRow: newIndex]) - previousMidYViewportOffset }]; /// `scrollPoint:` moves bounds of the enclosing clipView
+        runOnMain(0.0, ^{
+            if (
+                fabs(
+                    [self visibleRect].origin.y -
+                    (NSMidY([self rectOfRow: newIndex]) - previousMidYViewportOffset)
+                )
+                < 5
+            ) {
+                completionCallback();
+                return;
+            }
+           __restorePosition(iteration+1, self, previousMidYViewportOffset, newIndex, completionCallback);
+        });
+    };
 
     - (void) reloadWithNewData: (NSArray <NSXMLElement *> *)transUnits {
+        
+        /// Called by SourceList, when switching files
         
         self->transUnits = transUnits;
         [self bigUpdateAndStuff_OnlyUpdateSorting: NO];
@@ -877,6 +912,8 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         
         /// Update progress UI
         [getdoc(self)->ctrl->out_sourceList progressHasChanged]; /// Update the progress percentage indicators
+        
+        /*runOnMain(0.0, ^{*/ /// Breaks enter to start editing next line [Nov 2025]| (Forgot why I wanted to do this in the first place)
         
         /// Show edited row to user
         [self _revealTransUnit: transUnit columns: @[@"state"]];
@@ -1294,7 +1331,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
 
     #pragma mark - NSOutlineViewDelegate
     
-    #if 0
+    #if 1
         /// Returning 50 here makes `viewForTableColumn:` be called much less after switching files, which makes the sidebar more responsive. Not sure why it causes `viewForTableColumn:` to be called so much less. We are using `self.usesAutomaticRowHeights = YES` [Nov 2025, macOS 26 Tahoe]
         /// Downside:
         ///   Scrolling *up* into unloaded rows is jittery when you do this.
@@ -1313,44 +1350,46 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
             
             
             if ((1)) {
-                return 100;
+                return 75 /*100*/; /// Tradeoff: higher -> faster load times, too-high -> 'fights you' when scrolling up (not just jitter), 100 'fights you' 75 is fine. [NOv 2025] 
             }
-            if ((0))
-            {
-            __invocation_rowheight++;
-            
-            static NSMutableDictionary *storage = nil;
-            if (!storage) {
-                storage = [NSMutableDictionary new];
+            #if 0
+                if ((0))
                 {
-                    storage[@"id"]      = [self makeViewWithIdentifier: @"theReusableCell_TableID" owner: self];
-                    storage[@"source"]  = [self makeViewWithIdentifier: @"theReusableCell_Table" owner: self];
-                    storage[@"target"]  = [self makeViewWithIdentifier: @"theReusableCell_TableTarget" owner: self];
-                    storage[@"note"]    = [self makeViewWithIdentifier: @"theReusableCell_Table" owner: self];
-                }
-                /// We ignore the `@"state"` column, since that should never affect the height of the row [Nov 2025]
-            }
-            
-            CGFloat rowHeight = 0;
-            
-            auto colids = @[@"id", @"source", @"target", @"note"];
-            for (NSString *colid in colids) {
-            
-                NSTableCellView *cellView = _getCellView(self, [self tableColumnWithIdentifier: colid], item, storage[colid]);
+                __invocation_rowheight++;
                 
-                { /// Not sure if necessary
-                    [cellView setNeedsLayout: YES];
-                    [cellView layoutSubtreeIfNeeded];
+                static NSMutableDictionary *storage = nil;
+                if (!storage) {
+                    storage = [NSMutableDictionary new];
+                    {
+                        storage[@"id"]      = [self makeViewWithIdentifier: @"theReusableCell_TableID" owner: self];
+                        storage[@"source"]  = [self makeViewWithIdentifier: @"theReusableCell_Table" owner: self];
+                        storage[@"target"]  = [self makeViewWithIdentifier: @"theReusableCell_TableTarget" owner: self];
+                        storage[@"note"]    = [self makeViewWithIdentifier: @"theReusableCell_Table" owner: self];
+                    }
+                    /// We ignore the `@"state"` column, since that should never affect the height of the row [Nov 2025]
                 }
                 
-                rowHeight = MAX(rowHeight, cellView.frame.size.height);
+                CGFloat rowHeight = 0;
                 
-            }
-            
-            mflog(@"Calculated rowHeight: %f (row: %ld) (%d)", rowHeight, [self rowForItem: item], __invocation_rowheight);
-            
-            return rowHeight;
-            }
+                auto colids = @[@"id", @"source", @"target", @"note"];
+                for (NSString *colid in colids) {
+                
+                    NSTableCellView *cellView = _getCellView(self, [self tableColumnWithIdentifier: colid], item, storage[colid]);
+                    
+                    { /// Not sure if necessary
+                        [cellView setNeedsLayout: YES];
+                        [cellView layoutSubtreeIfNeeded];
+                    }
+                    
+                    rowHeight = MAX(rowHeight, cellView.frame.size.height);
+                    
+                }
+                
+                mflog(@"Calculated rowHeight: %f (row: %ld) (%d)", rowHeight, [self rowForItem: item], __invocation_rowheight);
+                
+                return rowHeight;
+                }
+            #endif
         }
         
     #endif
