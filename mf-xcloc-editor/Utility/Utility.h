@@ -7,16 +7,27 @@
 
 #import <AppKit/AppKit.h>
 
+/// Most of these macros are copies / reimplementations from ` mac-mouse-fix` [Nov 2025]
+///     Look there for documentation.
+
+///
+/// Helper macros
+///
+
+#define TOSTR(x)    #x                      /// `#` operator but delayed – Sometimes necessary when order-of-operations matters
+#define TOSTR_(x)   TOSTR(x)                /// `#` operator but delayed even more
+
 ///
 /// General convenience
 ///
+
 
 #define auto __auto_type                /// `auto` keyword is unused in C, so overriding with CPP-style `__auto_type` should be fine.
 #define mflog(msg...)                   NSLog(@"%20s: %@", __FILE_NAME__, stringf(@"" msg))
 #define isclass(obj,  classname)        ({ [[(obj) class] isSubclassOfClass: [classname class]]; })
 #define isclassd(obj, classname_str)     ({ [[(obj) class] isSubclassOfClass: NSClassFromString(classname_str)]; })
 #define stringf(format, args...)        [NSString stringWithFormat: (format), ## args]
-#define attributed(str) [[NSMutableAttributedString alloc] initWithString: (str)]
+#define attributed(str)                 [[NSMutableAttributedString alloc] initWithString: (str)]
 
 #define arrcount(x...) (sizeof ((x)) / sizeof (x)[0])
         
@@ -25,8 +36,15 @@
 #define mferror(domain, code_, msg_and_args...) \
     [NSError errorWithDomain: (domain) code: (code_) userInfo: @{ NSDebugDescriptionErrorKey: stringf(msg_and_args) }] /** Should we use `NSLocalizedFailureReasonErrorKey`? [Oct 2025] */
 
-#define mfonce dispatch_once
+#define mfonce dispatch_once /** I'm just using `static x; if (!x) ...;` Instead of this since we only do main thread in mf-xcloc editor. [Nov 2025] */
 #define mfoncet ({ static dispatch_once_t onceToken; &onceToken; })
+
+#define nowarn_push(w)                                                      \
+    _Pragma("clang diagnostic push")                                        \
+    _Pragma(TOSTR(clang diagnostic ignored #w))                             \
+
+#define nowarn_pop()                                                        \
+    _Pragma("clang diagnostic pop")
 
 #define safeidx(arr, count, idx, fallback) ({                   \
     auto _arr = (arr);                                          \
@@ -59,6 +77,7 @@
     NSInteger _arr[] = { indexes }; \
     indexSetWithIndexArray(_arr, arrcount(_arr)); \
 })
+
 static NSMutableIndexSet *indexSetWithIndexArray(NSInteger arr[], int len) {
     auto set = [NSMutableIndexSet new];
     for (int i = 0; i < len; i++)
@@ -262,7 +281,10 @@ struct mfanimate_args {
     CAMediaTimingFunction *curve;
     BOOL implicitAnimation;
 };
-#define mfanimate_args(args...) (struct mfanimate_args) { .duration = NAN, ## args }
+#define mfanimate_args(args...) \
+    nowarn_push(-Winitializer-overrides) \
+    (struct mfanimate_args) { .duration = NAN, ## args } \
+    nowarn_pop() \
 
 
 static void mfanimate(struct mfanimate_args args, void (^block)(void), void (^completion)(void)) { /// Not sure this is useful.

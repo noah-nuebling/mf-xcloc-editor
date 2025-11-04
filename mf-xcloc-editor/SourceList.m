@@ -213,7 +213,7 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
         
         /// TODO:
         ///     Maybe just look at the parent node (for performance – if that matters)
-        ///         `<file original="App/UI/Main/Base.lproj/Main.storyboard"> <body> <trans-unit> ....`)
+        ///         Structure: `<file original="App/UI/Main/Base.lproj/Main.storyboard"> <body> <trans-unit> ....`)
         
         for (int i = 0; i < files.count; i++) {
             if (i == 0) continue; /// Skip the allTransUnits item  [Oct 2025]

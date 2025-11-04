@@ -44,13 +44,14 @@
     - (void) writeTranslationDataToFile {
         /// Our code calls this whenever an edit is made
         if (!useNativeSaving) {
+        
             static int savesThisRunLoop = 0;
             runOnMain(0.0, ^{
                 savesThisRunLoop = 0;
             });
         
             mfdebounce(0.0, @"writeTranslationDataToFile", ^{
-                /// HACK: Only do this once per runLoop to prevent strange freezing bug. It seems when you save twice in one runLoop, without saving before, then some internal API in NSDocument infinitely waits on some semaphore or something. After you've successfully save, this isn't necessary anymore. I guess the API gets initialized or something. This currently happens when editing a translation and then hitting Command-R. Observed on macOS 26 Tahoe [Nov 2025]
+                /// HACK: Only do this once per runLoop to prevent strange freezing bug. It seems when you save twice in one runLoop, then some internal API in NSDocument infinitely waits on some semaphore or something. After you've successfully saved once, this isn't necessary anymore. I guess the API gets initialized or something. This currently happens when editing a translation and then hitting Command-R. Observed on macOS 26 Tahoe [Nov 2025]
                 /// Update: TODO: oh no, just saw the freeze again, after using the program for a while (and saving a few times) `[_NSDocumentSerializationSemaphore wait]` hangs forever ... I can't reproduce it though.
                 /// Old TODO notes about the original Command-R bug:
                 ///     Fix freeze when changing text and then hitting Command-R
