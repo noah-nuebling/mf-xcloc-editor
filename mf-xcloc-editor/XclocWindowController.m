@@ -151,13 +151,14 @@
         assert(!self.window);
         {
             
-            /// TODO: Make default width on small laptop screen better
+            /// TODO: Make default width on small laptop screen better (DONE)
+            ///     It's actually fine
             
             /// TODO: Fix Command-J while editing selection (DONE)
             /// TODO: Disable type-to-search on the TableView (DONE)
             /// TODO: Look into why all the blank lines actually contain a single space. (DONE)
-            ///         -> It's not all of them. They're defined like that in our .xcstrings file, should maybe fix that (or omit the `newlineMarkers` for those cases)
-            
+            ///         -> It's not all of them. They're defined like that in our .xcstrings file, should maybe fix that (or omit the `newlineMarkers` for those cases - UPDATE: Did that)
+ 
         
             /// Abandoned TODOs:
             
@@ -295,7 +296,7 @@
         
         /// Set window size/position
         { /// Default size/position
-            [window setContentSize: NSMakeSize(1440 - 100, 900 - 100)];
+            [window setContentSize: NSMakeSize(1440 - 100, 900 - 100)]; /// When using 1280x800 macOS scales it down automatically [Nov 2025]
             [window center];
         }
         if ((0)) /// This is unnecessary now since it's handled automatically by `restoreWindowWithIdentifier:`? [Oct 2025]
