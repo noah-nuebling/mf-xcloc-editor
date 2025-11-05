@@ -288,7 +288,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "agvtool bump -all\n";
+			shellScript = "#agvtool bump -all\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $(git rev-list HEAD --count)\" \"$INFOPLIST_FILE\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -449,10 +449,8 @@
 				CODE_SIGN_ENTITLEMENTS = "mf-xcloc-editor/Other/mf_xcloc_editor.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 7;
 				DEVELOPMENT_TEAM = LM5Z78756B;
 				ENABLE_HARDENED_RUNTIME = YES;
-				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "mf-xcloc-editor/Other/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "MMF Xcloc Editor";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -466,7 +464,6 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/mf-xcloc-editor/libxml2-build/lib",
 				);
-				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.nuebling.mf-xcloc-editor";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -486,10 +483,8 @@
 				CODE_SIGN_ENTITLEMENTS = "mf-xcloc-editor/Other/mf_xcloc_editor.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 7;
 				DEVELOPMENT_TEAM = LM5Z78756B;
 				ENABLE_HARDENED_RUNTIME = YES;
-				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "mf-xcloc-editor/Other/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "MMF Xcloc Editor";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -503,7 +498,6 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/mf-xcloc-editor/libxml2-build/lib",
 				);
-				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.nuebling.mf-xcloc-editor";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
