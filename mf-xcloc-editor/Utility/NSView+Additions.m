@@ -16,7 +16,8 @@
         NSView *rec;
         
         for (NSView *v in self.subviews) {
-            if ([[v identifier] isEqual: identifier]) return v;
+            if ([[v identifier] isEqual: identifier])
+                return v;
             if ((rec = [v searchSubviewWithIdentifier: identifier]))
                 return rec;
         }
