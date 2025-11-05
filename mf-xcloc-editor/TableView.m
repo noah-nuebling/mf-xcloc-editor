@@ -1321,6 +1321,8 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                 assert([reusableViewIDs containsObject: @"theReusableCell_Table"]);
                 cell = [self makeViewWithIdentifier: @"theReusableCell_Table" owner: self];
                 
+                [cell.textField setLineBreakStrategy: NSLineBreakStrategyNone]; /// disable `NSLineBreakStrategyPushOut` since the `MFInvisiblesTextView_Overlay` doesn't do that. (maybe we could enable it there but whatever. [Nov 2025])
+                
                 /// Clean up `@"MFInvisiblesTextView_Overlay"`
                 MFInvisiblesTextView *overlay = [cell.textField mf_associatedObjectForKey: @"MFInvisiblesTextView_Overlay"];
                 if ((overlay && !overlay.hidden) || cell.textField.hidden) {
