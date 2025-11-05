@@ -662,7 +662,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         /// Stop editing before the reload
         ///     We do this so that `MFTextField_ResignFirstResponder` is called which saves the edits that the user made, otherwise they are lost. [Nov 2025]
         ///     This happens when you edit a row and then hit Command-J (`Show in 'All Project Files'`) or click a column header to change the sorting [Nov 2025]
-        if (isclass([[self window] firstResponder], NSTextView)) {
+        if (isclass([[self window] firstResponder], MFInvisiblesTextView)) { /// Use `MFInvisiblesTextView` instead of `NSTextView` cause the filter field also uses an NSTextView under macOS Sequoia.
             [[self window] makeFirstResponder: self];
         
         }
@@ -1203,7 +1203,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
             
         /// Measure how many times this is invoked.
         ///     `makeViewWithIdentifier:` is the biggest bottleneck to responsive switching between sidebar items. [Nov 2025]
-        mflog(@"viewForTableColumn: (%d)", __invocations++);
+        if ((0)) mflog(@"viewForTableColumn: (%d)", __invocations++);
             
         NSString *uiString = rowModel_getUIString(self, item, tableColumn.identifier);
         
@@ -1440,7 +1440,12 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
     #endif
 
     - (void) outlineViewSelectionDidChange: (NSNotification *)notification {
-        [QLPreviewPanel.sharedPreviewPanel reloadData];
+        if ( /// Works without this if-statement but shows "this will raise soon" warning (macOS Sequoia)
+            [QLPreviewPanel sharedPreviewPanelExists] &&
+            [[QLPreviewPanel sharedPreviewPanel] isVisible]
+        ) {
+            [QLPreviewPanel.sharedPreviewPanel reloadData];
+        }
     }
     
     - (NSTableRowView *)outlineView:(NSOutlineView *)outlineView rowViewForItem:(id)item {
