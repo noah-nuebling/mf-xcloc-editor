@@ -1,6 +1,6 @@
 //
 //  NSView+Additions.h
-//  MMF Xcloc Editor
+//  Xcloc Editor
 //
 //  Created by Noah Nübling on 11/2/25.
 //

@@ -1,6 +1,6 @@
 //
 //  NSNotificationCenter+Additions.m
-//  MMF Xcloc Editor
+//  Xcloc Editor
 //
 //  Created by Noah Nübling on 11/1/25.
 //

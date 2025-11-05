@@ -1,6 +1,6 @@
 //
 //  NSObject+Thing.m
-//  MMF Xcloc Editor
+//  Xcloc Editor
 //
 //  Created by Noah Nübling on 10/25/25.
 //

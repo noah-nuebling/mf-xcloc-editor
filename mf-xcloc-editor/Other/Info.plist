@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>MMF Xcloc Editor</string>
+	<string>Xcloc Editor</string>
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>

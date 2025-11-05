@@ -1,6 +1,6 @@
 //
 //  XclocDocumentController.h
-//  MMF Xcloc Editor
+//  Xcloc Editor
 //
 //  Created by Noah Nübling on 10/27/25.
 //
