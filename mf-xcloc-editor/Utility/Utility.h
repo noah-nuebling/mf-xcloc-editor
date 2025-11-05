@@ -75,6 +75,7 @@
     _result;                                                \
 })
 
+#define tourl(pathstr) [NSURL fileURLWithPath: (pathstr)]
 #define toset(arr...) [NSSet setWithArray: (arr)]
 
 #define charset(str) [NSCharacterSet characterSetWithCharactersInString: (str)]

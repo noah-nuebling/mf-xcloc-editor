@@ -14,7 +14,8 @@
     static int _restoringWindows = 0;
     
     #if 1
-        - (void)openDocument:(id)sender {
+    
+        - (void) openDocument: (id)sender {
             
             /// Invoked by Command-O but we're also redirecting `applicationOpenUntitledFile:` to this [Oct 2025]
             
@@ -42,9 +43,28 @@
             openPanel.allowsMultipleSelection = NO;
             [openPanel setRequiredFileType: @"com.apple.xcode.xcloc"];
             {
+            
+                auto untranslocatedBundlePath = ^NSString *(void) { /// Search next to the real app bundle, even if we're translocated [Nov 2025]. Also see `mac-mouse-fix > AppTranslocationManager.m`
+                    
+                    NSURL *current_url = tourl([NSBundle.mainBundle bundlePath]);
+
+                    CFErrorRef err = NULL;
+                    extern CFURLRef SecTranslocateCreateOriginalPathForURL(CFURLRef translocatedPath, CFErrorRef *error);
+                    NSURL *untranslocated_url = CFBridgingRelease(SecTranslocateCreateOriginalPathForURL((__bridge void *)current_url, &err));
+                    if (
+                        err ||
+                        ![untranslocated_url path].length /// Probably totally unnecessary
+                    ) {
+                        mflog("Error finding untranslocated URL for bundle URL (%@): %@", current_url, err);
+                        return [current_url path];
+                    }
+                    mflog("Found untranslocated URL for bundle URL %@ -> %@", current_url, untranslocated_url);
+                    return [untranslocated_url path];
+                };
+            
                 /// The NSOpenPanel.directory defaults to the dir that the user last opened if they navigated somewhere in the open-panel – perhaps we should preserve the selection if the NSOpenPanel.directory contains .xcloc files [Oct 2025]
                 ///     (But this is not necessary for MMF, since we know we'll ship the .xcloc files next to this app bundle.) [Oct 2025]
-                auto _searchResults = findPaths(100, [[NSBundle.mainBundle bundlePath] stringByDeletingLastPathComponent], ^BOOL (NSString *p) {
+                auto _searchResults = findPaths(100, [untranslocatedBundlePath() stringByDeletingLastPathComponent], ^BOOL (NSString *p) {
                     return [p hasSuffix: @".xcloc"];
                 });
                 if (_searchResults.count)
