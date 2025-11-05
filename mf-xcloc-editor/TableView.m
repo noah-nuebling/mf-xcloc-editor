@@ -24,6 +24,7 @@
 
 static int __invocations = 0; /// Performance testing
 static int __invocation_rowheight = 0;
+static CGFloat _defaultRowHeight = 75 /*100*/; /// We return this in `heightOfRowByItem:`  || Tradeoff: higher -> faster load times, too-high -> 'fights you' when scrolling up (not just jitter), 100 'fights you' 75 is fine. [NOv 2025]
 
 #pragma mark - MFQLPreviewItem
 
@@ -76,6 +77,42 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         if (self.isSelected) return;
         if (self.nextRowSelected) return;
         [super drawSeparatorInRect: dirtyRect];
+    }
+    
+    - (void) setFrame: (NSRect)frame {
+        
+        
+        /// HACK to fix jitter when scroling up.
+        /// Purpose:
+        ///     adjust scrollPosition when system loads 'real' height of a row to prevent shifting of the rows below which is perceived as jitter.
+        /// Context:
+        ///     See `heightOfRowByItem:` and `_defaultRowHeight`
+        /// Observations: [Nov 2025, macOS Tahoe]
+        ///     I observed that the table already adjusts the scroll position when it initially loads and the view. It seems to use the `_defaultRowHeight` value we give to it often but sometimes
+        ///     it uses different values, perhaps trying to predict based on previously loaded views or something like that. It then however calls setFrame: again with the final, actual size of the view, but it *doesn't* adjust the scroll position for that second resizing.
+        ///     Once the final actual size of the row has been determined once, it always immediately uses that size when the view comes into the viewport again. reloadData: seems to reset everything.
+        ///     -> This code tries to catch the 'second resizing' case and adjust the scroll-position.
+        /// Caveats:
+        ///     - This is a workaround for what seems to be a bug in NSTableView, which is possibly triggered by our override of `heightByRowItem:` to return a constant `_defaultRowHeight` which makes loading dramatically faster for some reason (probably also due to bugs / suboptimal code in the framework)
+        ///         -> On macOS versions where these bugs aren't present, these workarounds could cause issues. But on macOS 26 Tahoe, they seem to work very well.
+        ///     - There are still sometimes small scroll-position jumps with this [Nov 2025] but it's much better than without, and am too lazy to investigate further.
+
+        if (
+            self.frame.size.height == _defaultRowHeight && frame.size.height != _defaultRowHeight &&
+            NSEqualRects(NSRectFromRect(self.frame, .height = 0), NSRectFromRect(frame, .height = 0)) /// Not sure this check is necessary, but matches what I've observed [Nov 2025]
+        ) {
+        
+            auto clipView = [[self enclosingScrollView] contentView];
+            
+            if (clipView.bounds.origin.y > self.frame.origin.y) { /// Row loaded at the top of the viewport (scrolling up)
+                auto boundsOrigin = [clipView bounds].origin;
+                boundsOrigin.y += frame.size.height - _defaultRowHeight;
+                [clipView setBoundsOrigin: boundsOrigin];
+            }
+            else ; /// Row loaded at the bottom of the viewport (scrolling down)
+        }
+            
+        [super setFrame: frame];
     }
 
 @end
@@ -1354,13 +1391,12 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         ///             -> Just turning this off and letting things be a little slow
         ///     UPDATE:
         ///         Actually the jitter is also really bad if we don't implement this [macOS Tahoe, Nov 2025], so maybe we should just return a constant to at least make it faster to load? ... ah I'll just keep the default behavior and hope Apple improves it in the future.
+        ///     UPDATE 2: Could fix the jitter by overriding `[TableRowView setFrame:]` [Nov 2025]
         
         - (CGFloat) outlineView: (NSOutlineView *)outlineView heightOfRowByItem: (id)item {
             
+            return _defaultRowHeight;
             
-            if ((1)) {
-                return 75 /*100*/; /// Tradeoff: higher -> faster load times, too-high -> 'fights you' when scrolling up (not just jitter), 100 'fights you' 75 is fine. [NOv 2025]
-            }
             #if 0
                 if ((0))
                 {

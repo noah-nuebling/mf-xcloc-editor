@@ -87,6 +87,28 @@ static NSMutableIndexSet *indexSetWithIndexArray(NSInteger arr[], int len) {
     return set;
 }
 
+struct _MFRectOverrides { CGFloat x, y, width, height; };
+static NSRect NSRectFromRect(NSRect base, struct _MFRectOverrides overrides) {
+
+    /// Create an NSRect by taking an existing NSRect and adjusting only specific values.
+
+    #define NSRectFromRect(base, overrides_...) ({ \
+        [[maybe_unused]] CGFloat x = (base).origin.x; /** Make locali vars so the expressions that the caller passes into `overrides_` can easily reference the current values in the `base` NSRect. This is a bit obscure, not sure if good API, usually it's better when the caller passes in a varname [Nov 2025] */\
+        [[maybe_unused]] CGFloat y = (base).origin.y; \
+        [[maybe_unused]] CGFloat width = (base).size.width; \
+        [[maybe_unused]] CGFloat height = (base).size.height; \
+        NSRectFromRect((base), (struct _MFRectOverrides) { nowarn_push(-Winitializer-overrides) \
+            .x=NAN, .y=NAN, .width=NAN, .height=NAN, ##overrides_ \
+        nowarn_pop() }); \
+    })
+    
+    if (!isnan(overrides.x))       base.origin.x    = overrides.x;
+    if (!isnan(overrides.y))       base.origin.y    = overrides.y;
+    if (!isnan(overrides.width))   base.size.width  = overrides.width;
+    if (!isnan(overrides.height))  base.size.height = overrides.height;
+    return base;
+}
+
 ///
 /// Logging
 ///

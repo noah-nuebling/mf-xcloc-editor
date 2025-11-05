@@ -6,7 +6,7 @@
 //
 
 /// Macros for making defining view-hierarchies without IB easier.
-///     We have a version of this in a bunch of repos, in some of them we explained some of the choices more IIRC.
+///     We have a version of this in a bunch of repos, in some of them we explained some of the choices more.
 ///     This is kinda unnecessary since the view hierarchies in mf-xcloc-editor  are very simple and non-repetitve. But it's fun I guess. [Oct 2025]
 
 #import "AppKit/AppKit.h"
