@@ -21,6 +21,7 @@
 #import "MFUI.h"
 #import "NSNotificationCenter+Additions.h"
 #import "NSView+Additions.h"
+#import "Utility/ToString.m"
 
 static int __invocations = 0; /// Performance testing
 static int __invocation_rowheight = 0;
@@ -568,11 +569,10 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                     
                     BOOL kreturn    = commandSelector == @selector(insertNewline:) || commandSelector == @selector(insertNewlineIgnoringFieldEditor:);
                     BOOL koption    = commandSelector == @selector(insertNewlineIgnoringFieldEditor:);
-                    BOOL kshift     = (NSApp.currentEvent.modifierFlags & NSEventModifierFlagShift);
+                    BOOL kshift     = !!(NSApp.currentEvent.modifierFlags & NSEventModifierFlagShift);
                     
-                    if ((0)) {}
-                    else if (kreturn && (koption ^ kshift))               goto newline;
-                    else if (kreturn)                       goto end_editing;
+                    if      (kreturn && (koption ^ kshift))     goto newline;
+                    else if (kreturn)                           goto end_editing;
                     
                     goto end;
                     newline: {

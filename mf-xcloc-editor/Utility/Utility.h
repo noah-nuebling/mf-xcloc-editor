@@ -37,6 +37,12 @@
 #define mfonce dispatch_once /** I'm just using `static x; if (!x) ...;` Instead of this since we only do main thread in mf-xcloc editor. [Nov 2025] */
 #define mfoncet ({ static dispatch_once_t onceToken; &onceToken; })
 
+#define bitpos(mask) (                                                  \
+    (mask) == 0               ? -1 :                                    /** Fail: less than one bit set */\
+    ((mask) & (mask)-1) != 0  ? -1 :                                    /** Fail: more than one bit set (aka not a power of two) */\
+    __builtin_ctz(mask)                                                 /** Sucess! – Count trailling zeros*/ \
+)
+
 #define nowarn_push(w)                                                      \
     _Pragma("clang diagnostic push")                                        \
     _Pragma(TOSTR(clang diagnostic ignored #w))                             \
@@ -44,7 +50,7 @@
 #define nowarn_pop()                                                        \
     _Pragma("clang diagnostic pop")
 
-#define safeidx(arr, count, idx, fallback) ({                   \
+#define safeindex(arr, count, idx, fallback) ({                   \
     auto _arr = (arr);                                          \
     auto _idx = (idx);                                          \
     (0 <= _idx && _idx < (count)) ? _arr[_idx] : (fallback);    /** If index is signed an negative, it would underflow in the `< (count)` comparison , but it would still fail  the `>= 0` comparison. I think our safety precautionns in MMF are overkill. */\
@@ -145,7 +151,7 @@ static NSString *_shorten__func__(const char *func) {
 
 #define xml_childat(xmlNode, idx) ({                            \
     auto _node = (xmlNode);                                     \
-    safeidx(_node.children, _node.children.count, (idx), nil);  \
+    safeindex(_node.children, _node.children.count, (idx), nil);  \
 })
 
 typedef struct { NSXMLNode *fallback; } xml_childnamed_args;
