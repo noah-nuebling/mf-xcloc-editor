@@ -515,8 +515,9 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         - (void) keyDown: (NSEvent *)theEvent {
             
             if (
-                (0) && /// Disable keyboard controls for previewItems, cause it's not that useful and currently produces a bit of weird behavior (I think. Can't remember what [Oct 2025])
-                QLPreviewPanel.sharedPreviewPanel.visible
+                (1) && /// Disable keyboard controls for previewItems, cause it's not that useful and currently produces a bit of weird behavior (I think. Can't remember what [Oct 2025]) || Update: [Nov 2025] Re-enabled. No weird behavior. 
+                [QLPreviewPanel sharedPreviewPanelExists] &&
+                [[QLPreviewPanel sharedPreviewPanel] isVisible]
             ) {
                 if (eventIsKey(theEvent, NSLeftArrowFunctionKey)) /// Flip through different screenshots containing the currently selected string. Could also implement this in `previewPanel:handleEvent:` [Oct 2025]
                     [self _incrementCurrentPreviewItem: -1];
