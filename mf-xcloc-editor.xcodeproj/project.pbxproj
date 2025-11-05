@@ -464,6 +464,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/mf-xcloc-editor/libxml2-build/lib",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 11.5;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.nuebling.mf-xcloc-editor";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -498,6 +499,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/mf-xcloc-editor/libxml2-build/lib",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 11.5;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.nuebling.mf-xcloc-editor";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
