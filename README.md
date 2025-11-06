@@ -41,7 +41,7 @@ These notes are a bit sloppy and stream-of-consciousness, but I hope they are st
 - Strings marked as 'do not translate' are *not* shown to localizers.
     - Xcode sorts these strings above 'needs_review' strings making it harder to find strings that need review.
 - Strings with multiple pluralizable variants are displayed in a simple way.
-    - Caveat: In `Xcloc Editor.app`, pluralizable format specifiers like `%#@pluralizable@` can not be edited and are not shown to localizers. From my understanding it's never necessary to make this editable, at least for my app Mac Mouse Fix, which this editor is primarily designed for. In Mac Mouse Fix, I set the format string of all pluralizable strings to only a single format specifier (like `%#@pluralizable@`) and then have all the actual content in the plural variants. This simplifies things for localizers and has no drawbacks as far as I can tell. If somebody does need this functionality – [open an issue](https://github.com/noah-nuebling/mf-xcloc-editor/issues/new) and I'll consider adding it.
+    - Caveat: In `Xcloc Editor.app`, pluralizable format specifiers like `%#@pluralizable@` can not be edited and are not shown to localizers. From my understanding it's never necessary to make this editable, at least for my app Mac Mouse Fix, which this editor is primarily designed for. In Mac Mouse Fix, I set the format string of all `pluralizable format strings` to only a single format specifier (like `%#@pluralizable@`) and then have all the actual content in the plural variants. This simplifies things for localizers and has no drawbacks as far as I can tell. If somebody does need this functionality – [open an issue](https://github.com/noah-nuebling/mf-xcloc-editor/issues/new) and I'll consider adding it.
 - Pluralizable variants are not hidden by default.
     - In Xcode, users have to go through two levels of '>' disclosure triangles to see pluralizable variants, which they may miss.
 - Only once all the pluralizable variants are marked as 'translated' does the entire string show up as 'translated'
@@ -60,7 +60,7 @@ These notes are a bit sloppy and stream-of-consciousness, but I hope they are st
 
 #### Drawbacks compared to Xcode's xcloc editor
 
-- Can't edit "pluralizable format string"s (but that isn't necessary I think – see above)
+- Can't edit `pluralizable format string`s (but that isn't necessary I think – see above)
 - Format specifiers like "%@" don't get a special color background like they do in Xcode.
     - I don't think this is super helpful in Xcode especially since it also makes it impossible to edit the format specifier once it has the background which is a bit annoying. And for my project MMF, there are Javascript, Python and C format specifiers, which won't all get highlighted consistently by Xcode anyways. So I decided to just leave this feature out. [Open an issue](https://github.com/noah-nuebling/mf-xcloc-editor/issues/new) if you want this feature.
 
