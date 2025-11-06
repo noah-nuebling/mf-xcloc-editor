@@ -82,7 +82,7 @@ These notes are a bit sloppy and stream-of-consciousness, but I hope they are st
 I think that AI translation can be very good if it has the necessary context, but you have to provide that context. AI has less ability to access context compared to a human translator. For example, a translation AI typically wouldn't be able to easily look up how a term is translated in System Settings, or in Apple's documentation, or in other parts of your project. Also it won't be able to see the localization screenshots, or use your UI/website to experience how it functions and is laid out. All these things are easy for human translators using `Xcloc Editor.app`.
 
 If you provide high-quality context to the AI, I think it will be able to match the quality of human translators.
-I've translated the update notes for Mac Mouse Fix using AI, since it's impractical to do fast enough with volunteer translators. The quality is lacking. The most glaring issue is that the AI does not know how terms are translated inside other parts of the project, so will incorrectly refer to specific ui strings.
+I've translated the update notes for Mac Mouse Fix using AI (since it's impractical to do fast enough with volunteer translators). The quality is lacking. The most glaring issue is that the AI does not know how terms are translated inside other parts of the project, so will incorrectly refer to specific ui strings.
 
 I don't know how hard it is in practice to provide good context to the AI.
 
