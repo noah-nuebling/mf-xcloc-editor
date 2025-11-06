@@ -53,7 +53,7 @@ These notes are a bit sloppy and stream-of-consciousness, but I hope they are st
 - Can be controlled and navigated completely via the keyboard.
 - Shift-Return enters a newline, for the ChatGPT users. (But Option-Return is also supported)
 - .xcloc file automatically saves on every edit so users don't have to manually save and no data will be lost.
-- Window and column resizing is less annoying than in Xcode
+- Window and column resizing is better than in Xcode
 - Text-substitutions can be turned off.
     (E.g. smart-quotes, or "omw" -> "on my way". These always auto re-enable in Xcode.)
 - Subtle '↩' marker so that localizers can easily distinguish between '\n' characters in the text vs line wrapping.
