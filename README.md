@@ -102,12 +102,13 @@ These notes are a bit stream-of-consciousness, but I hope they are still useful 
 
 I think that AI translation can be very good if it has the necessary context, but you have to provide that context. AI has less ability to access context compared to a human translator. For example, a translation AI typically wouldn't be able to look up how a term is translated in System Settings, or in Apple's documentation, or in other parts of your project. Also it won't be able to see the localization screenshots, or use your UI/website to experience how it functions and is laid out. All these things are easy for human translators using `Xcloc Editor.app`.
 
-If you provide high-quality context to the AI, I think it will be able to match the quality of human translators. \
-I've translated the update notes for Mac Mouse Fix using AI (since it's impractical to do fast enough with volunteer translators), but there are issues. The most glaring one is that the AI does not know how terms are translated inside other parts of the project, so will incorrectly refer to specific ui strings.
+I've translated the update notes for Mac Mouse Fix using AI (since it's impractical to do fast enough with volunteer translators), but there are issues due to the lack of context. The most glaring one is that the AI does not know how terms are translated inside other parts of the project, so will incorrectly refer to specific ui strings.
+For the update notes I just accept the lower translation quality and put a disclaimer at the top with a link to the English original.
 
 I don't know how hard it is in practice to provide good context to the AI.
 
 <!--
+- Also, human translators can still use AI to speed up their workflow.
 - It's also nice to have all users of the app be able to spot issues and submit fixes relatively easily. (Although I'm not sure how many people will actually do that) 
 - I decided against AI translation, when I started working on the new localization system for Mac Mouse Fix in 2024, partly because I thought building the system would be way easier and I could just use Xcode's built-in tooling for everything, but also because I thought the quality of the translations would not be as good. 
 - Despite these pros, if I did this again, I may have went with AI translation. I probably would have had the AI translate everything from English to German (a language that I speak) and then tweak the instructions and localizer hints until the AI produces the same German translations that I would have written. I think once the AI can translate very well into one language, it can probably translate into other languages at the same quality.  I haven't tested  of these ideas, though.
