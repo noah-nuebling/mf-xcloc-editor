@@ -44,7 +44,6 @@ These notes are a bit stream-of-consciousness, but I hope they are still useful 
 #### Improvements over Xcode's xcloc editor
 
 - Don't have to download Xcode (large)
-- Small size – can be shipped in a bundle with your .xcloc files.
 - Doesn't have Xcode sidebar which is useless to localizers and may be intimidating.
 - All project files are layed out flat in the sidebar, so localizers don't have to search through the folder hierarchy in your project.
 - Easy and powerful filtering / searching in strings from *all* project files, which could e.g. help localizers easily reference how a term is localized in other parts of the app. (There's no glossary support, but this may be good enough)
@@ -71,6 +70,7 @@ These notes are a bit stream-of-consciousness, but I hope they are still useful 
 - Can be controlled and navigated completely via the keyboard.
 - Shift-Return enters a newline, for the ChatGPT users. (But Option-Return is also supported)
 - .xcloc file automatically saves on every edit so users don't have to manually save and no data will be lost.
+- Small size – can be shipped in a bundle with your .xcloc files.
 - Window and column resizing is better than in Xcode
 - Text-substitutions can be turned off.
     (E.g. smart-quotes, or "omw" -> "on my way". These always auto re-enable in Xcode.)
