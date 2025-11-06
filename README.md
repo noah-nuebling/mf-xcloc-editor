@@ -1,11 +1,29 @@
-# Xcloc Editor.app
 
+
+
+<p align=center>
+<img width="100" alt="AppIcon_Include1024x1024_NSAppearanceNameSystem_B0605869-21C3-4637-BEAB-05DBD67FB50C-58116-000006E9BDAC185D_Normal@2x" src="https://github.com/user-attachments/assets/7335ee58-eebc-4895-a326-586bf8e8866d" />
+</p>
+
+<p align=center>    
+<h1 align=center> Xcloc Editor.app </h1>
+</p>
+
+<p align=center>
 Lightweight clone of Xcode's .xcloc file editor for the Mac Mouse Fix project.
+</p>
 
+
+<p align=center>   
 <img width="1440" height="900" alt="Screenshot 2025-11-05 at 9 25 58 PM" src="https://github.com/user-attachments/assets/3f328804-4840-4320-8d28-123d3a374484" />
+</p>
 
-For more on .xcloc files (aka Xcode Localization Catalogs), see:\
+<p align=center>    
+For more on .xcloc files (aka Xcode Localization Catalogs), see:<br>
 https://developer.apple.com/documentation/xcode/exporting-localizations/
+</p>
+
+<br>
 
 ## Notes for people who may want to use this for their project as well
 
