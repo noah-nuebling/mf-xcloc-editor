@@ -35,8 +35,8 @@ These notes are a bit sloppy and stream-of-consciousness, but I hope they are st
 - Doesn't have Xcode bug where red rectangles that highlight strings in localization screenshots are never updated. [FB20608107]
     - This bug can be circumvented by including a copy of the screenshot for each localizable string that appears inside of it – however, for my app, Mac Mouse Fix, this bloats the size of the .xcloc package beyond the size supported by Gmail attachments or GitHub comment attachments – making it hard for volunteer localizers to share the .xcloc files they've translated.
 - Localizers can edit the 'state' of localized strings
-    - In Xcode, the state automatically updates to 'translated' whenever the localizer edits the string, but other than that localizers have no control over the state, which could be useful if they want to come back to a string later.
-    - In contrast, `Xcloc Editor.app` lets localizers easily toggle the state between 'needs_review' and 'translated' via a convenient Command-R shortcut, or an easy-to-discover right-click menu.
+    - In Xcode, the state automatically updates to 'translated' whenever the localizer edits the string, but other than that localizers have no control over the state.
+    - In contrast, `Xcloc Editor.app` lets localizers easily toggle the state between 'needs_review' and 'translated' via a convenient Command-R shortcut, or an easy-to-discover right-click menu. -> This is useful if a localizer wants to come back to a string later.
 - Shows localization progress percentage in the sidebar (Similar to Xcode's **.xcstrings** editor), helping localizers keep track of their progress.
 - Strings marked as 'do not translate' are *not* shown to localizers.
     - Xcode sorts these strings above 'needs_review' strings making it harder to find strings that need review.
