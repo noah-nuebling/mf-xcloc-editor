@@ -67,10 +67,10 @@ These notes are a bit stream-of-consciousness, but I hope they are still useful 
     - For localizable strings inside Interface Builder files, Xcode exports very long comments that are actually old-style plist dictionaries containing mostly redundant or irrelevant information such as "ObjectID", "Class" or "title" (which just repeats the English UI string). `Xcloc Editor.app` filters out all this redundant stuff, so that localizers can focus on the hints that you wrote for them.
 - When you ship `Xcloc Editor.app` next to .xcloc files, it will automatically show the user a picker between those .xcloc files.
 - Supports undo and redo for all edits.
-- Can be controlled and navigated completely via the keyboard.
+- Can be controlled and navigated completely via the keyboard for a fast and convenient workflow.
 - Shift-Return enters a newline, for the ChatGPT users. (But Option-Return is also supported)
 - .xcloc file automatically saves on every edit so users don't have to manually save and no data will be lost.
-- Small size – can be shipped in a bundle with your .xcloc files.
+- Small size – can be easily shipped in a folder with your .xcloc files.
 - Window and column resizing is better than in Xcode
 - Text-substitutions can be turned off.
     (E.g. smart-quotes, or "omw" -> "on my way". These always auto re-enable in Xcode.)
@@ -80,7 +80,7 @@ These notes are a bit stream-of-consciousness, but I hope they are still useful 
 
 - Can't edit `pluralizable format string`s (but that isn't necessary I think – see above)
 - Format specifiers like "%@" don't get a special color background like they do in Xcode.
-    - I don't think this is super helpful in Xcode especially since it also makes it impossible to edit the format specifier once it has the background which is a bit annoying. And for my project MMF, there are Javascript, Python and C format specifiers, which won't all get highlighted consistently by Xcode anyways. So I decided to just leave this feature out. [Open an issue](https://github.com/noah-nuebling/mf-xcloc-editor/issues/new) if you want this feature.
+    - I don't think this is super helpful in Xcode especially since it also makes it impossible to edit the format specifier once it has the background which is a bit annoying. And for my project MMF, there are Javascript, Python and C format specifiers, which won't all get highlighted consistently by Xcode anyways. So I decided to just leave this feature out. Please [open an issue](https://github.com/noah-nuebling/mf-xcloc-editor/issues/new) if you want this feature.
 
 ### Comparison with other xcloc editors
 
@@ -96,7 +96,7 @@ These notes are a bit stream-of-consciousness, but I hope they are still useful 
       - I also wasn't aware of the issues with Xcode's xcloc editor, which caused me to write this program, `Xcloc Editor.app`.
       - I looked at some CrowdIn projects and IIRC I didn't see much 'crowd' activity even on larger projects - Instead I saw a few people making larger contributions, which would make most perks of online-editors not-so-important.
   - Was this a good choice not to go with an online editor? 
-    - I'm not sure, yet. Would I recommend it?  -If all the translatable files of your project are managed by Xcode (.xcstrings or .strings), then using `Xcloc Editor.app` might be easier to get started, lower the complexity and dependencies in your project, and provide a better experience for localizers than an online editor. But if your project contains other files, things get more complicated. For my project Mac Mouse Fix, I wrote Python scripts that call Apple's `xcstringstool` to host the translations for *all* the project files (e.g. .md and .vue) inside .xcstrings files, which can then be exported as .xcloc files. But it's probably less effort to use an online editor which already supports different file-types. 
+    - I'm not sure, yet. Would I recommend it? - I think if all the translatable files of your project are managed by Xcode (.xcstrings or .strings or .stringsdict), then using `Xcloc Editor.app` might be easier to get started, lower the complexity and dependencies in your project, and provide a better experience for localizers than an online editor. But if your project contains other files, things get more complicated. For my project Mac Mouse Fix, I wrote Python scripts that call Apple's `xcstringstool` to host the translations for *all* the project files <!-- (including non-Xcode files like .md and .vue) --> inside .xcstrings files, which can then be exported as .xcloc files. But it's probably less effort to use an online editor which already supports different file-types. 
 
 ### Comparison & thoughts on AI translation
 
