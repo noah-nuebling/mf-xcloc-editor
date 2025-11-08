@@ -370,7 +370,7 @@ static NSData *imageData(NSImage *image, NSBitmapImageFileType type, NSDictionar
         usingType: type
         properties: properties
     ];
-    if (!imageData) { /// I assume this is done for reliability
+    if (!imageData.length) { /// I assume this is done for reliability || [Nov 2025] Had to add .length for this to work on macOS 12.0 Monterey. Seems like Apple's PackagedDocument sample forgot that?
         NSBitmapImageRep *imageRep = nil;
         @autoreleasepool {
             imageRep = [[NSBitmapImageRep alloc] initWithData: image.TIFFRepresentation];
