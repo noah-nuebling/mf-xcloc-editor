@@ -514,26 +514,23 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
     
         - (void) keyDown: (NSEvent *)theEvent {
             
-            if (
-                (1) && /// Disable keyboard controls for previewItems, cause it's not that useful and currently produces a bit of weird behavior (I think. Can't remember what [Oct 2025]) || Update: [Nov 2025] Re-enabled. No weird behavior. 
+            int shouldMaybeSwitchPreviewImages = (
+                (1) && /** Disable keyboard controls for previewItems, cause it's not that useful and currently produces a bit of weird behavior (I think. Can't remember what [Oct 2025]) || Update: [Nov 2025] Re-enabled. No weird behavior.  Update2: There was weird behavior, but I think we fixed it now. [Nov 2025] */
+                [self numberOfPreviewItemsInPreviewPanel: nil] > 1 &&
                 [QLPreviewPanel sharedPreviewPanelExists] &&
                 [[QLPreviewPanel sharedPreviewPanel] isVisible]
-            ) {
-                if (eventIsKey(theEvent, NSLeftArrowFunctionKey)) /// Flip through different screenshots containing the currently selected string. Could also implement this in `previewPanel:handleEvent:` [Oct 2025]
-                    [self _incrementCurrentPreviewItem: -1];
-                else if (eventIsKey(theEvent, NSRightArrowFunctionKey))
-                    [self _incrementCurrentPreviewItem: +1];
-                else
-                    [super keyDown: theEvent];
-            }
-            else {
-                if (eventIsKey(theEvent, NSLeftArrowFunctionKey))   /// Select the sourceList
-                    [getdoc(self)->ctrl->out_sourceList.window makeFirstResponder: getdoc(self)->ctrl->out_sourceList];
-                else if (eventIsKey(theEvent, ' '))	/// Space key opens the preview panel. Also supports Command-Y (using Menu Item)
-                    [self togglePreviewPanel: self];
-                else
-                    [super keyDown: theEvent]; /// Handling of UpArrow and DownArrow is built-in to `NSTableView` [Oct 2025]
-            }
+            );
+            
+            if (shouldMaybeSwitchPreviewImages && eventIsKey(theEvent, NSLeftArrowFunctionKey)) /// Flip through different screenshots containing the currently selected string. Could also implement this in `previewPanel:handleEvent:` [Oct 2025]
+                [self _incrementCurrentPreviewItem: -1];
+            else if (shouldMaybeSwitchPreviewImages && eventIsKey(theEvent, NSRightArrowFunctionKey))
+                [self _incrementCurrentPreviewItem: +1];
+            else if (eventIsKey(theEvent, NSLeftArrowFunctionKey))   /// Select the sourceList
+                [getdoc(self)->ctrl->out_sourceList.window makeFirstResponder: getdoc(self)->ctrl->out_sourceList];
+            else if (eventIsKey(theEvent, ' '))	/// Space key opens the preview panel. Also supports Command-Y (using Menu Item)
+                [self togglePreviewPanel: self];
+            else
+                [super keyDown: theEvent]; /// Handling of UpArrow and DownArrow is built-in to `NSTableView` [Oct 2025]
         }
         - (void) cancelOperation: (id)sender {
             
@@ -1155,10 +1152,6 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
             }
         }
         
-        /// Add zero-width spaces after periods in the string-key to make NSTextField wrap the lines there.
-        if (iscol(@"id"))
-            uiString = [uiString stringByReplacingOccurrencesOfString: @"." withString: @".\u200B"];
-        
         /// Handle pluralizable strings
         {
             if (rowModel_isPluralParent(transUnit)) {
@@ -1207,6 +1200,11 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         if ((0)) mflog(@"viewForTableColumn: (%d)", __invocations++);
             
         NSString *uiString = rowModel_getUIString(self, item, tableColumn.identifier);
+        
+        /// Add zero-width spaces after periods in the string-key to make NSTextField wrap the lines there.
+        ///     Don't do this in `rowModel_getUIString` cause that will mess up search.
+        if (iscol(@"id"))
+            uiString = [uiString stringByReplacingOccurrencesOfString: @"." withString: @".\u200B"];
         
         /// Override raw state string with colorful symbols / badges
         NSAttributedString *uiStringAttributed  = [[NSAttributedString alloc] initWithString: (uiString ?: @"")];
