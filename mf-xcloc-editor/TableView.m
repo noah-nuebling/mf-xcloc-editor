@@ -1152,10 +1152,6 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
             }
         }
         
-        /// Add zero-width spaces after periods in the string-key to make NSTextField wrap the lines there.
-        if (iscol(@"id"))
-            uiString = [uiString stringByReplacingOccurrencesOfString: @"." withString: @".\u200B"];
-        
         /// Handle pluralizable strings
         {
             if (rowModel_isPluralParent(transUnit)) {
@@ -1204,6 +1200,11 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         if ((0)) mflog(@"viewForTableColumn: (%d)", __invocations++);
             
         NSString *uiString = rowModel_getUIString(self, item, tableColumn.identifier);
+        
+        /// Add zero-width spaces after periods in the string-key to make NSTextField wrap the lines there.
+        ///     Don't do this in `rowModel_getUIString` cause that will mess up search.
+        if (iscol(@"id"))
+            uiString = [uiString stringByReplacingOccurrencesOfString: @"." withString: @".\u200B"];
         
         /// Override raw state string with colorful symbols / badges
         NSAttributedString *uiStringAttributed  = [[NSAttributedString alloc] initWithString: (uiString ?: @"")];
