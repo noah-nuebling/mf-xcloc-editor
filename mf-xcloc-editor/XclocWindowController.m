@@ -184,7 +184,8 @@
                 window.toolbar.delegate = self;
                 [window.toolbar insertItemWithItemIdentifier: @"SearchField" atIndex: 0]; /// Gotta do this in addition to `toolbarDefaultItemIdentifiers:` – why is this so complicated.
                 window.toolbar.displayMode = NSToolbarDisplayModeIconOnly;
-                window.toolbar.allowsDisplayModeCustomization = NO;
+                if (@available(macOS 15.0, *))
+                    window.toolbar.allowsDisplayModeCustomization = NO;
             }
             if ((0)) window.toolbarStyle = NSWindowToolbarStyleUnifiedCompact;
         };
