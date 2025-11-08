@@ -288,7 +288,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "#agvtool bump -all\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $(git rev-list HEAD --count)\" \"$INFOPLIST_FILE\"\n";
+			shellScript = "#agvtool bump -all\n#/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $(git rev-list HEAD --count)\" \"$INFOPLIST_FILE\"\nif [ \"${CONFIGURATION}\" = \"Release\" ]; then\n   /usr/bin/plutil -replace CFBundleVersion -string $(expr 1 + $(/usr/bin/plutil -extract CFBundleVersion raw \"${INFOPLIST_FILE}\")) \"${INFOPLIST_FILE}\"\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 

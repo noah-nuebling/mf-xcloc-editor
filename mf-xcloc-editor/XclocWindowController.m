@@ -180,7 +180,8 @@
             
             window.toolbar = [NSToolbar new]; /// Adding to change titlebar height
             {
-                window.toolbar.allowsUserCustomization = NO;
+                if ((0)) /// default is NO and causes error on macOS 12 Monterey:`*** Assertion failure in -[NSToolbar setAllowsUserCustomization:], NSToolbar.m:1379`
+                    window.toolbar.allowsUserCustomization = NO;
                 window.toolbar.delegate = self;
                 [window.toolbar insertItemWithItemIdentifier: @"SearchField" atIndex: 0]; /// Gotta do this in addition to `toolbarDefaultItemIdentifiers:` – why is this so complicated.
                 window.toolbar.displayMode = NSToolbarDisplayModeIconOnly;
