@@ -365,7 +365,7 @@ static NSData *imageData(NSImage *image, NSBitmapImageFileType type, NSDictionar
     
     /// TODO: Maybe copy this into mac-mouse-fix
     
-    NSData *imageData = [NSBitmapImageRep /// I assume this is done for speed
+    NSData *imageData = [NSBitmapImageRep /// I assume this is done for speed || [Nov 2025] Saw this log weird error under macOS Sonoma, but I think we can ignore: `finalizeDestination:3496: *** ERROR: CGImageDestinationFinalize was called, but there were no images added` 
         representationOfImageRepsInArray: image.representations
         usingType: type
         properties: properties

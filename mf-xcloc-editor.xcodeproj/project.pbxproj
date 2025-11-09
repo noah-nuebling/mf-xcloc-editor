@@ -288,7 +288,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "#agvtool bump -all\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $(git rev-list HEAD --count)\" \"$INFOPLIST_FILE\"\n";
+			shellScript = "#agvtool bump -all\n#/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $(git rev-list HEAD --count)\" \"$INFOPLIST_FILE\"\nif [ \"${CONFIGURATION}\" = \"Release\" ]; then\n   /usr/bin/plutil -replace CFBundleVersion -string $(expr 1 + $(/usr/bin/plutil -extract CFBundleVersion raw \"${INFOPLIST_FILE}\")) \"${INFOPLIST_FILE}\"\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -376,13 +376,14 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_FUNCTION = NO;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 15.2;
+				MACOSX_DEPLOYMENT_TARGET = 11.5;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				OTHER_CFLAGS = "-Werror=unguarded-availability-new";
 				SDKROOT = macosx;
 			};
 			name = Debug;
@@ -430,12 +431,13 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_FUNCTION = NO;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 15.2;
+				MACOSX_DEPLOYMENT_TARGET = 11.5;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
+				OTHER_CFLAGS = "-Werror=unguarded-availability-new";
 				SDKROOT = macosx;
 			};
 			name = Release;
@@ -464,7 +466,6 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/mf-xcloc-editor/libxml2-build/lib",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 11.5;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.nuebling.mf-xcloc-editor";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -499,7 +500,6 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/mf-xcloc-editor/libxml2-build/lib",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 11.5;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.nuebling.mf-xcloc-editor";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;

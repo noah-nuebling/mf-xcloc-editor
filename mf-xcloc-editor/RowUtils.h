@@ -85,8 +85,10 @@
         auto textAttachment = [NSTextAttachment new]; {
             [textAttachment setImage: image];
         }
-        auto result = [NSMutableAttributedString attributedStringWithAttachment: textAttachment attributes: @{
+        
+        NSMutableAttributedString *result = [[NSAttributedString attributedStringWithAttachment: textAttachment] mutableCopy];
+        [result addAttributes: @{
             NSForegroundColorAttributeName: [NSColor systemGreenColor]
-        }];
+        } range: NSMakeRange(0, result.length)];
         return result;
     }
