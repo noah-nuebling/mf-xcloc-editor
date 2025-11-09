@@ -27,6 +27,10 @@ https://developer.apple.com/documentation/xcode/exporting-localizations/
 
 ## Notes for people who may want to use this for their project as well
 
+### Example
+
+See how this is used for the Mac Mouse Fix project [here](https://redirect.macmousefix.com/?target=mmf-localization-contribution).
+
 ### Comparison with Xcode's xcloc editor
 
 #### Perks that it has in common with Xcode's xcloc editor
@@ -111,10 +115,6 @@ I don't know how hard it is in practice to provide good context to the AI.
 - I decided against AI translation, when I started working on the new localization system for Mac Mouse Fix in 2024, partly because I thought building the system would be way easier and I could just use Xcode's built-in tooling for everything, but also because I thought the quality of the translations would not be as good. 
 - Despite these pros, if I did this again, I may have went with AI translation. I probably would have had the AI translate everything from English to German (a language that I speak) and then tweak the instructions and localizer hints until the AI produces the same German translations that I would have written. I think once the AI can translate very well into one language, it can probably translate into other languages at the same quality.  I haven't tested  of these ideas, though.
 -->
-
-### Example
-
-See how this is used for the Mac Mouse Fix project [here](https://redirect.macmousefix.com/?target=mmf-localization-contribution).
 
 ### Other Caveats
 
