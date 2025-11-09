@@ -150,6 +150,17 @@
         /// Set up window
         assert(!self.window);
         {
+        
+        
+            /// TODO: Maybe make Apple Glossaries accessible somehow.
+            ///     macOS 10.15 glossaries can be downloaded here: (https://developer.apple.com/download/all/?q=glossaries)
+            ///     But I can't find an AppleGlot download.
+            ///     Theoretically, it should be sorta easy to update our `rowModel_getCellModel()` to be able to understand the Apple glossary XML format.
+            ///     Ideally we'd want *all* the .lg files to be easily searchable – I'm not sure our current UI is performant enough.
+            ///     ... Also I don't wanna overengineer. Localizers can just look up the terms in the UI – they don't absolutely need this super comprehensive glossary.
+            ///     [Nov 2025]
+            ///
+            ///     Sidenote: Could we also use Apple Glossaries to auto-translate all the standard menuBar items?
             
             /// Abandoned TODOs:
             
@@ -159,10 +170,14 @@
                 ///
                 /// TODO: Maybe look into responsiveness of changing the sort / file
                 ///     Overriding `heightOfRowByItem:` can improve things, but that's hard to do well – giving up. Performance is alright.
+                ///     Update: DONE
                 /// TODO: Fix issue where double-clicking / triple-clicking /...  a row does nothing (instead of starting text-editing)
                 ///     Tried to fix this but hard. Maybe just live with it.
                 /// TODO: Undo is a bit unresponsive (cause saving the doc on every edit is slow)
                 ///     Maybe we'll just live with that. (Do we even need undo? – All this NSDocument stuff may have been overkill. Things we so much simpler when we were just writing to disk directly. )
+                ///     Update: The unresponsiveness is only sometimes. I read about some macOS bug on Twitter that causes slow saving - maybe we hit that?
+            
+                
             
             window = [XclocWindow new];
             window.styleMask = 0
