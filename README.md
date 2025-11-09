@@ -27,8 +27,6 @@ https://developer.apple.com/documentation/xcode/exporting-localizations/
 
 ## Notes for people who may want to use this for their project as well
 
-These notes are a bit stream-of-consciousness, but I hope they are still useful to someone!
-
 ### Comparison with Xcode's xcloc editor
 
 #### Perks that it has in common with Xcode's xcloc editor
