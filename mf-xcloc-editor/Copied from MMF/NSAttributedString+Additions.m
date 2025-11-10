@@ -14,22 +14,21 @@
 
 #pragma mark Determine size
 
+#define NSNotFoundRect NSMakeRect(NSNotFound, NSNotFound, 0, 0)
 static NSRect MFUnionRect(NSRect r, NSRect s) {
     
-    /// Replacement for `NSUnionRect`
-    ///     `NSUnionRect` seems to ignore rects with zero-width,
-    ///     which makes it not work for `NSTextLayoutFragment` representing blank-lines. [Oct 2025]
+    /// Copied from mac-mouse-fix [Nov 2025]
     
-    CGFloat minX = MIN(r.origin.x, s.origin.x);
-    CGFloat maxX = MAX(
-        (r.origin.x + r.size.width),
-        (s.origin.x + s.size.width)
-    );
-    CGFloat minY = MIN(r.origin.y, s.origin.y);
-    CGFloat maxY = MAX(
-        (r.origin.y + r.size.height),
-        (s.origin.y + s.size.height)
-    );
+    if (r.origin.x == NSNotFound || r.origin.y == NSNotFound) return s;
+    if (s.origin.x == NSNotFound || s.origin.y == NSNotFound) return r;
+    
+    CGFloat minX, maxX;
+    CGFloat minY, maxY;
+    
+    minX = MIN(r.origin.x, s.origin.x);
+    maxX = MAX(NSMaxX(r), NSMaxX(s));
+    minY = MIN(r.origin.y, s.origin.y);
+    maxY = MAX(NSMaxY(r), NSMaxY(s));
     
     return (NSRect){ { .x = minX, .y = minY }, { .width = maxX-minX, .height = maxY-minY } };
 
@@ -82,7 +81,7 @@ static NSRect MFUnionRect(NSRect r, NSRect s) {
             /// On options:
             ///     - `NSTextLayoutFragmentEnumerationOptionsEnsuresExtraLineFragment` is for ensuring layout consistency with editable text, which we don't need here.
             ///     - `NSTextLayoutFragmentEnumerationOptionsEstimatesSize` is a faster, but less accurate alternative to `NSTextLayoutFragmentEnumerationOptionsEnsuresLayout`
-            resultRect = NSZeroRect;
+            resultRect = NSNotFoundRect;
             NSTextLayoutFragmentEnumerationOptions enumerationOptions = (
                 NSTextLayoutFragmentEnumerationOptionsEnsuresLayout |
                 NSTextLayoutFragmentEnumerationOptionsEnsuresExtraLineFragment /// Doesn't seem to make a difference [Oct 2025]
