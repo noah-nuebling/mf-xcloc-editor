@@ -27,7 +27,9 @@ https://developer.apple.com/documentation/xcode/exporting-localizations/
 
 ## Notes for people who may want to use this for their project as well
 
-These notes are a bit stream-of-consciousness, but I hope they are still useful to someone!
+### Example
+
+See how this is used for the Mac Mouse Fix project [here](https://redirect.macmousefix.com/?target=mmf-localization-contribution).
 
 ### Comparison with Xcode's xcloc editor
 
@@ -84,7 +86,8 @@ These notes are a bit stream-of-consciousness, but I hope they are still useful 
 
 ### Comparison with other xcloc editors
 
-- The best native macOS xcloc editor that I came across is [LocaStudio](https://www.cunningo.com/locastudio/index.html). It's very good but has been abandoned and doesn't support the very useful 'state' feature. (Where strings can be marked as 'needs_review' or 'translated' – see above.)
+- The best native macOS xcloc editor that I came across is [LocaStudio](https://www.cunningo.com/locastudio/index.html). It seemed very good to me but has been abandoned and doesn't support the very useful 'state' feature. (Where strings can be marked as 'needs_review' or 'translated' – see above.)
+- The other xcloc editors I found I thought were not very good or were focused on AI instead of human translators.
 - Comparison with online editors (like CrowdIn): 
   - These might be a better alternative for most projects. 
   - Reasons why I decided against them:
@@ -95,17 +98,17 @@ These notes are a bit stream-of-consciousness, but I hope they are still useful 
           - -> CrowdIn DOES offer the free-tier to smaller indie apps even if they are monetized.
       - I also wasn't aware of the issues with Xcode's xcloc editor, which caused me to write this program, `Xcloc Editor.app`.
       - I looked at some CrowdIn projects and IIRC I didn't see much 'crowd' activity even on larger projects - Instead I saw a few people making larger contributions, which would make most perks of online-editors not-so-important.
-  - Was this a good choice not to go with an online editor? 
-    - I'm not sure, yet. Would I recommend it? - I think if all the translatable files of your project are managed by Xcode (.xcstrings or .strings or .stringsdict), then using `Xcloc Editor.app` might be easier to get started, lower the complexity and dependencies in your project, and provide a better experience for localizers than an online editor. But if your project contains other files, things get more complicated. For my project Mac Mouse Fix, I wrote Python scripts that call Apple's `xcstringstool` to host the translations for *all* the project files <!-- (including non-Xcode files like .md and .vue) --> inside .xcstrings files, which can then be exported as .xcloc files. But it's probably less effort to use an online editor which already supports different file-types. 
+  - Would I recommend using `Xcloc Editor.app` over an online editor? - I think if all the translatable files of your project are managed by Xcode (.xcstrings or .strings or .stringsdict), then using `Xcloc Editor.app` might be easier to get started, lower the complexity and dependencies in your project, and provide a better experience for localizers than an online editor. But if your project contains non-Xcode-managed files, things get more complicated. For my project Mac Mouse Fix, I wrote Python scripts that call Apple's `xcstringstool` to host the translations for *all* the project files <!-- (including Markdown and Vuejs files) --> inside .xcstrings files, which can then be exported to localizers as one unified .xcloc file. But it's probably less effort to use an online editor which already supports different file-types.
 
 ### Comparison & thoughts on AI translation
 
 I think that AI translation can be very good if it has the necessary context, but you have to provide that context. AI has less ability to access context compared to a human translator. For example, a translation AI typically wouldn't be able to look up how a term is translated in System Settings, or in Apple's documentation, or in other parts of your project. Also it won't be able to see the localization screenshots, or use your UI/website to experience how it functions and is laid out. All these things are easy for human translators using `Xcloc Editor.app`.
 
-I've translated the update notes for Mac Mouse Fix using AI (since it would be too slow with volunteer translators), but there are issues due to the lack of context. The most glaring one is that the AI does not know how terms are translated inside other parts of the project, so will incorrectly refer to specific ui strings.
+I've translated the update notes for Mac Mouse Fix using Claude 3.5 (since it would be too slow with volunteer translators), but there are issues due to the lack of context. For example, it will just make up translations for UI strings, because it doesn't have access to the real translations.
 For the update notes I just accept the lower translation quality and put a disclaimer at the top with a link to the English original. 
 
 I don't know how hard it is in practice to provide good context to the AI.
+(I also don't know for sure that it produces good output with the right context, but I think so based on my other experiences.)
 
 <!--
 - Also, human translators can still use AI to speed up their workflow.

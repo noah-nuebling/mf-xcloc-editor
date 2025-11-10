@@ -406,7 +406,7 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
     
 
             return mfui_wrap(mfui_margins(15, 3, 2, 0),
-                mfui_label(@"Project Files", .size = 11, .weight = NSFontWeightSemibold, .color = [NSColor secondaryLabelColor])
+                mfui_label(kMFStr_Separator, .size = 11, .weight = NSFontWeightSemibold, .color = [NSColor secondaryLabelColor])
             );
             
         }

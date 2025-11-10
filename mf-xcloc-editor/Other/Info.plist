@@ -38,7 +38,7 @@
 	<key>CFBundleShortVersionString</key>
 	<string>0.9</string>
 	<key>CFBundleVersion</key>
-	<string>164</string>
+	<string>165</string>
 	<key>NSHumanReadableCopyright</key>
 	<string></string>
 	<key>NSMainNibFile</key>
@@ -50,15 +50,15 @@
 	<key>UTImportedTypeDeclarations</key>
 	<array>
 		<dict>
-			<key>UTTypeIdentifier</key>
-			<string>com.apple.xcode.xcloc</string>
-			<key>UTTypeDescription</key>
-			<string>Xcode Localization Catalog</string>
 			<key>UTTypeConformsTo</key>
 			<array>
 				<string>public.composite-content</string>
 				<string>com.apple.package</string>
 			</array>
+			<key>UTTypeDescription</key>
+			<string>Xcode Localization Catalog</string>
+			<key>UTTypeIdentifier</key>
+			<string>com.apple.xcode.xcloc</string>
 			<key>UTTypeTagSpecification</key>
 			<dict>
 				<key>public.filename-extension</key>
