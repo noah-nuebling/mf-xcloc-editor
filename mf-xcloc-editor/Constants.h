@@ -7,6 +7,7 @@
 
 /// Some uiStrings are in the code, some are here. Whatever works. [Nov 2025]
 
+#define kMFStr_Separator                @"Project Files"
 #define kMFPath_AllDocuments            @"All Project Files"
 #define kMFStr_FilterTranslations       @"Filter Translations (⌘F)"
 #define kMFStr_MarkForReview            @"Mark for Review"
