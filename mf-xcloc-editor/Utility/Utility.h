@@ -34,9 +34,6 @@
 #define mferror(domain, code_, msg_and_args...) \
     [NSError errorWithDomain: (domain) code: (code_) userInfo: @{ NSDebugDescriptionErrorKey: stringf(msg_and_args) }] /** Should we use `NSLocalizedFailureReasonErrorKey`? [Oct 2025] */
 
-#define mfonce dispatch_once /** I'm just using `static x; if (!x) ...;` Instead of this since we only do main thread in mf-xcloc editor. [Nov 2025] */
-#define mfoncet ({ static dispatch_once_t onceToken; &onceToken; })
-
 #define bitpos(mask) (                                                  \
     (mask) == 0               ? -1 :                                    /** Fail: less than one bit set */\
     ((mask) & (mask)-1) != 0  ? -1 :                                    /** Fail: more than one bit set (aka not a power of two) */\

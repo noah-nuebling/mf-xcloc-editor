@@ -22,6 +22,7 @@
 #import "NSNotificationCenter+Additions.h"
 #import "NSView+Additions.h"
 #import "Utility/ToString.m"
+#import "NSAttributedString+Additions.h"
 
 static int __invocations = 0; /// Performance testing
 static int __invocation_rowheight = 0;
@@ -1201,11 +1202,6 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
             
         NSString *uiString = rowModel_getUIString(self, item, tableColumn.identifier);
         
-        /// Add zero-width spaces after periods in the string-key to make NSTextField wrap the lines there.
-        ///     Don't do this in `rowModel_getUIString` cause that will mess up search.
-        if (iscol(@"id"))
-            uiString = [uiString stringByReplacingOccurrencesOfString: @"." withString: @".\u200B"];
-        
         /// Override raw state string with colorful symbols / badges
         NSAttributedString *uiStringAttributed  = [[NSAttributedString alloc] initWithString: (uiString ?: @"")];
         NSColor *stateCellBackgroundColor = nil;
@@ -1240,11 +1236,27 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         {
             
             bool makeSelectable = YES;
+            NSLineBreakMode lineBreakMode = NSLineBreakByWordWrapping;
             
             if (iscol(@"id")) {
                 
                 assert([reusableViewIDs containsObject: @"theReusableCell_TableID"]);
                 cell = [self makeViewWithIdentifier: @"theReusableCell_TableID" owner: self]; /// [Jun 2025] What to pass as owner here? Will this lead to retain cycle?
+                
+                /// Switch on characterWrap
+                ///     Use char-wrapping, since word-wrapping wraps at `-` but not at `.` – even though `.` is the stronger separator in string-keys.
+                ///     Before, we tried `stringByReplacingOccurrencesOfString: @"." withString: @".\u200B"`, which works but breaks search / copy-then-search for the @"id" column.  [Nov 2025]
+                ///     Better solution idea: Customize fieldEditor (override `writeSelectionToPasteboard:`)
+                {
+                    lineBreakMode = NSLineBreakByCharWrapping; /// This only comes into effect after selecting the text for the first time? Before that, only the NSAttributedString attrs seem to take effect. Weird. [Nov 2025, macOS 15 Sequoia, 2018 Mac Mini]
+                    uiStringAttributed = [uiStringAttributed attributedStringByAddingAttributesAsBase: @{
+                        NSParagraphStyleAttributeName:  ({
+                            auto p = [NSMutableParagraphStyle new];
+                            p.lineBreakMode = NSLineBreakByCharWrapping;
+                            p;
+                        })
+                    }];
+                }
                 
                 /// Configure filename-field
                 {
@@ -1334,7 +1346,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
             
             /// Common config
             cell.textField.delegate      = (id)self;
-            cell.textField.lineBreakMode = NSLineBreakByWordWrapping;
+            cell.textField.lineBreakMode = lineBreakMode;
             cell.textField.selectable    = makeSelectable;
             
             /// SEt da string!!
