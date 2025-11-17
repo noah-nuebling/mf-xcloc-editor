@@ -1615,8 +1615,16 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
             - (BOOL) previewPanel: (QLPreviewPanel *)panel handleEvent: (NSEvent *)event {
                 /// redirect all key down events from the QLPanel to the table view (So you can flip through rows) [Oct 2025]
                 if ([event type] == NSEventTypeKeyDown) {
-                    if (!eventIsKey(event, NSUpArrowFunctionKey) && !eventIsKey(event, NSDownArrowFunctionKey)) /// We disable it for NSUpArrowFunctionKey and NSDownArrowFunctionKey cause the blue row highlight is a little distracting
+                    
+                    if (eventIsKey(event, '\r')) {
+                        [[[QLPreviewPanel sharedPreviewPanel] windowController] performSelector: @selector(switchToIndexSheet:) withObject: nil];
+                        return YES;
+                    }
+                    
+                    /// Focus main window
+                    if (!eventIsKey(event, NSUpArrowFunctionKey) && !eventIsKey(event, NSDownArrowFunctionKey)) /// We don't do this for NSUpArrowFunctionKey and NSDownArrowFunctionKey cause the blue row highlight is a little distracting
                         [self.window makeKeyAndOrderFront: nil]; /// Without this, the `filterField` (Command-F) and "Switch between `SourceList` and `TableView`" (LeftArrow / RightArrow) keys don't work properly. [Oct 2025]
+                    
                     [self keyDown: event];
                     return YES;
                 }
@@ -1647,7 +1655,6 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                 })[0];
                 
                 auto imageFileData = [[NSData alloc] initWithContentsOfFile: imagePath];
-                auto image = [[NSImage alloc] initWithData: imageFileData];
                 
                 auto simpleHash = ^int (NSData *data) {
                     
@@ -1661,19 +1668,6 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                     return hash;
                 };
                 
-                auto annotatedImage = [NSImage imageWithSize: image.size flipped: YES drawingHandler: ^BOOL(NSRect dstRect) {
-                    
-                    [image drawInRect: dstRect]; /// This line is slow
-                    
-                    [NSColor.systemRedColor setStroke];
-                    
-                    auto path = [NSBezierPath bezierPathWithRect: frame];
-                    [path setLineWidth: 3.0];
-                    [path stroke];
-
-                    return YES;
-                }];
-                
                 /// Get `annotatedImagePath`
                 ///     We have to write the annotated image to a file to get the QLPreviewPanel to load it.
                 ///         Xcode's xcloc editor circumvents this somehow (But it's also buggy and doesn't update the annotations correctly)
@@ -1684,8 +1678,8 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                     [[imagePath lastPathComponent] stringByDeletingPathExtension],
                     @" --- ",
                     [NSString stringWithFormat: @"(%@) %@", /// Cache key
-                        @(simpleHash(imageFileData)),    /// Uniquely identifies source image (Filename could be non-unique when you have multiple `Mac Mouse Fix.xcloc` files for different locales. [Nov 2025])
-                        NSStringFromRect(frame)          /// Uniquely identifies annotation
+                        @(simpleHash(imageFileData)),           /// Uniquely identifies source image (screenshot filename could be non-unique when you have multiple `Mac Mouse Fix.xcloc` files for different locales. When the annotation rect is also the same the cache-key will conflict  – but that's very unlikely. [Nov 2025])
+                        NSStringFromRect(frame)             /// Uniquely identifies annotation
                     ],
                     @".",
                     [imagePath pathExtension]
@@ -1699,6 +1693,20 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                 }
                 else {
                     mflog(@"Creating new annotatedImage file at: %@", annotatedImagePath);
+                
+                    auto image = [[NSImage alloc] initWithData: imageFileData];
+                    auto annotatedImage = [NSImage imageWithSize: image.size flipped: YES drawingHandler: ^BOOL(NSRect dstRect) {
+                        
+                        [image drawInRect: dstRect]; /// This line is slow
+                        
+                        [NSColor.systemRedColor setStroke];
+                        
+                        auto path = [NSBezierPath bezierPathWithRect: frame];
+                        [path setLineWidth: 3.0];
+                        [path stroke];
+
+                        return YES;
+                    }];
                 
                     /// Make parent dirs
                     NSError *err = nil;
