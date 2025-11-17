@@ -1646,7 +1646,20 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                     return [[path lastPathComponent] isEqual: name];
                 })[0];
                 
-                auto image = [[NSImage alloc] initWithContentsOfFile: imagePath];
+                auto imageFileData = [[NSData alloc] initWithContentsOfFile: imagePath];
+                auto image = [[NSImage alloc] initWithData: imageFileData];
+                
+                auto simpleHash = ^int (NSData *data) {
+                    
+                    const char *bytes = data.bytes;
+                    NSUInteger len = data.length;
+                    
+                    int hash = 0;
+                    for (int i = 0; i < len; i++)
+                        hash -= bytes[i];
+                    
+                    return hash;
+                };
                 
                 auto annotatedImage = [NSImage imageWithSize: image.size flipped: YES drawingHandler: ^BOOL(NSRect dstRect) {
                     
@@ -1670,7 +1683,10 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                     @"/mf-xcloc-editor/annotated-screenshots/",
                     [[imagePath lastPathComponent] stringByDeletingPathExtension],
                     @" --- ",
-                    NSStringFromRect(frame),
+                    [NSString stringWithFormat: @"(%@) %@", /// Cache key
+                        @(simpleHash(imageFileData)),    /// Uniquely identifies source image (Filename could be non-unique when you have multiple `Mac Mouse Fix.xcloc` files for different locales. [Nov 2025])
+                        NSStringFromRect(frame)          /// Uniquely identifies annotation
+                    ],
                     @".",
                     [imagePath pathExtension]
                 )];
