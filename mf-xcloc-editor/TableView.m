@@ -1628,7 +1628,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                 /// redirect all key down events from the QLPanel to the table view (So you can flip through rows) [Oct 2025]
                 if ([event type] == NSEventTypeKeyDown) {
                     
-                    if (eventIsKey(event, '\r')) {
+                    if (eventIsKey(event, '\r')) { /// It's a bit awkward that return opens the indexSheet or starts editing the translation depending on whether the QLPanel is focused (Which is not that noticable) [Nov 2025]
                         [[[QLPreviewPanel sharedPreviewPanel] windowController] performSelector: @selector(switchToIndexSheet:) withObject: nil];
                         return YES;
                     }
