@@ -467,11 +467,11 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
     }
 
     - (void) outlineViewSelectionDidChange: (NSNotification *)notification {
-        runOnMain(0.0, ^{ /// Defer so our selection drawing can update first, making things feel more responsive [Nov 2025]
+        //runOnMain(0.0, ^{ /// Defer so our selection drawing can update first, making things feel more responsive [Nov 2025]
+                            /// Update: [Dec 2025] Disable since making this non-synchronous breaks `_revealTransUnit:` > `Navigate UI`. Solution idea: Only make it sync when triggered programmatically.
             File *file = self->files[self.selectedRow];
             [getdoc(self)->ctrl->out_tableView reloadWithNewData: file->transUnits];
-        });
-
+        //});
     }
     
     - (id)copy {

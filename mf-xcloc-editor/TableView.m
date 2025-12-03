@@ -923,7 +923,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         return [state isEqual: kMFTransUnitState_Translated];
     }
     
-    - (void) setIsTranslatedState: (BOOL)newIsTranslatedState onRowModel:(NSXMLElement *)transUnit {
+    - (void) setIsTranslatedState: (BOOL)newIsTranslatedState onRowModel: (NSXMLElement *)transUnit {
         
         {
             auto oldIsTranslated = [[self stateOfRowModel: transUnit] isEqual: kMFTransUnitState_Translated];
