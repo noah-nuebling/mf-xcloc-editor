@@ -1030,6 +1030,9 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         
             topLevel = [self topLevelItemContainingItem: transUnit];
             if (!topLevel) {
+                /// Remove selection
+                ///     [Dec 2025] Necessary because `__restorePosition()` (helper of `bigUpdateAndStuff_OnlyUpdateSorting:`) will otherwise asynchronously try to restore the exact position of the selection on the screen, overriding the `scrollRowToVisible:` code below.
+                if (![[self selectedItem] isEqual: transUnit]) [self selectRowIndexes: indexset() byExtendingSelection: NO];
                 /// Remove the filter
                 [getdoc(self)->ctrl->out_filterField setStringValue: @""];
                 [self updateFilter: @""]; /// Updating `out_filterField` should maybe call this automatically [Nov 2025]
@@ -1037,6 +1040,8 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                 topLevel = [self topLevelItemContainingItem: transUnit];
             }
             if (!topLevel) {
+                /// Remove selection
+                if (![[self selectedItem] isEqual: transUnit]) [self selectRowIndexes: indexset() byExtendingSelection: NO];
                 /// Navigate to AllDocuments
                 [getdoc(self)->ctrl->out_sourceList showAllTransUnits];
                 /// Try again
