@@ -375,7 +375,7 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
             if ([f isEqual: @"separator"]) { [allUIStrings addObject: @""]; continue; }
             NSString *uiString =
                 [[f->path lastPathComponent] stringByDeletingPathExtension]
-                //[f->path lastPathComponent]
+                //[f->path lastPathComponent] /// This is too cluttered and less scannable, although it makes it more understandable that you're looking at file-names. Solution idea: Gray-out the file-extensions. [Dec 2025]
             ;
             for (int i = 1;; i++) {
                 NSString *appendix = (i == 1) ? @"" : stringf(@" (%d)", i);
