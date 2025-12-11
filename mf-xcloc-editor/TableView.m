@@ -28,6 +28,8 @@ static int __invocations = 0; /// Performance testing
 static int __invocation_rowheight = 0;
 static CGFloat _defaultRowHeight = 75 /*100*/; /// We return this in `heightOfRowByItem:`  || Tradeoff: higher -> faster load times, too-high -> 'fights you' when scrolling up (not just jitter), 100 'fights you' 75 is fine. [NOv 2025]
 
+static NSStringCompareOptions kFilterField_StringCompareOptions = (/*NSRegularExpressionSearch |*/ NSCaseInsensitiveSearch);
+
 #pragma mark - MFQLPreviewItem
 
 @interface MFQLPreviewItem : NSObject<QLPreviewItem>
@@ -623,11 +625,11 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
 
     #pragma mark - Filtering
     - (void) updateFilter: (NSString *)filterString {
-        if ([_filterString isEqual: filterString]) return; /// mouseDown: in SourceList.m relies on this to not change the scrollPosition randomly. [Nov 2025]
-        _filterString = filterString;
+        if ([_filterString isEqual: filterString]) return; /// [mouseDown:] in SourceList.m relies on this to not change the scrollPosition randomly. [Nov 2025]
         
         mfdebounce(0.2, @"updateFilter", ^{ /// Keep typing in filterField responsive
             mflog(@"Debouncedd");
+            self->_filterString = filterString;
             [self bigUpdateAndStuff_OnlyUpdateSorting: NO];
         });
     }
@@ -763,7 +765,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                         if (
                             [combinedTransUnitString
                                 rangeOfString: _filterString
-                                options: (/*NSRegularExpressionSearch |*/ NSCaseInsensitiveSearch)
+                                options: kFilterField_StringCompareOptions
                             ]
                             .location != NSNotFound
                         ) {
@@ -1208,7 +1210,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         NSString *uiString = rowModel_getUIString(self, item, tableColumn.identifier);
         
         /// Override raw state string with colorful symbols / badges
-        NSAttributedString *uiStringAttributed  = [[NSAttributedString alloc] initWithString: (uiString ?: @"")];
+        NSMutableAttributedString *uiStringAttributed  = [[NSMutableAttributedString alloc] initWithString: (uiString ?: @"")];
         NSColor *stateCellBackgroundColor = nil;
         {
             if (iscol(@"state")) {
@@ -1233,6 +1235,38 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                     uiString = stringf(@"Error: unknown state: %@", uiString);
                     assert(false);
                 }
+            }
+        }
+        
+        /// Add search-highlights
+        
+        if (self->_filterString.length && !iscol(@"state")) { /// @"state" col is excluded from searching. See [updateFilter:], also see `#define combinedRowString`[Dec 2025]
+            
+            /// Find ranges in the uiString that match the `_filterString`
+            ///     (And are therefore responsible for this row being shown. See `kFilterField_StringCompareOptions`) [Dec 2025]
+            auto filterMatchRanges = [NSMutableArray new];
+            {
+                NSRange lastRange = NSMakeRange(0, 0);
+                while (1) {
+                    NSRange range = [uiStringAttributed.string
+                        rangeOfString: self->_filterString
+                        options: kFilterField_StringCompareOptions
+                        range: NSMakeRange(NSMaxRange(lastRange), uiStringAttributed.string.length - NSMaxRange(lastRange))
+                    ];
+                    
+                    [filterMatchRanges addObject: [NSValue valueWithRange: range]];
+                    
+                    if (range.location == NSNotFound) break;
+                 
+                    lastRange = range;
+                }
+            }
+            
+            /// Add yellow text background to matches.
+            for (NSValue *rangeNS in filterMatchRanges) {
+                [uiStringAttributed addAttributes: @{
+                    NSBackgroundColorAttributeName: [NSColor systemYellowColor], /// Safari Command-F seems to use yellowColor, not systemYellowColor, but this looks better I think. [Dec 2025]
+                } range: [rangeNS rangeValue]];
             }
         }
         
