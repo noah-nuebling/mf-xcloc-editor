@@ -12,7 +12,7 @@
 
 #import "TableView.h"
 #import "Utility.h"
-#import "NSObject+Additions.h"
+#import "NSObject+MFAssociatedObject.h"
 #import "AppDelegate.h"
 #import "Constants.h"
 #import "XclocDocument.h"
