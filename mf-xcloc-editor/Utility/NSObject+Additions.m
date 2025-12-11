@@ -5,10 +5,11 @@
 //  Created by Noah Nübling on 10/21/25.
 //
 
-#import "NSObject+MFAssociatedObject.h"
+#import "NSObject+Additions.h"
 #import <objc/runtime.h>
 
-@implementation NSObject (MFAssociatedObject)
+@implementation NSObject (Additions)
+
 
     /// associatedObject convenience (Not sure this is actually useful [Oct 2025]
     - (id) mf_associatedObjectForKey: (NSString *)key {
@@ -17,5 +18,7 @@
     - (void) mf_setAssociatedObject: (id)obj forKey: (NSString *)key {
         objc_setAssociatedObject(self, (void *)[key hash], obj, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     }
+    
+    
 
 @end

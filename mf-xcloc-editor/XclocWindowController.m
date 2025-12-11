@@ -22,8 +22,6 @@
 #import "NSNotificationCenter+Additions.h"
 #import <objc/runtime.h>
 
-#import "NSObject+MFTargetAction.h"
-
 @interface TitlbarAccessoryViewController : NSTitlebarAccessoryViewController @end
 @implementation TitlbarAccessoryViewController { @public NSView *_theView; }
     - (void)loadView { self.view = _theView; }
@@ -220,10 +218,7 @@
                 if ((0)) /// default is NO and causes error on macOS 12 Monterey:`*** Assertion failure in -[NSToolbar setAllowsUserCustomization:], NSToolbar.m:1379`
                     window.toolbar.allowsUserCustomization = NO;
                 window.toolbar.delegate = self;
-                {
-                    [window.toolbar insertItemWithItemIdentifier: @"SearchField" atIndex: 0];
-                    [window.toolbar insertItemWithItemIdentifier: @"RegexToggle" atIndex: 0];
-                }
+                [window.toolbar insertItemWithItemIdentifier: @"SearchField" atIndex: 0]; /// Gotta do this in addition to `toolbarDefaultItemIdentifiers:` – why is this so complicated.
                 window.toolbar.displayMode = NSToolbarDisplayModeIconOnly;
                 if (@available(macOS 15.0, *))
                     window.toolbar.allowsDisplayModeCustomization = NO;
@@ -350,7 +345,6 @@
     #pragma mark - NSToolBarDelegate
     
     static NSArray <NSToolbarItemIdentifier> *toolbarItemIdentifers = @[
-        @"RegexToggle",
         @"SearchField",
     ];
     
@@ -362,58 +356,15 @@
     }
     
     - (NSToolbarItem *)toolbar:(NSToolbar *)toolbar itemForItemIdentifier:(NSToolbarItemIdentifier)itemIdentifier willBeInsertedIntoToolbar:(BOOL)flag {
-        
-        NSToolbarItem *resulttt;
-        if ((0)) {}
-        else if ([itemIdentifier isEqual: @"RegexToggle"]) {
-            
-            if ((1)) {
-                auto result = [[NSToolbarItem alloc] initWithItemIdentifier: @"RegexToggle"];
-                
-                result.image = [NSImage imageWithSystemSymbolName: @"asterisk" accessibilityDescription: @"RegexToggle"];
-                result.enabled = YES;
-                result.toolTip = stringf(@"Use Regular Expressions in the '%@' field", kMFStr_FilterTranslations);
-                [result mf_bindTargetAction: ^(NSToolbarItem *sender) {
-                    mflog(@"RegexToggle action! Sender: %@", sender);
-                    result.
-                    
-                }];
-                
-                resulttt = result;
-            }
-            if ((0)) { /// Src: https://stackoverflow.com/a/61200555/10601702
-                // create toolbar items
-                NSToolbarItem *toolbarItem = [[NSToolbarItem alloc] initWithItemIdentifier:itemIdentifier];
-                toolbarItem.label = @"title";
-                NSImage *iconImage = [NSImage imageNamed:NSImageNameColumnViewTemplate];
-                NSButton *button = [[NSButton alloc] initWithFrame:NSMakeRect(0, 0, 40.0, 40.0)];
-                button.title = @"";
-                button.image = iconImage;
-                [button setButtonType:NSButtonTypeToggle];
-                button.bezelStyle = NSBezelStyleTexturedRounded;
-                button.action = @selector(toggleColumnView:);
-                [toolbarItem setView:button];
-                return toolbarItem;
-            }
-        }
-        else if ([itemIdentifier isEqual: @"SearchField"]) {
-            
-            
-            auto result = [[NSSearchToolbarItem alloc] initWithItemIdentifier: @"SearchField"];
-            result.searchField.delegate = self;
-            result.searchField = ({
-                auto v = mfui_new(FilterField);
-                v.placeholderString = kMFStr_FilterTranslations;
-                self->out_filterField = v;
-                v;
-            });
-        
-            resulttt = result;
-
-        }
-        else assert(false);
-            
-        return resulttt;
+        auto result = [[NSSearchToolbarItem alloc] initWithItemIdentifier: @"SearchField"];
+        result.searchField.delegate = self;
+        result.searchField = ({
+            auto v = mfui_new(FilterField);
+            v.placeholderString = kMFStr_FilterTranslations;
+            self->out_filterField = v;
+            v;
+        });
+        return result;
     }
     
     #pragma mark - Local MFUI Stuff

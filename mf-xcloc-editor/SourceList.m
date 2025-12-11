@@ -14,7 +14,7 @@
 #import "XclocDocument.h"
 #import "RowUtils.h"
 #import "MFUI.h"
-#import "NSObject+MFAssociatedObject.h"
+#import "NSObject+Additions.h"
 #import "Utility/ToString.m"
 #import "Constants.h"
 

@@ -6,7 +6,7 @@
 //
 
 #import "NSNotificationCenter+Additions.h"
-#import "NSObject+MFAssociatedObject.h"
+#import "NSObject+Additions.h"
 #import "Utility.h"
 
 @interface MFNotificationObserver : NSObject @end

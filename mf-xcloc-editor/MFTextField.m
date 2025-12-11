@@ -8,7 +8,7 @@
 #import "MFTextField.h"
 #import "Utility.h"
 #import "NSAttributedString+Additions.h"
-#import "NSObject+MFAssociatedObject.h"
+#import "NSObject+Additions.h"
 #import "NSNotificationCenter+Additions.h"
 
 /// Also see:

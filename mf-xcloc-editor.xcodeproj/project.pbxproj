@@ -12,8 +12,7 @@
 		4F33326C2EACC15000055FFC /* FileProvider.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F33326B2EACC15000055FFC /* FileProvider.framework */; };
 		4F5160362EB6A7CA009B0BC5 /* NSNotificationCenter+Additions.m in Sources */ = {isa = PBXBuildFile; fileRef = 4F5160352EB6A7CA009B0BC5 /* NSNotificationCenter+Additions.m */; };
 		4F5160432EB77FA7009B0BC5 /* NSView+Additions.m in Sources */ = {isa = PBXBuildFile; fileRef = 4F5160422EB77FA7009B0BC5 /* NSView+Additions.m */; };
-		4F726A722EEAFFEC00735253 /* NSObject+MFTargetAction.m in Sources */ = {isa = PBXBuildFile; fileRef = 4F726A712EEAFFEC00735253 /* NSObject+MFTargetAction.m */; };
-		4F7E02D12EA7758800C2F693 /* NSObject+MFAssociatedObject.m in Sources */ = {isa = PBXBuildFile; fileRef = 4F7E02D02EA7758700C2F693 /* NSObject+MFAssociatedObject.m */; };
+		4F7E02D12EA7758800C2F693 /* NSObject+Additions.m in Sources */ = {isa = PBXBuildFile; fileRef = 4F7E02D02EA7758700C2F693 /* NSObject+Additions.m */; };
 		4FAD64792E69D1DD00643726 /* XclocWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4FAD64782E69D1DD00643726 /* XclocWindowController.m */; };
 		4FAD9C142EAF7DC600875CA0 /* XclocDocumentController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4FAD9C132EAF7DC600875CA0 /* XclocDocumentController.m */; };
 		4FC6FA632E6A0BA700459F13 /* ReusableViews.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4FC6FA622E6A0BA700459F13 /* ReusableViews.xib */; };
@@ -52,10 +51,8 @@
 		4F5160412EB77FA7009B0BC5 /* NSView+Additions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSView+Additions.h"; sourceTree = "<group>"; };
 		4F5160422EB77FA7009B0BC5 /* NSView+Additions.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSView+Additions.m"; sourceTree = "<group>"; };
 		4F64FED62EB6352D004B6FD5 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = SOURCE_ROOT; };
-		4F726A702EEAFFEC00735253 /* NSObject+MFTargetAction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSObject+MFTargetAction.h"; sourceTree = "<group>"; };
-		4F726A712EEAFFEC00735253 /* NSObject+MFTargetAction.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSObject+MFTargetAction.m"; sourceTree = "<group>"; };
-		4F7E02CF2EA7758700C2F693 /* NSObject+MFAssociatedObject.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSObject+MFAssociatedObject.h"; sourceTree = "<group>"; };
-		4F7E02D02EA7758700C2F693 /* NSObject+MFAssociatedObject.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSObject+MFAssociatedObject.m"; sourceTree = "<group>"; };
+		4F7E02CF2EA7758700C2F693 /* NSObject+Additions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSObject+Additions.h"; sourceTree = "<group>"; };
+		4F7E02D02EA7758700C2F693 /* NSObject+Additions.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSObject+Additions.m"; sourceTree = "<group>"; };
 		4F7E02D22EA77C9700C2F693 /* da.xcloc */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = da.xcloc; sourceTree = "<group>"; };
 		4F7E02D32EA77D1600C2F693 /* da (original).xcloc */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = "da (original).xcloc"; sourceTree = "<group>"; };
 		4FAD64772E69D1DD00643726 /* XclocWindowController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XclocWindowController.h; sourceTree = "<group>"; };
@@ -129,11 +126,9 @@
 				4FC6FA662E6A367400459F13 /* MFUI.h */,
 				4F0C64A12EAD4C00008B3506 /* MFUI.m */,
 				4FF447A72DF6CB3A008F2D74 /* Utility.h */,
+				4F7E02CF2EA7758700C2F693 /* NSObject+Additions.h */,
 				4F51603F2EB76462009B0BC5 /* ToString.m */,
-				4F7E02CF2EA7758700C2F693 /* NSObject+MFAssociatedObject.h */,
-				4F7E02D02EA7758700C2F693 /* NSObject+MFAssociatedObject.m */,
-				4F726A702EEAFFEC00735253 /* NSObject+MFTargetAction.h */,
-				4F726A712EEAFFEC00735253 /* NSObject+MFTargetAction.m */,
+				4F7E02D02EA7758700C2F693 /* NSObject+Additions.m */,
 				4F5160342EB6A7CA009B0BC5 /* NSNotificationCenter+Additions.h */,
 				4F5160352EB6A7CA009B0BC5 /* NSNotificationCenter+Additions.m */,
 				4F5160412EB77FA7009B0BC5 /* NSView+Additions.h */,
@@ -311,11 +306,10 @@
 				4FF08E322EAAA8A100BBE492 /* NSAttributedString+Additions.m in Sources */,
 				4F5160432EB77FA7009B0BC5 /* NSView+Additions.m in Sources */,
 				4FF08E352EAAC57E00BBE492 /* MFTextField.m in Sources */,
-				4F726A722EEAFFEC00735253 /* NSObject+MFTargetAction.m in Sources */,
 				4FF447A62DF6BC6F008F2D74 /* TableView.m in Sources */,
 				4FF447AA2DF701EE008F2D74 /* SourceList.m in Sources */,
 				4FFBA6B52EAA14AF00CF1A71 /* XclocDocument.m in Sources */,
-				4F7E02D12EA7758800C2F693 /* NSObject+MFAssociatedObject.m in Sources */,
+				4F7E02D12EA7758800C2F693 /* NSObject+Additions.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
