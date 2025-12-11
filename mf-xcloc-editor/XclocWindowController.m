@@ -20,19 +20,39 @@
 #import "MFTextField.h"
 
 #import "NSNotificationCenter+Additions.h"
+#import <objc/runtime.h>
 
 @interface TitlbarAccessoryViewController : NSTitlebarAccessoryViewController @end
 @implementation TitlbarAccessoryViewController { @public NSView *_theView; }
     - (void)loadView { self.view = _theView; }
 @end
 
+@interface FilterFieldCell : NSSearchFieldCell @end
+@implementation FilterFieldCell
+
+    - (NSRect) searchTextRectForBounds: (NSRect)rect {
+        NSRect result = [super searchTextRectForBounds: rect];
+        
+        result.size.width -= 50; /// Make space for the custom regex toggle – is called but seems to do absolutely nothing on macOS 26 Tahoe [Dec 2025]. Suspect it's because they rewrote everything in SwiftUI. (But not sure.)
+        result.origin.x += 50;
+        
+        mflog(@"%@ -> %@", NSStringFromRect(rect), NSStringFromRect(result));
+        
+        return result;
+    }
+
+@end
+
 @interface FilterField : NSSearchField <NSSearchFieldDelegate, NSControlTextEditingDelegate> @end
 @implementation FilterField
 
     - (instancetype) initWithFrame: (NSRect)frame {
-        self = [super initWithFrame:frame];
+
+        self = [super initWithFrame: frame];
         if (self) {
+            object_setClass(self.cell, [FilterFieldCell class]);
             self.delegate = self;
+            self.cell.scrollable = YES;
         }
         return self;
     }
