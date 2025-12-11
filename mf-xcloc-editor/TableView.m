@@ -438,7 +438,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
             return YES;
         }
         
-        return [super validateMenuItem: menuItem];
+        return NO; //[super validateMenuItem: menuItem]; /// Throws unrecognizedselector exception [Dec 2025]
     }
     
     #pragma mark - Mouse Control
