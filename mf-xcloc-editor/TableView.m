@@ -1262,10 +1262,31 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                 }
             }
             
-            /// Add yellow text background to matches.
+            /// Get highlightColor
+            static NSColor *highlightColor;
+            {
+                if ((0)) { /// Match Mail.app ... Doesn't stand out enough? ... Small highlights become a bit hard to pick out.
+                    if (!highlightColor)
+                    highlightColor = [NSColor
+                        colorNamed: @"SnippetHighlightColor"
+                        bundle: [NSBundle bundleWithPath: @"/System/Applications/Mail.app"]
+                    ] ?: [NSColor findHighlightColor];
+                }
+                if ((0)) { /// Match Safari and Xcode ... Looks grating (Maybe because we don't have a shadow)
+                    highlightColor = [NSColor findHighlightColor];
+                }
+                if ((1)) { /// Custom
+                    if (!highlightColor)
+                    highlightColor = [NSColor colorWithName: nil dynamicProvider: ^NSColor *(NSAppearance *_) { /// Get it to update instantly on darkmode-switch. IIRC I filed a FB report about this not working on older macOS and they fixed it in Tahoe. [Dec 2025]
+                        return [[NSColor systemYellowColor] colorWithAlphaComponent: 0.5];
+                    }];
+                }
+            }
+            
+            /// Add color background to matches.
             for (NSValue *rangeNS in filterMatchRanges) {
                 [uiStringAttributed addAttributes: @{
-                    NSBackgroundColorAttributeName: [NSColor systemYellowColor], /// Safari Command-F seems to use yellowColor, not systemYellowColor, but this looks better I think. [Dec 2025]
+                    NSBackgroundColorAttributeName: highlightColor,
                 } range: [rangeNS rangeValue]];
             }
         }
