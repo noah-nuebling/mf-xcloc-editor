@@ -5,7 +5,7 @@
 //  Created by Noah Nübling on 10/23/25.
 //
 
-#import <Cocoa/Cocoa.h>
+#import <AppKit/AppKit.h>
 
 @interface MFInvisiblesTextView : NSTextView @end
 @interface MFTextField : NSTextField @end

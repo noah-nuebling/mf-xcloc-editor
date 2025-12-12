@@ -1309,13 +1309,13 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                 ///     Better solution idea: Customize fieldEditor (override `writeSelectionToPasteboard:`)
                 {
                     lineBreakMode = NSLineBreakByCharWrapping; /// This only comes into effect after selecting the text for the first time? Before that, only the NSAttributedString attrs seem to take effect. Weird. [Nov 2025, macOS 15 Sequoia, 2018 Mac Mini]
-                    uiStringAttributed = [uiStringAttributed attributedStringByAddingAttributesAsBase: @{
+                    uiStringAttributed = [[uiStringAttributed attributedStringByAddingAttributesAsBase: @{
                         NSParagraphStyleAttributeName:  ({
                             auto p = [NSMutableParagraphStyle new];
                             p.lineBreakMode = NSLineBreakByCharWrapping;
                             p;
                         })
-                    }];
+                    }] mutableCopy];
                 }
                 
                 /// Configure filename-field
