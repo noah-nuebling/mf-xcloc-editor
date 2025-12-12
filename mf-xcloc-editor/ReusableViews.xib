@@ -132,7 +132,7 @@
                             <buttonCell key="cell" type="push" title="View Screenshot" bezelStyle="rounded" imagePosition="only" alignment="center" controlSize="mini" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="GSq-rv-bbb">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                 <font key="font" metaFont="miniSystem"/>
-                                <imageReference key="image" image="eye" catalog="system" symbolScale="medium"/>
+                                <imageReference key="image" image="eye" catalog="system" symbolScale="small"/>
                             </buttonCell>
                             <constraints>
                                 <constraint firstAttribute="width" constant="20" id="Dtu-NQ-hC6"/>
@@ -196,6 +196,6 @@
         </tableCellView>
     </objects>
     <resources>
-        <image name="eye" catalog="system" width="21" height="13"/>
+        <image name="eye" catalog="system" width="16" height="11"/>
     </resources>
 </document>
