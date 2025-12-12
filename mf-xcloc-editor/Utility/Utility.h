@@ -117,7 +117,7 @@ static NSRect NSRectFromRect(NSRect base, struct _MFRectOverrides overrides) {
 /// Logging
 ///
 
-#define mflog(msg...)  NSLog(@"%@: %@", /*__FILE_NAME__,*/ _shorten__func__(__func__), stringf(@"" msg))
+#define mflog(msg...)  //NSLog(@"%@: %@", /*__FILE_NAME__,*/ _shorten__func__(__func__), stringf(@"" msg))
 
 static NSString *_shorten__func__(const char *func) {
     

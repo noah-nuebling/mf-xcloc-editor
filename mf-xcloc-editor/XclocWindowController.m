@@ -27,23 +27,12 @@
     - (void)loadView { self.view = _theView; }
 @end
 
-@interface FilterFieldCell : NSSearchFieldCell @end
+@interface FilterFieldCell : NSTextFieldCell @end
 @implementation FilterFieldCell
-
-    - (NSRect) searchTextRectForBounds: (NSRect)rect {
-        NSRect result = [super searchTextRectForBounds: rect];
-        
-        result.size.width -= 50; /// Make space for the custom regex toggle – is called but seems to do absolutely nothing on macOS 26 Tahoe [Dec 2025]. Suspect it's because they rewrote everything in SwiftUI. (But not sure.)
-        result.origin.x += 50;
-        
-        mflog(@"%@ -> %@", NSStringFromRect(rect), NSStringFromRect(result));
-        
-        return result;
-    }
 
 @end
 
-@interface FilterField : NSSearchField <NSSearchFieldDelegate, NSControlTextEditingDelegate> @end
+@interface FilterField : NSTextField <NSTextFieldDelegate, NSControlTextEditingDelegate> @end
 @implementation FilterField
 
     - (instancetype) initWithFrame: (NSRect)frame {
@@ -52,7 +41,12 @@
         if (self) {
             object_setClass(self.cell, [FilterFieldCell class]);
             self.delegate = self;
+            
             self.cell.scrollable = YES;
+            
+            //self.drawsBackground = YES;
+            //self.bezelStyle = NSTextFieldRoundedBezel;
+            
         }
         return self;
     }
@@ -81,6 +75,139 @@
         return YES;
     }
 
+    #if 1
+        - (void)drawFocusRingMask {
+            auto rect = [self focusRingMaskBounds];
+            auto path = [NSBezierPath bezierPathWithRoundedRect: rect xRadius: rect.size.height/2.0 yRadius: rect.size.height/2.0]; /// Pill shape
+            [path fill];
+        }
+        
+        - (NSRect) focusRingMaskBounds {
+            auto v = self.superview;
+            auto rect = [self convertRect: [v bounds] fromView: v];
+            return rect;
+        }
+
+    #endif
+
+@end
+
+
+typedef enum : int {
+    kMFFilterFieldToggleType_Regex,
+    kMFFilterFieldToggleType_Capitalization,
+} MFFilterFieldToggleType;
+
+@interface RegexToggle : NSView @end /// Control drawin inside the FilterField (sort of) [Dec 2025]
+@implementation RegexToggle
+    {
+        @public
+        MFFilterFieldToggleType type;
+        bool state; /// off/on
+        bool hover;
+        NSTrackingRectTag tracking;
+    }
+    
+    - (void) setFrame:(NSRect)frame {
+        [super setFrame: frame];
+        { /// We're watching self.frame, using self.bounds because setBounds: is never called.
+            if (self->tracking) [self removeTrackingRect: self->tracking];
+            self->tracking = [self addTrackingRect: [self bounds] owner: self userData: nil assumeInside: NO];
+        }
+    }
+    
+    - (void) mouseExited:  (NSEvent *)event { self->hover = 0; [self setNeedsDisplay: YES]; mflog(@"hover: %d", self->hover); }
+    - (void) mouseEntered: (NSEvent *)event { self->hover = 1; [self setNeedsDisplay: YES]; mflog(@"hover: %d", self->hover); }
+    
+    - (void)mouseUp:(NSEvent *)event {
+        
+        if (NSPointInRect([self convertPoint: event.locationInWindow fromView: nil], [self bounds])) {
+            self->state = !self->state;
+            [self setNeedsDisplay: YES];
+        }
+    }
+    
+    - (BOOL)isOpaque { return YES; } /// Prevent window dragging
+    
+    - (void) drawRect:(NSRect)dirtyRect {
+        
+        auto drawingRect = self.bounds;
+        
+        /// Draw circle background
+        {
+            if (self->state) [[NSColor controlAccentColor] setFill];
+            else {
+                if (self->hover) [[NSColor quaternaryLabelColor] setFill];
+                else             [[NSColor clearColor] setFill];
+            }
+            auto smallDim = MIN(drawingRect.size.width, drawingRect.size.height);
+            auto path = [NSBezierPath bezierPathWithRoundedRect: drawingRect xRadius: smallDim/2.0 yRadius: smallDim/2.0];
+            [path fill];
+        }
+        
+        /// Draw Regex text
+        
+        auto foregroundColor = self->state ? [NSColor whiteColor] : [NSColor controlTextColor];
+        
+        
+        if (self->type == kMFFilterFieldToggleType_Regex)
+        {
+            auto s = attributed(@".*");
+            CGFloat fontSize = 25.0 * (drawingRect.size.width / 30.0);
+            [s setAttributes:@{
+                NSFontAttributeName: [NSFont systemFontOfSize: fontSize weight: NSFontWeightBold],
+                NSForegroundColorAttributeName: self->state ? foregroundColor : [foregroundColor colorWithAlphaComponent: 0.6], /// Lower the alpha to match the SF Symbols (See imageWithSystemSymbolName: ) [Dec 2025]
+            } range: NSMakeRange(0, s.length)];
+            
+            NSRect sDrawingRect = NSZeroRect;
+            { /// Center the string
+                CGSize sSize = [s size];
+                sDrawingRect.size = sSize;
+                sDrawingRect.origin.x += (drawingRect.size.width - sSize.width) / 2.0;
+                sDrawingRect.origin.y += (drawingRect.size.height - sSize.height) / 2.0;
+            }
+            sDrawingRect.origin.y += fontSize * (5.0 / 20); /// Heuristic adjustments
+            
+            [s drawWithRect: sDrawingRect options: 0 context: nil];
+        }
+        else if (self->type == kMFFilterFieldToggleType_Capitalization) {
+            
+            auto img = [NSImage imageWithSystemSymbolName: @"textformat" accessibilityDescription: nil];
+            if (@available(macOS 12.0, *)) {
+                img = [img imageWithSymbolConfiguration: [NSImageSymbolConfiguration configurationWithPaletteColors: @[foregroundColor]]];
+            } else {
+                    // Fallback on earlier versions
+            }
+            
+            [img setTemplate: YES];
+            
+            /// Determine img scaling factor
+            CGFloat factor;
+            {
+                auto xFactor = img.size.width / drawingRect.size.width;
+                auto yFactor = img.size.height / drawingRect.size.height;
+                factor = MAX(xFactor, yFactor); /// How much the image needs to be scaled down to fit.
+            }
+            /// Scale and center img
+            NSRect imgDrawingRect;
+            {
+                imgDrawingRect = (NSRect){ .size=img.size };
+                auto diffW = (imgDrawingRect.size.width / factor)  - imgDrawingRect.size.width;
+                auto diffH = (imgDrawingRect.size.height / factor) - imgDrawingRect.size.height;
+                imgDrawingRect.size.width -= diffW;
+                imgDrawingRect.size.height -= diffH;
+                imgDrawingRect.origin.x += diffW/2.0;
+                imgDrawingRect.origin.y += diffH/2.0;
+            }
+            { /// Heuristic adjustments
+                imgDrawingRect.origin.y += 4.0;
+            }
+            
+            [img drawInRect: imgDrawingRect];
+        }
+    }
+    
+    
 @end
 
 @interface XclocWindow : NSWindow @end
@@ -356,15 +483,63 @@
     }
     
     - (NSToolbarItem *)toolbar:(NSToolbar *)toolbar itemForItemIdentifier:(NSToolbarItemIdentifier)itemIdentifier willBeInsertedIntoToolbar:(BOOL)flag {
-        auto result = [[NSSearchToolbarItem alloc] initWithItemIdentifier: @"SearchField"];
-        result.searchField.delegate = self;
-        result.searchField = ({
-            auto v = mfui_new(FilterField);
-            v.placeholderString = kMFStr_FilterTranslations;
-            self->out_filterField = v;
-            v;
-        });
+        auto result = [[NSToolbarItem alloc] initWithItemIdentifier: @"SearchField"];
+        
+        if ((1))
+        result.view =
+            mfui_hstack(0, @[
+                mfui_sized(0, 10),
+                [NSImageView imageViewWithImage: [NSImage imageWithSystemSymbolName: @"magnifyingglass" accessibilityDescription: nil]],
+                ({
+                    auto v = mfui_new(FilterField);
+                    v.placeholderString = kMFStr_FilterTranslations;
+                    self->out_filterField = v;
+                    v;
+                }),
+                ({
+                    auto v = mfui_new(RegexToggle);
+                    v->type = kMFFilterFieldToggleType_Capitalization;
+                    v.toolTip = @"Case Sensitive Search";
+                    mfui_setsize(v,18,18);
+                }),
+                mfui_sized(0, 3),
+                ({
+                    #if 0
+                        auto v = mfui_new(NSTextField);
+                        v.stringValue = @".*";
+                        v.font = [NSFont systemFontOfSize: 11.0 weight: 0];
+                        v.textColor = [NSColor whiteColor];
+                        v.toolTip = @"Use Regular Expression patterns for searching instead of searching for the text verbatim.";
+                        v.buttonType = NSButtonTypeOnOff;
+                    #endif
+                    #if 1
+                        auto v = mfui_new(RegexToggle);
+                        v->type = kMFFilterFieldToggleType_Regex;
+                        v.toolTip = @"Regular Expression Search";
+                        mfui_setsize(v,18,18);
+                    #endif
+                    v;
+                }),
+                mfui_sized(0, 10),
+            ]);
+        
+        if ((0))
+        result.image = [NSImage imageWithSystemSymbolName: @"asterisk" accessibilityDescription: nil];
+        
+        result.enabled = YES;
+        result.target = self;
+        result.action = @selector(testAction:);
+        
+        result.bordered = YES;
+        
+        [result.view.heightAnchor constraintEqualToConstant: /*22*/30].active = YES;
+        [result.view.widthAnchor constraintEqualToConstant: 300].active = YES;
+        
         return result;
+    }
+    
+    - (void) testAction: (id)sender {
+        mflog(@"");
     }
     
     #pragma mark - Local MFUI Stuff
@@ -390,3 +565,38 @@
     }
 
 @end
+
+#define MF_TEST 0
+#if MF_TEST
+
+@implementation NSObject (MFTest)
+
+    + (void)load { /// Finding: When drawing the NSButton inside the NSTextField, something seems to override its styling – when we draw the same button outside of this context, it works as expected.
+        
+        auto win = [NSWindow new];
+        win.styleMask = 0
+            | NSWindowStyleMaskTitled
+            | NSWindowStyleMaskClosable
+        ;
+        win.titlebarSeparatorStyle = NSTitlebarSeparatorStyleShadow;
+        
+        win.contentView = mfui_wrap(mfui_margins(20, 20, 10, 10), ({
+            auto v = mfui_new(NSButton);
+            v.title = @"Regex";
+            v.toolTip = @"Use Regular Expression patterns for searching instead of searching for the text verbatim.";
+            v.buttonType = NSButtonTypeOnOff;
+            v.bordered = YES;
+            //v.bezelStyle = NSBezelStylePush;
+            //v.bezelColor = [NSColor systemGreenColor];
+            //[v.widthAnchor constraintEqualToAnchor: v.heightAnchor].active = YES; /// Make circle
+            [v.heightAnchor constraintEqualToConstant: 6].active = YES;
+            v;
+        }));
+        
+        [win makeKeyAndOrderFront: nil];
+        
+    }
+
+@end
+
+#endif

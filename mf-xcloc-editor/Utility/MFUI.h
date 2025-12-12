@@ -31,10 +31,10 @@ static NSEdgeInsets mfui_margins(double top, double bottom, double left, double 
 }
 
 static void mfui_setmargins(NSView *big, NSEdgeInsets margins, NSView *little) {
-    if (!isnan(margins.top))     { auto c = [big.topAnchor      constraintEqualToAnchor: little.topAnchor    constant: -margins.top]  ; c.identifier = @"mui_setmargins"; c.active = YES; }
-    if (!isnan(margins.bottom))  { auto c = [big.bottomAnchor   constraintEqualToAnchor: little.bottomAnchor constant: margins.bottom]; c.identifier = @"mui_setmargins"; c.active = YES; }
-    if (!isnan(margins.left))    { auto c = [big.leftAnchor     constraintEqualToAnchor: little.leftAnchor   constant: -margins.left] ; c.identifier = @"mui_setmargins"; c.active = YES; }
-    if (!isnan(margins.right))   { auto c = [big.rightAnchor    constraintEqualToAnchor: little.rightAnchor  constant: margins.right] ; c.identifier = @"mui_setmargins"; c.active = YES; }
+    if (!isnan(margins.top))     { auto c = [big.topAnchor      constraintEqualToAnchor: little.topAnchor    constant: -margins.top]  ; c.priority = 1000; c.identifier = @"mui_setmargins"; c.active = YES; }
+    if (!isnan(margins.bottom))  { auto c = [big.bottomAnchor   constraintEqualToAnchor: little.bottomAnchor constant: margins.bottom]; c.priority = 1000; c.identifier = @"mui_setmargins"; c.active = YES; }
+    if (!isnan(margins.left))    { auto c = [big.leftAnchor     constraintEqualToAnchor: little.leftAnchor   constant: -margins.left] ; c.priority = 1000; c.identifier = @"mui_setmargins"; c.active = YES; }
+    if (!isnan(margins.right))   { auto c = [big.rightAnchor    constraintEqualToAnchor: little.rightAnchor  constant: margins.right] ; c.priority = 1000; c.identifier = @"mui_setmargins"; c.active = YES; }
 }
 static void mfui_insert(NSView *big, NSEdgeInsets margins, NSView *little) {
     [big addSubview: little];
@@ -82,16 +82,32 @@ static NSTextField *mfui_label(NSString *text, mfui_label_args args) {
 
 static NSStackView *mfui_stack(char orientation, CGFloat spacing, NSArray *arrangedSubviews) {
     
-    assert(false); /// Unused
-    
     auto v = mfui_new(NSStackView);
     v.orientation = orientation == 'v' ? NSUserInterfaceLayoutOrientationVertical : NSUserInterfaceLayoutOrientationHorizontal;
     
     for (NSView *w in arrangedSubviews) {
         [v addArrangedSubview: w];
+        [v setVisibilityPriority: NSStackViewVisibilityPriorityMustHold forView: w];
+        
+    }
+    
+    if ((0)) {
+        [v setClippingResistancePriority: 1000 forOrientation: NSLayoutConstraintOrientationVertical];
+        [v setClippingResistancePriority: 1000 forOrientation: NSLayoutConstraintOrientationHorizontal];
+        
+        [v setHuggingPriority: 1000 forOrientation: NSLayoutConstraintOrientationVertical];
+        [v setHuggingPriority: 1000 forOrientation: NSLayoutConstraintOrientationHorizontal];
+        
+        [v setContentCompressionResistancePriority: 1000 forOrientation: NSLayoutConstraintOrientationVertical];
+        [v setContentCompressionResistancePriority: 1000 forOrientation: NSLayoutConstraintOrientationHorizontal];
+        
+        [v setContentHuggingPriority: 1000 forOrientation: NSLayoutConstraintOrientationVertical];
+        [v setContentHuggingPriority: 1000 forOrientation: NSLayoutConstraintOrientationHorizontal];
     }
     
     v.spacing = spacing;
+    
+    v.detachesHiddenViews = NO;
     
     return v;
 }
@@ -100,8 +116,20 @@ static NSStackView *mfui_stack(char orientation, CGFloat spacing, NSArray *arran
 #define mfui_hstack(spacing, views...) mfui_stack('h', (spacing), (views))
 
 static NSView *mfui_spacer(void) {
-    assert(false);
     auto v = mfui_new(NSView);
     v.identifier = @"mfui_spacer";
+    return v;
+}
+
+static NSView *mfui_setsize(NSView *v, CGFloat height, CGFloat width) {
+    [v.heightAnchor constraintEqualToConstant: height].active = YES;
+    [v.widthAnchor constraintEqualToConstant:  width].active = YES;
+    return v;
+}
+
+static NSView *mfui_sized(CGFloat height, CGFloat width) {
+    auto v = mfui_new(NSView);
+    v.identifier = @"mfui_sized";
+    mfui_setsize(v, height, width);
     return v;
 }
