@@ -172,13 +172,13 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                     }
                     
                     NSTableCellView *cell = [self viewAtColumn: [self columnWithIdentifier: @"source"] row: row makeIfNecessary: NO];
-                    [textField__ mf_setAssociatedObject: cell.textField forKey: @"MFSourceCellSister"]; /// Do this every time cause cells get swapped out by the tableView[Nov 2025]
+                    textField__.mf_associatedObjects[@"MFSourceCellSister"] = cell.textField; /// Do this every time cause cells get swapped out by the tableView[Nov 2025]
                     
                     /// Show MFInvisiblesTextView with newline glyphs
                     cell.textField.hidden = YES /*NO*/; /// Set to YES overlays the MFTextField and MFInvisiblesTextView, making text darker – useful as debugging tool (or to keep usable if there are bugs)
                     
                     
-                    NSTextView *textView = [cell.textField mf_associatedObjectForKey: @"MFInvisiblesTextView_Overlay"];
+                    NSTextView *textView = cell.textField.mf_associatedObjects[@"MFInvisiblesTextView_Overlay"];
                     if (!textView) {
                         textView = [MFInvisiblesTextView new];
                         {
@@ -194,7 +194,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
 
                         [cell addSubview: textView];
                         mfui_setmargins(cell, mfui_margins(8,8,2,2), textView); /// Margins match constraints on cell.textField in IB [Oct 2025]
-                        [cell.textField mf_setAssociatedObject: textView forKey: @"MFInvisiblesTextView_Overlay"];
+                        cell.textField.mf_associatedObjects[@"MFInvisiblesTextView_Overlay"] = textView;
                     }
 
                     textView.hidden = NO;
@@ -222,8 +222,8 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                     MFTextField *textField__ = note.object;
                     if (textField__.window != self.window) return;
                     
-                    MFTextField *sisterTextField = [textField__ mf_associatedObjectForKey: @"MFSourceCellSister"];
-                    NSTextView *textView = [sisterTextField mf_associatedObjectForKey: @"MFInvisiblesTextView_Overlay"];
+                    MFTextField *sisterTextField = textField__.mf_associatedObjects[@"MFSourceCellSister"];
+                    NSTextView *textView = sisterTextField.mf_associatedObjects[@"MFInvisiblesTextView_Overlay"];
                     
                     if (sisterTextField) sisterTextField.hidden = NO;
                     if (textView)        textView.hidden = YES;
@@ -1366,7 +1366,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                         mflog(@"quick-look-button special config: %p (row: %ld)", quickLookButton, [self rowForItem: transUnit]);
                         [quickLookButton setAction: @selector(quickLookButtonPressed:)];
                         [quickLookButton setTarget: self];
-                        [quickLookButton mf_setAssociatedObject: @([self rowForItem: item]) forKey: @"rowOfQuickLookButton"];
+                        quickLookButton.mf_associatedObjects[@"rowOfQuickLookButton"] = @([self rowForItem: item]);
                     }
                 }
             }
@@ -1413,7 +1413,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                 [cell.textField setLineBreakStrategy: NSLineBreakStrategyNone]; /// disable `NSLineBreakStrategyPushOut` since the `MFInvisiblesTextView_Overlay` doesn't do that. (maybe we could enable it there but whatever. [Nov 2025])
                 
                 /// Clean up `@"MFInvisiblesTextView_Overlay"`
-                MFInvisiblesTextView *overlay = [cell.textField mf_associatedObjectForKey: @"MFInvisiblesTextView_Overlay"];
+                MFInvisiblesTextView *overlay = cell.textField.mf_associatedObjects[@"MFInvisiblesTextView_Overlay"];
                 if ((overlay && !overlay.hidden) || cell.textField.hidden) {
                     assert(false); /// Shouldn't happen if our code works correctly.
                     [overlay setHidden: YES];
@@ -1596,7 +1596,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         };
         
         - (IBAction) quickLookButtonPressed: (id)quickLookButton {
-            NSInteger row = [[quickLookButton mf_associatedObjectForKey: @"rowOfQuickLookButton"] integerValue];
+            NSInteger row = [[quickLookButton mf_associatedObjects][@"rowOfQuickLookButton"] integerValue];
             
             if (self.selectedRow == row) {
                 [self togglePreviewPanel: nil];

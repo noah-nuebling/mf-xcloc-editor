@@ -411,7 +411,7 @@ double newlineMarkerWidth = 0.0 /*15.0*/; /// Try to stop newline marker from be
             static int _logCount = 0;
         
             #define log(msg...) \
-                mflog(@"%@ / %@%@", @(_logCount++), stringf(@"row %@: ", [self mf_associatedObjectForKey: @"MFTextField_Row"]), stringf(msg))
+                mflog(@"%@ / %@%@", @(_logCount++), stringf(@"row %@: ", self.mf_associatedObjects[@"MFTextField_Row"]), stringf(msg))
             
             - (void) _logSize {
                 log(@"   frame: %@", NSStringFromRect(self.frame));

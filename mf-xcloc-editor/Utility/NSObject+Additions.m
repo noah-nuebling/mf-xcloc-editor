@@ -6,9 +6,8 @@
 //
 
 @interface NSObject (Additions)
-
-    - (id) mf_associatedObjectForKey: (NSString *)key;
-    - (void) mf_setAssociatedObject: (id)obj forKey: (NSString *)key;
+    
+    - (NSMutableDictionary *)mf_associatedObjects;
 
 @end
 
@@ -23,14 +22,16 @@
 @implementation NSObject (Additions)
 
 
-    /// associatedObject convenience (Not sure this is actually useful [Oct 2025]
-    - (id) mf_associatedObjectForKey: (NSString *)key {
-        return objc_getAssociatedObject(self, (void *)[key hash]);
-    }
-    - (void) mf_setAssociatedObject: (id)obj forKey: (NSString *)key {
-        objc_setAssociatedObject(self, (void *)[key hash], obj, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-    }
+    - (NSMutableDictionary *)mf_associatedObjects {
     
+        /// associatedObject convenience. Very useful. You can do all the JavaScript things. [Dec 2025]
     
-
+         id dict = objc_getAssociatedObject(self, "__mf_associatedObjects");
+         if (!dict) {
+            dict = [NSMutableDictionary new];
+            objc_setAssociatedObject(self, "__mf_associatedObjects", dict, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+         }
+         return dict;
+    }
 @end
+

@@ -66,10 +66,7 @@
             observer->weakObservee = observee;
         }
         
-        [observee
-            mf_setAssociatedObject: observer
-            forKey: stringf(@"%p", observer) /// Use the pointer as key –> Can have arbitrary number of observations on the observee
-        ];
+        [observee mf_associatedObjects][stringf(@"%p", observer)] = observer; /// Use the pointer as key –> Can have arbitrary number of observations on the observee
         
         [self addObserver: observer selector: @selector(callback:) name: name object: obj];
         

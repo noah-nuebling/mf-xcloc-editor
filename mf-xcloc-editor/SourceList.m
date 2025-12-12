@@ -233,7 +233,7 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
     
     - (void) updateProgressInCell: (NSTableCellView *)cell withFile: (File *)file {
     
-        NSTextField *progressField = [cell mf_associatedObjectForKey: @"progress-field"];
+        NSTextField *progressField = cell.mf_associatedObjects[@"progress-field"];
         progressField.attributedStringValue = ({
             
             /// Determine progress percent
@@ -428,7 +428,7 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
                 mfui_insert(cell, mfui_margins(0, 0, 0, 0), content);
                 
                 cell.textField = out_label;
-                [cell mf_setAssociatedObject: out_progress forKey: @"progress-field"];
+                cell.mf_associatedObjects[@"progress-field"] = out_progress;
             }
             
             if ((1)) {
@@ -438,7 +438,7 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
                 cell.textField.stringValue = [self uiStringForFile: file];
                 
                 id progressField = firstmatch(cell.subviews, cell.subviews.count, nil, sv, [[sv identifier] isEqual: @"progess-field"]);
-                [cell mf_setAssociatedObject: progressField forKey: @"progress-field"];
+                cell.mf_associatedObjects[@"progress-field"] = progressField;
                 
                 auto indentConstraint = firstmatch(cell.constraints, cell.constraints.count, nil, c, [c.identifier isEqual: @"indentConstraint"]);
                 indentConstraint.constant = ([self rowForItem: file] == 0) ? 2 : 5; /// Indent the project file's rows a bit under the `@"separator"` (Why am I doing this???)
