@@ -15,8 +15,6 @@ static int __invocations = 0; /// Performance testing
 static int __invocation_rowheight = 0;
 static CGFloat _defaultRowHeight = 75 /*100*/; /// We return this in `heightOfRowByItem:`  || Tradeoff: higher -> faster load times, too-high -> 'fights you' when scrolling up (not just jitter), 100 'fights you' 75 is fine. [NOv 2025]
 
-static NSStringCompareOptions kFilterField_StringCompareOptions = (/*NSRegularExpressionSearch |*/ NSCaseInsensitiveSearch);
-
 #pragma mark - MFQLPreviewItem
 
 @interface MFQLPreviewItem : NSObject<QLPreviewItem>
@@ -113,6 +111,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
 @implementation TableView
     {
         NSString *_filterString;
+        NSStringCompareOptions _filterOptions;
         NSMutableArray<NSXMLElement *> *_displayedTopLevelTransUnits; /// Main dataModel displayed by this table. Does not contain transUnits which are children || Terminology: We call these rowModels, OutlineView-Items, or transUnits – All these terms refer to the same thing [Oct 2025]
         NSMutableDictionary<NSXMLElement *, NSArray<NSXMLElement *> *> *_childrenMap; /// Maps topLevel transUnits to their pluralizable variant children
         id _lastQLPanelDisplayState;
@@ -345,6 +344,9 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
             ]);
         }
         
+        /// Sync with filter-menu-items in the mainMenu
+        ///     This is really hacky. Would be cleaner to use KVO here to observe the global `_filterOptions_CaseSensitive/_filterOptions_Regex` state. [Dec 2025]
+        [NSApp.delegate performSelector: @selector(updateFilterStuff:) withObject: self];
         
         /// Return
         return self;
@@ -617,12 +619,23 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
     }
 
     #pragma mark - Filtering
-    - (void) updateFilter: (NSString *)filterString {
-        if ([_filterString isEqual: filterString]) return; /// [mouseDown:] in SourceList.m relies on this to not change the scrollPosition randomly. [Nov 2025]
+    - (void) updateFilterString:  (NSString *)string              { [self _updateFilterStuff_string: string              options: self->_filterOptions]; }
+    - (void) updateFilterOptions: (NSStringCompareOptions)options { [self _updateFilterStuff_string: self->_filterString options: options]; }
+    
+    - (void) _updateFilterStuff_string: (NSString *)string options: (NSStringCompareOptions)options {
+        
+        mflog(@"options: %lu", options);
         
         mfdebounce(0.2, @"updateFilter", ^{ /// Keep typing in filterField responsive
-            mflog(@"Debouncedd");
-            self->_filterString = filterString;
+            
+            mflog(@"options: %lu", options);
+            
+            if (
+                [self->_filterString isEqual: string] && /// `-[mouseDown:]` in SourceList.m (which deletes the filter-string) relies on this to not change the scrollPosition randomly. [Nov 2025]
+                self->_filterOptions == options
+            ) return;
+            self->_filterString = string;
+            self->_filterOptions = options;
             [self bigUpdateAndStuff_OnlyUpdateSorting: NO];
         });
     }
@@ -757,8 +770,8 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                         
                         if (
                             [combinedTransUnitString
-                                rangeOfString: _filterString
-                                options: kFilterField_StringCompareOptions
+                                rangeOfString: self->_filterString
+                                options: self->_filterOptions
                             ]
                             .location != NSNotFound
                         ) {
@@ -1030,7 +1043,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                 if (![[self selectedItem] isEqual: transUnit]) [self selectRowIndexes: indexset() byExtendingSelection: NO];
                 /// Remove the filter
                 [getdoc(self)->ctrl->out_filterField setStringValue: @""];
-                [self updateFilter: @""]; /// Updating `out_filterField` should maybe call this automatically [Nov 2025]
+                [self updateFilterString: @""]; /// Updating `out_filterField` should maybe call this automatically [Nov 2025]
                 /// Try again
                 topLevel = [self topLevelItemContainingItem: transUnit];
             }
@@ -1239,19 +1252,31 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
             ///     (And are therefore responsible for this row being shown. See `kFilterField_StringCompareOptions`) [Dec 2025]
             auto filterMatchRanges = [NSMutableArray new];
             {
-                NSRange lastRange = NSMakeRange(0, 0);
-                while (1) {
-                    NSRange range = [uiStringAttributed.string
+                NSRange lastMatchRange = {};
+                for (int i = 0; ; i++) {
+                
+                    NSUInteger searchStart = 0;
+                    if (i) {
+                        searchStart = NSMaxRange(lastMatchRange);
+                        if (searchStart == lastMatchRange.location) {
+                            searchStart++; /// Prevent infinite-loop when using `.*` regex. which sometimes matches zero-length stuff.
+                            if (uiStringAttributed.string.length < searchStart) break;
+                        }
+                    }
+                
+                    NSRange matchRange = [uiStringAttributed.string
                         rangeOfString: self->_filterString
-                        options: kFilterField_StringCompareOptions
-                        range: NSMakeRange(NSMaxRange(lastRange), uiStringAttributed.string.length - NSMaxRange(lastRange))
+                        options: self->_filterOptions
+                        range: NSMakeRange(searchStart, uiStringAttributed.string.length - searchStart)
                     ];
                     
-                    [filterMatchRanges addObject: [NSValue valueWithRange: range]];
+                    if (matchRange.location == NSNotFound) break;
                     
-                    if (range.location == NSNotFound) break;
-                 
-                    lastRange = range;
+                    mflog(@"searchMatch: %@ | %lu | %@", NSStringFromRange(matchRange), uiStringAttributed.string.length, [uiStringAttributed.string substringWithRange: matchRange]);
+                    
+                    [filterMatchRanges addObject: [NSValue valueWithRange: matchRange]];
+                    
+                    lastMatchRange = matchRange;
                 }
             }
             

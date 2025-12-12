@@ -302,7 +302,7 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
                 NSPoint clickedPoint = [self convertPoint: event.locationInWindow fromView: nil];
                 if (NSPointInRect(clickedPoint, selectedRect)) {
                     [getdoc(self)->ctrl->out_filterField setStringValue: @""];
-                    [getdoc(self)->ctrl->out_tableView updateFilter: @""];
+                    [getdoc(self)->ctrl->out_tableView updateFilterString: @""];
                 }
             }
         }
@@ -323,7 +323,7 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
                 )
             ) {
                 [getdoc(self)->ctrl->out_filterField setStringValue: @""];
-                [getdoc(self)->ctrl->out_tableView updateFilter: @""];
+                [getdoc(self)->ctrl->out_tableView updateFilterString: @""];
             }
             else if (        /// Select the tableView if the user hits space, enter, or rightArrow
                 eventIsKey(event, ' ') ||

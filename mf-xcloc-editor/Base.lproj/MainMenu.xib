@@ -81,18 +81,31 @@
                                     <action selector="quickLookMenuItemSelected:" target="Voe-Tx-rLC" id="ehL-H6-NXh"/>
                                 </connections>
                             </menuItem>
+                            <menuItem isSeparatorItem="YES" id="im3-xc-zTj"/>
                             <menuItem title="Filter" image="magnifyingglass" catalog="system" keyEquivalent="f" id="8ga-Qf-vov">
                                 <connections>
                                     <action selector="filterMenuItemSelected:" target="Voe-Tx-rLC" id="p2x-Zl-doG"/>
                                 </connections>
                             </menuItem>
+                            <menuItem title="Filter Case-Sensitively" image="textformat" catalog="system" keyEquivalent="c" id="n0d-bS-3FX">
+                                <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
+                                <connections>
+                                    <action selector="caseSensitiveMenuItemSelected:" target="Voe-Tx-rLC" id="UZd-RZ-iGd"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Filter Using Regular Expressions" state="on" image="questionmark.circle.dashed" catalog="system" keyEquivalent="r" id="Sio-jG-uhB">
+                                <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
+                                <connections>
+                                    <action selector="regexMenuItemSelected:" target="Voe-Tx-rLC" id="zzF-vw-ETN"/>
+                                </connections>
+                            </menuItem>
                             <menuItem isSeparatorItem="YES" id="ox6-AG-2iq"/>
-                            <menuItem title="Show in 'filename'" image="magnifyingglass" catalog="system" keyEquivalent="j" identifier="show_in_all" id="2k6-4K-CWc">
+                            <menuItem title="&lt;Show in all the files&gt;" image="questionmark.circle.dashed" catalog="system" keyEquivalent="j" identifier="show_in_all" id="2k6-4K-CWc">
                                 <connections>
                                     <action selector="showInFilenameMenuItemSelected:" target="Voe-Tx-rLC" id="OVb-Bz-tE8"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Show in 'filename'" image="magnifyingglass" catalog="system" keyEquivalent="j" identifier="show_in_file" id="knV-8Y-Uvv">
+                            <menuItem title="&lt;Show in 'filename'&gt;" image="questionmark.circle.dashed" catalog="system" keyEquivalent="j" identifier="show_in_file" id="knV-8Y-Uvv">
                                 <connections>
                                     <action selector="showInFilenameMenuItemSelected:" target="Voe-Tx-rLC" id="X5z-CC-AuP"/>
                                 </connections>
@@ -350,5 +363,7 @@
         <image name="checkmark.circle" catalog="system" width="15" height="15"/>
         <image name="eye" catalog="system" width="21" height="13"/>
         <image name="magnifyingglass" catalog="system" width="16" height="15"/>
+        <image name="questionmark.circle.dashed" catalog="system" width="15" height="15"/>
+        <image name="textformat" catalog="system" width="18" height="12"/>
     </resources>
 </document>

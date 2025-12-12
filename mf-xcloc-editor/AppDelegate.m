@@ -18,6 +18,11 @@
 
 @implementation AppDelegate
 
+    {
+        bool _filterOptions_Regex;
+        bool _filterOptions_CaseSensitive;
+    }
+
 #pragma mark - Lifecycle
 
     - (instancetype)init
@@ -68,7 +73,6 @@
                 }
             ];
         }
-        
     }
 
     - (NSApplicationTerminateReply) applicationShouldTerminate: (NSApplication *)sender {
@@ -127,12 +131,19 @@
         auto doc = getdoc_frontmost();
         if (!doc) ret(NO);    /// When no doc is open, none of these menu-items apply, also the `getdoc_frontmost()->someIvar` calls would crash.  (When no doc is open, NSOpenPanel opens) [Oct 2025]
         
-        if (menuItem.action == @selector(filterMenuItemSelected:)) {
+        if ((0)) {}
+        else if (menuItem.action == @selector(filterMenuItemSelected:))
+            ret(YES);
+        else if (menuItem.action == @selector(regexMenuItemSelected:)) {
+            menuItem.state = self->_filterOptions_Regex; /// Prevents macOS state restoration from wrongly initing the items's state (I think) [Dec 2025]
             ret(YES);
         }
-        else if (menuItem.action == @selector(quickLookMenuItemSelected:)) {
+        else if (menuItem.action == @selector(caseSensitiveMenuItemSelected:)) {
+            menuItem.state = self->_filterOptions_CaseSensitive;
             ret(YES);
         }
+        else if (menuItem.action == @selector(quickLookMenuItemSelected:))
+            ret(YES);
         else if (menuItem.action == @selector(showInFilenameMenuItemSelected:)) {
             
             TableView *tableView = doc->ctrl->out_tableView;
@@ -187,6 +198,24 @@
 
     - (IBAction) filterMenuItemSelected: (id)sender {
         [getdoc_frontmost()->ctrl->out_filterField.window makeFirstResponder: getdoc_frontmost()->ctrl->out_filterField];
+    }
+    
+    - (IBAction)regexMenuItemSelected: (NSMenuItem *)sender         { sender.state = !sender.state; self->_filterOptions_Regex         = sender.state; [self updateFilterStuff: nil]; }
+    - (IBAction)caseSensitiveMenuItemSelected: (NSMenuItem *)sender { sender.state = !sender.state; self->_filterOptions_CaseSensitive = sender.state; [self updateFilterStuff: nil]; }
+
+    - (void) updateFilterStuff: (TableView *)tableView {
+        
+        mflog(@"regex: %d, case: %d", self->_filterOptions_Regex, self->_filterOptions_CaseSensitive);
+        
+        NSStringCompareOptions options = 0;
+        if (!self->_filterOptions_CaseSensitive)  options |= NSCaseInsensitiveSearch;
+        if (self ->_filterOptions_Regex)          options |= NSRegularExpressionSearch;
+    
+        if (tableView) /// Necessary because we're calling this in (TableView.m -init), before the tableView is available via `getdoc_alldocs()`. Very hacky. Could use KVO instead. [Dec 2025]
+            [tableView updateFilterOptions: options];
+        else
+            for (XclocDocument *doc in getdoc_alldocs())
+                [doc->ctrl->out_tableView updateFilterOptions: options];
     }
 
     - (IBAction) quickLookMenuItemSelected: (id)sender {

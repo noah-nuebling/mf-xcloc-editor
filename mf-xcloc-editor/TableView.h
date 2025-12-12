@@ -19,7 +19,8 @@
         }
         
         - (void) reloadWithNewData: (NSArray <NSXMLElement *> *)transUnits;
-        - (void) updateFilter: (NSString *)newFilterString;
+        - (void) updateFilterString: (NSString *)newFilterString;
+        - (void) updateFilterOptions: (NSStringCompareOptions)options;
         - (IBAction) togglePreviewPanel:(id)previewPanel;
         - (void) returnFocus;
         - (void) toggleIsTranslatedState: (NSXMLElement *)transUnit;

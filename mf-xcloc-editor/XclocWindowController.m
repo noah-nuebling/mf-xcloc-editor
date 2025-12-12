@@ -42,7 +42,7 @@
 
     - (void) cancelOperation: (id)sender { /// escape
         [self setStringValue: @""];
-        [getdoc(self)->ctrl->out_tableView updateFilter: @""];  /// Can't get our `NSControlTextDidChangeNotification` callback to trigger 'naturally' [Oct 2025]
+        [getdoc(self)->ctrl->out_tableView updateFilterString: @""];  /// Can't get our `NSControlTextDidChangeNotification` callback to trigger 'naturally' [Oct 2025]
         [getdoc(self)->ctrl->out_tableView returnFocus];        /// Return focus to the TableView when the user hits escape.
     }
     
@@ -302,7 +302,7 @@
         /// Set up `result.filterField` callback
         [[NSNotificationCenter defaultCenter] mf_addObserverForName: NSControlTextDidChangeNotification object: self->out_filterField observee: self block: ^(NSNotification * _Nonnull notification, XclocWindowController *_Nullable observee) {
             mflog(@"filter fiellddd: %@", observee->out_filterField.stringValue);
-            [observee->out_tableView updateFilter: observee->out_filterField.stringValue];
+            [observee->out_tableView updateFilterString: observee->out_filterField.stringValue];
         }];
         
         /// Set window size/position
