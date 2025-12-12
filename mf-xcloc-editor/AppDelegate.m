@@ -127,49 +127,43 @@
         
         BOOL result = NO;
         #define ret(res) ({ result = (res); goto end; })
-        
-        if ((0)) {}
-        else if (menuItem.action == @selector(regexMenuItemSelected:)) {
-            menuItem.state = self->_filterOptions_Regex; /// Prevents macOS state restoration from wrongly initing the items's state (I think) [Dec 2025]
-            ret(YES);
-        }
-        else if (menuItem.action == @selector(caseSensitiveMenuItemSelected:)) {
-            menuItem.state = self->_filterOptions_CaseSensitive;
-            ret(YES);
-        }
+        #define isaction(sel) (menuItem.action == @selector(sel))
         
         {
-            auto doc = getdoc_frontmost();
-            if (doc) ret(NO);    /// When no doc is open, none of the following menu-items apply, also the `getdoc_frontmost()->someIvar` calls would crash.  (When no doc is open, NSOpenPanel opens) [Oct 2025]
+            auto doc = getdoc_frontmost(); /// Careful: When no doc is open, `doc->someIvar` calls crash.  (When no doc is open, NSOpenPanel opens) [Oct 2025]
         
-            if ((0)) {}
-            else if (menuItem.action == @selector(filterMenuItemSelected:))
-                ret(YES);
-            else if (menuItem.action == @selector(quickLookMenuItemSelected:))
-                ret(YES);
-            else if (menuItem.action == @selector(showInFilenameMenuItemSelected:)) {
-                
-                TableView *tableView = doc->ctrl->out_tableView;
-                NSXMLElement *selectedTransUnit = [tableView selectedItem];
-                
-                if ([menuItem.identifier isEqual: @"show_in_all"]) {
-                    menuItem.title = kMFStr_RevealInAll;
-                    menuItem.image = [NSImage imageWithSystemSymbolName: kMFStr_RevealInAll_Symbol accessibilityDescription: kMFStr_RevealInAll];
-                }
-                else {
-                    menuItem.title = kMFStr_RevealInFile(doc, selectedTransUnit);
-                    menuItem.image = [NSImage imageWithSystemSymbolName: kMFStr_RevealInFile_Symbol accessibilityDescription: kMFStr_RevealInFile(doc, selectedTransUnit)];
-                }
-                
-                if      ([tableView selectedItem] == nil)                                                                  ret (NO);
-                else if (![doc->ctrl->out_sourceList allTransUnitsShown] && [menuItem.identifier isEqual: @"show_in_all"]) ret (YES);
-                else if ([doc->ctrl->out_sourceList allTransUnitsShown] && [menuItem.identifier isEqual: @"show_in_file"]) ret (YES);
-                else                                                                                                       ret (NO);
+            if (isaction(quickLookMenuItemSelected:))
+                ret(!!doc);
+            
+            if (isaction(filterMenuItemSelected:))
+                ret(!!doc);
+            if (isaction(caseSensitiveMenuItemSelected:)) {
+                menuItem.state = self->_filterOptions_CaseSensitive;
+                ret(!!doc);
             }
-            else if (menuItem.action == @selector(markAsTranslatedMenuItemSelected:)) {
+            if (isaction(regexMenuItemSelected:)) {
+                menuItem.image = ({ /// Custom-draw `.*` icon for the regex menuItem. (SF Symbols doesn't offer that) [Dec 2025].
+                    auto text = [[NSAttributedString alloc]
+                        initWithString: @".*"
+                        attributes: @{
+                            NSFontAttributeName: [NSFont systemFontOfSize: 13 weight: NSFontWeightSemibold],
+                            NSForegroundColorAttributeName: [NSColor labelColor],
+                        }
+                    ];
+                    auto img = [NSImage imageWithSize: text.size flipped: NO drawingHandler: ^BOOL(NSRect dstRect) {
+                        [text drawInRect: dstRect];
+                        return YES;
+                    }];
+                    img.template = YES;
+                    img;
+                });
+                menuItem.state = self->_filterOptions_Regex; /// Prevents macOS state restoration from wrongly initing the items's state (I think) [Dec 2025]
+                ret(!!doc);
+            }
+            
+            if (isaction(markAsTranslatedMenuItemSelected:)) {
                 
-                TableView *tableView = doc->ctrl->out_tableView;
-                
+                TableView *tableView = !doc?nil: doc->ctrl->out_tableView;
                 
                 if ([menuItem.identifier isEqual: @"mark_for_review"]) {
                     menuItem.title = kMFStr_MarkForReview;
@@ -180,20 +174,48 @@
                     menuItem.image = [NSImage imageWithSystemSymbolName: kMFStr_MarkAsTranslated_Symbol accessibilityDescription: nil];
                 }
                 
-                if      (![(id)[tableView.window firstResponder] isDescendantOf: tableView])                                                ret (NO); /// Ignore input when tableView is not firstResponder to prevent accidental input [Oct 2025] || isDescendantOf: is necessary when editing an NSTextField.
-                else if ([tableView selectedItem] == nil)                                                                                   ret (NO);
-                else if (rowModel_isPluralParent([tableView selectedItem]))                                                                 ret (NO);
-                else if ([tableView rowIsTranslated: [tableView selectedItem]] && [menuItem.identifier isEqual: @"mark_for_review"])        ret (YES);
-                else if (![tableView rowIsTranslated: [tableView selectedItem]] && [menuItem.identifier isEqual: @"mark_as_translated"])    ret (YES);
-                else                                                                                                                        ret (NO);
+                if (
+                    ![(id)[tableView.window firstResponder] respondsToSelector: @selector(isDescendantOf:)] ||                          /// [Dec 2025] Pretty sure I saw a crash that this should prevent.
+                    ![(id)[tableView.window firstResponder] isDescendantOf: tableView]
+                )                                                                                                                      ret (NO); /// Ignore input when tableView is not firstResponder to prevent accidental input [Oct 2025] || isDescendantOf: is necessary when editing an NSTextField.
+                if (![tableView selectedItem])                                                                                         ret (NO);
+                if (rowModel_isPluralParent([tableView selectedItem]))                                                                 ret (NO);
+                if ([tableView  rowIsTranslated: [tableView selectedItem]] && [menuItem.identifier isEqual: @"mark_for_review"])       ret (YES);
+                if (![tableView rowIsTranslated: [tableView selectedItem]] && [menuItem.identifier isEqual: @"mark_as_translated"])    ret (YES);
+                ret (NO);
                 
             }
-            else
-                ret([super validateMenuItem: menuItem]);
+            if (isaction(showInFilenameMenuItemSelected:)) {
+                
+                TableView *tableView = !doc?nil: doc->ctrl->out_tableView;;
+                
+                if ([menuItem.identifier isEqual: @"show_in_all"]) {
+                    if (![tableView selectedItem]) {
+                        menuItem.title = kMFStr_GoToAll; /// IIRC we decided for this two-item approach to make things searchable or something? Changing the `kMFStr_` here might defeat the purpose? But eh it works fine [Dec 2025]
+                        menuItem.image = [NSImage imageWithSystemSymbolName: kMFStr_GoToAll_Symbol accessibilityDescription: kMFStr_GoToAll];
+                    }
+                    else {
+                        menuItem.title = kMFStr_RevealInAll;
+                        menuItem.image = [NSImage imageWithSystemSymbolName: kMFStr_RevealInAll_Symbol accessibilityDescription: kMFStr_RevealInAll];
+                    }
+                }
+                else {
+                    menuItem.title = kMFStr_RevealInFile(doc, [tableView selectedItem]);
+                    menuItem.image = [NSImage imageWithSystemSymbolName: kMFStr_RevealInFile_Symbol accessibilityDescription: kMFStr_RevealInFile(doc, [tableView selectedItem])];
+                }
+                
+                if (![doc->ctrl->out_sourceList allTransUnitsShown] && [menuItem.identifier isEqual: @"show_in_all"]) ret (YES);
+                if (![tableView selectedItem])                                                                        ret (NO);
+                if ([doc->ctrl->out_sourceList allTransUnitsShown] && [menuItem.identifier isEqual: @"show_in_file"]) ret (YES);
+                ret (NO);
+            }
+            
+            ret([super validateMenuItem: menuItem]);
         }
             
         end: {}
         #undef ret
+        #undef isaction
         
         mflog(@"validateMenuItem: %d", result);
         
@@ -218,10 +240,8 @@
         if (tableView) /// Necessary because we're calling this in (TableView.m -init), before the tableView is available via `getdoc_alldocs()`. Very hacky. Could use KVO instead. [Dec 2025]
             [tableView updateFilterOptions: options];
         else
-            for (XclocDocument *doc in getdoc_alldocs()) {
-                mflog(@"iter doc: %@", doc);
+            for (XclocDocument *doc in getdoc_alldocs())
                 [doc->ctrl->out_tableView updateFilterOptions: options];
-            }
     }
 
     - (IBAction) quickLookMenuItemSelected: (id)sender {
