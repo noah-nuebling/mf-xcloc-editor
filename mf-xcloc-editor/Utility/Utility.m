@@ -1,86 +1,6 @@
-//
-//  Utility.h
-//  mf-xcloc-editor
-//
-//  Created by Noah Nübling on 09.06.25.
-//
+#import "Utility.h"
 
-/// Most of these macros are copies / reimplementations from ` mac-mouse-fix` [Nov 2025]
-///     Look there for documentation.
-
-///
-/// Helper macros
-///
-
-#define TOSTR(x)    #x                      /// `#` operator but delayed – Sometimes necessary when order-of-operations matters
-#define TOSTR_(x)   TOSTR(x)                /// `#` operator but delayed even more
-
-///
-/// General convenience
-///
-
-#define auto __auto_type                /// `auto` keyword is unused in C, so overriding with CPP-style `__auto_type` should be fine.
-#define isclass(obj,  classname)        ({ [[(obj) class] isSubclassOfClass: [classname class]]; })
-#define isclassd(obj, classname_str)     ({ [[(obj) class] isSubclassOfClass: NSClassFromString(classname_str)]; })
-#define stringf(format, args...)        [NSString stringWithFormat: (format), ## args]
-#define attributed(str)                 [[NSMutableAttributedString alloc] initWithString: (str)]
-
-#define arrcount(x...) (sizeof ((x)) / sizeof (x)[0])
-        
-#define nowtime() (CACurrentMediaTime() * 1000.0) /// Timestamp in milliseconds
-        
-#define mferror(domain, code_, msg_and_args...) \
-    [NSError errorWithDomain: (domain) code: (code_) userInfo: @{ NSDebugDescriptionErrorKey: stringf(msg_and_args) }] /** Should we use `NSLocalizedFailureReasonErrorKey`? [Oct 2025] */
-
-#define bitpos(mask) (                                                  \
-    (mask) == 0               ? -1 :                                    /** Fail: less than one bit set */\
-    ((mask) & (mask)-1) != 0  ? -1 :                                    /** Fail: more than one bit set (aka not a power of two) */\
-    __builtin_ctz(mask)                                                 /** Sucess! – Count trailling zeros*/ \
-)
-
-#define nowarn_push(w)                                                      \
-    _Pragma("clang diagnostic push")                                        \
-    _Pragma(TOSTR(clang diagnostic ignored #w))                             \
-
-#define nowarn_pop()                                                        \
-    _Pragma("clang diagnostic pop")
-
-#define safeindex(arr, count, idx, fallback) ({                   \
-    auto _arr = (arr);                                          \
-    auto _idx = (idx);                                          \
-    (0 <= _idx && _idx < (count)) ? _arr[_idx] : (fallback);    /** If index is signed an negative, it would underflow in the `< (count)` comparison , but it would still fail  the `>= 0` comparison. I think our safety precautionns in MMF are overkill. */\
-})
-
-#define allsatisfy(arr, count, varname, condition...) ({    \
-    bool _result = 1;                                       \
-    auto _arr = (arr);                                      \
-    for (auto _i = 0; _i < (count); _i++) {                 \
-        auto varname = _arr[_i];                            \
-        if (!(condition)) { _result = 0; break; }           \
-    }                                                       \
-    _result;                                                \
-})
-#define firstmatch(arr, count, fallback, varname, condition...) ({    \
-    typeof((arr)[0]) _result = (fallback);                  \
-    auto _arr = (arr);                                      \
-    for (auto _i = 0; _i < (count); _i++) {                 \
-        auto varname = _arr[_i];                            \
-        if ((condition)) { _result = varname; break; }      \
-    }                                                       \
-    _result;                                                \
-})
-
-#define tourl(pathstr) [NSURL fileURLWithPath: (pathstr)]
-#define toset(arr...) [NSSet setWithArray: (arr)]
-
-#define charset(str) [NSCharacterSet characterSetWithCharactersInString: (str)]
-
-#define indexset(indexes...) ({ \
-    NSInteger _arr[] = { indexes }; \
-    indexSetWithIndexArray(_arr, arrcount(_arr)); \
-})
-
-static NSMutableIndexSet *indexSetWithIndexArray(NSInteger arr[], int len) {
+NSMutableIndexSet *indexSetWithIndexArray(NSInteger arr[], int len) {
     auto set = [NSMutableIndexSet new];
     for (int i = 0; i < len; i++)
         if (arr[i] >= 0 && arr[i] != NSNotFound) /// outlineView row-getter methods sometimes return -1 if the row-search failed, but when you pass these to `reloadDataForRowIndexes:` it silently fails, so we filter these 'nil' indexes out. [Oct 2025]
@@ -89,20 +9,9 @@ static NSMutableIndexSet *indexSetWithIndexArray(NSInteger arr[], int len) {
     return set;
 }
 
-struct _MFRectOverrides { CGFloat x, y, width, height; };
-static NSRect NSRectFromRect(NSRect base, struct _MFRectOverrides overrides) {
+NSRect _NSRectFromRect(NSRect base, struct _MFRectOverrides overrides) {
 
     /// Create an NSRect by taking an existing NSRect and adjusting only specific values.
-
-    #define NSRectFromRect(base, overrides_...) ({ \
-        [[maybe_unused]] CGFloat x = (base).origin.x; /** Make locali vars so the expressions that the caller passes into `overrides_` can easily reference the current values in the `base` NSRect. This is a bit obscure, not sure if good API, usually it's better when the caller passes in a varname [Nov 2025] */\
-        [[maybe_unused]] CGFloat y = (base).origin.y; \
-        [[maybe_unused]] CGFloat width = (base).size.width; \
-        [[maybe_unused]] CGFloat height = (base).size.height; \
-        NSRectFromRect((base), (struct _MFRectOverrides) { nowarn_push(-Winitializer-overrides) \
-            .x=NAN, .y=NAN, .width=NAN, .height=NAN, ##overrides_ \
-        nowarn_pop() }); \
-    })
     
     if (!isnan(overrides.x))       base.origin.x    = overrides.x;
     if (!isnan(overrides.y))       base.origin.y    = overrides.y;
@@ -111,13 +20,7 @@ static NSRect NSRectFromRect(NSRect base, struct _MFRectOverrides overrides) {
     return base;
 }
 
-///
-/// Logging
-///
-
-#define mflog(msg...)  printf("%s: %s\n", [_shorten__func__(__func__) UTF8String], [stringf(@"" msg) UTF8String])
-
-static NSString *_shorten__func__(const char *func) {
+NSString *_shorten__func__(const char *func) {
     
     /// Help make mflogs scannable / filterable
     /// Example
@@ -126,7 +29,7 @@ static NSString *_shorten__func__(const char *func) {
     
     if (!func || !strlen(func)) return @""; /// Can this happen?
     
-    //return @"xxx";
+    return @"xxx";
     
     if (func[0] == '-' || func[0] == '+') { /// Objc method – shorten
         
@@ -152,9 +55,7 @@ static NSString *_shorten__func__(const char *func) {
     safeindex(_node.children, _node.children.count, (idx), nil);  \
 })
 
-typedef struct { NSXMLNode *fallback; } xml_childnamed_args;
-static NSXMLNode *xml_childnamed(NSXMLElement *_node, NSString *name_, xml_childnamed_args args) {
-    #define xml_childnamed(node, name, fallback...) xml_childnamed((node), (name), (xml_childnamed_args){ fallback })
+NSXMLNode *_xml_childnamed(NSXMLElement *_node, NSString *name_, xml_childnamed_args args) {
     
     auto result = firstmatch(_node.children, _node.children.count, nil, x, [x.name isEqual: (name_)]);
     if (!result && args.fallback) {
@@ -165,9 +66,7 @@ static NSXMLNode *xml_childnamed(NSXMLElement *_node, NSString *name_, xml_child
     return result;
 }
 
-typedef struct { NSXMLNode *fallback; } xml_attr_args;
-static NSXMLNode *xml_attr(NSXMLElement *xmlElement, NSString *name, xml_attr_args args) {
-    #define xml_attr(xmlElement, name, fallback...) xml_attr((xmlElement), (name), (xml_attr_args) { fallback })
+NSXMLNode *_xml_attr(NSXMLElement *xmlElement, NSString *name, xml_attr_args args) {
     
     auto result = [xmlElement attributeForName: name];
     if (!result && args.fallback) {
@@ -178,7 +77,7 @@ static NSXMLNode *xml_attr(NSXMLElement *xmlElement, NSString *name, xml_attr_ar
     return result;
 }
 
-static NSMutableDictionary<NSString *, NSXMLNode *> *xml_attrdict(NSXMLElement *_xmlElement) {
+NSMutableDictionary<NSString *, NSXMLNode *> *xml_attrdict(NSXMLElement *_xmlElement) {
     NSMutableDictionary *result = [NSMutableDictionary dictionary];
     for (NSXMLNode *el in [_xmlElement attributes]) result[el.name] = el;
     return result;
@@ -186,7 +85,7 @@ static NSMutableDictionary<NSString *, NSXMLNode *> *xml_attrdict(NSXMLElement *
 
 #pragma mark - Shorthands for horrible NSFileWrapper API
 
-    static void _fw_walk(NSFileWrapper *fileWrapper, void (^callback)(NSFileWrapper *subFileWrapper, NSString *subpath, BOOL *stop), NSMutableArray *currentKeyPath, BOOL *stop) {
+    void _fw_walk(NSFileWrapper *fileWrapper, void (^callback)(NSFileWrapper *subFileWrapper, NSString *subpath, BOOL *stop), NSMutableArray *currentKeyPath, BOOL *stop) {
         
         /// Helper for `fw_walk`
         
@@ -205,7 +104,7 @@ static NSMutableDictionary<NSString *, NSXMLNode *> *xml_attrdict(NSXMLElement *
                 [currentKeyPath removeLastObject];
             }
     }
-    static void fw_walk(NSFileWrapper *fileWrapper, void (^callback)(NSFileWrapper *w, NSString *subpath, BOOL *stop)) {
+    void fw_walk(NSFileWrapper *fileWrapper, void (^callback)(NSFileWrapper *w, NSString *subpath, BOOL *stop)) {
         
         /// Walk all the filesystem nodes inside the `fileWrapper`
     
@@ -213,7 +112,7 @@ static NSMutableDictionary<NSString *, NSXMLNode *> *xml_attrdict(NSXMLElement *
         _fw_walk(fileWrapper, callback, [NSMutableArray new], &stop);
     }
 
-    static NSFileWrapper *fw_readPath(NSFileWrapper *fw, NSString *subpath) {
+    NSFileWrapper *fw_readPath(NSFileWrapper *fw, NSString *subpath) {
         
         /// Get the NSFileWrapper at `subpath` inside `fw`
         ///     May explode if you pass an invalid subpath [Oct 2025]
@@ -226,7 +125,7 @@ static NSMutableDictionary<NSString *, NSXMLNode *> *xml_attrdict(NSXMLElement *
         return fw;
     }
 
-    static void fw_writePath(NSFileWrapper *fw, NSString *subpath, NSData *fileContents) {
+    void fw_writePath(NSFileWrapper *fw, NSString *subpath, NSData *fileContents) {
         
         /// Replace the NSFileWrapper at `subpath` inside `fw` with `fileContents`
         ///     May explode if you pass an invalid subpath [Oct 2025]
@@ -249,7 +148,7 @@ static NSMutableDictionary<NSString *, NSXMLNode *> *xml_attrdict(NSXMLElement *
     }
     
 
-    static NSArray<NSString *> *fw_findPaths(NSFileWrapper *wrapper, BOOL (^condition)(NSFileWrapper *fw, NSString *p, BOOL *stop)) {
+    NSArray<NSString *> *fw_findPaths(NSFileWrapper *wrapper, BOOL (^condition)(NSFileWrapper *fw, NSString *p, BOOL *stop)) {
         
         /// Like `findPaths()` but for NSFileWrapper [Oct 2025]
         
@@ -265,7 +164,7 @@ static NSMutableDictionary<NSString *, NSXMLNode *> *xml_attrdict(NSXMLElement *
     }
 
 
-static NSArray<NSString *> *findPaths(int timeout_ms, NSString *dirPath, BOOL (^condition)(NSString *path)) {
+NSArray<NSString *> *findPaths(int timeout_ms, NSString *dirPath, BOOL (^condition)(NSString *path)) {
     
     /// Like shell globbing but more cumbersome.
     ///     `timeout_ms` arg is for when we're searching outside of our own bundle, where the folder structure could be anything.
@@ -288,7 +187,7 @@ static NSArray<NSString *> *findPaths(int timeout_ms, NSString *dirPath, BOOL (^
     return result;
 }
 
-static NSEvent *makeKeyDown(unichar keyEquivalent, int keyCode) {
+NSEvent *makeKeyDown(unichar keyEquivalent, int keyCode) {
     return [NSEvent
         keyEventWithType: NSEventTypeKeyDown
         location: NSZeroPoint
@@ -303,11 +202,11 @@ static NSEvent *makeKeyDown(unichar keyEquivalent, int keyCode) {
     ];
 }
 
-static BOOL eventIsKey(NSEvent *event, unichar key) {
+BOOL eventIsKey(NSEvent *event, unichar key) {
     return [stringf(@"%C", (unichar)key) isEqual: [event charactersIgnoringModifiers]];
 }
 
-static void runOnMain(double delay, void (^workload)(void)) {
+void runOnMain(double delay, void (^workload)(void)) {
     
     /// Delayed run on main for UI code [Oct 2025]
     ///     If you pass 0.0 as the delay, the workload will be executed during the next iteration of main runLoop (I think) [Oct 2025]
@@ -318,7 +217,7 @@ static void runOnMain(double delay, void (^workload)(void)) {
     [[NSRunLoop mainRunLoop] addTimer: t forMode: NSRunLoopCommonModes];
 }
 
-static void mfdebounce(double delay, NSString *identifier, void (^block)(void)) {
+void mfdebounce(double delay, NSString *identifier, void (^block)(void)) {
     
     /// Only for the main thread! (Which is the only thread we use in mf-xcloc-editor)
     
@@ -332,17 +231,7 @@ static void mfdebounce(double delay, NSString *identifier, void (^block)(void)) 
     [[NSRunLoop mainRunLoop] addTimer: storage[identifier] forMode: NSRunLoopCommonModes];
 }
 
-struct mfanimate_args {
-    NSTimeInterval duration;
-    CAMediaTimingFunction *curve;
-    BOOL implicitAnimation;
-};
-#define mfanimate_args(args...) nowarn_push(-Winitializer-overrides) \
-    (struct mfanimate_args) { .duration = NAN, ## args } \
-nowarn_pop() \
-
-
-static void mfanimate(struct mfanimate_args args, void (^block)(void), void (^completion)(void)) { /// Not sure this is useful.
+void mfanimate(struct mfanimate_args args, void (^block)(void), void (^completion)(void)) { /// Not sure this is useful.
     
     [NSAnimationContext runAnimationGroup:^(NSAnimationContext * _Nonnull context) {
         
@@ -355,7 +244,7 @@ static void mfanimate(struct mfanimate_args args, void (^block)(void), void (^co
     } completionHandler: completion];
 };
 
-static NSData *imageData(NSImage *image, NSBitmapImageFileType type, NSDictionary *properties) {
+NSData *imageData(NSImage *image, NSBitmapImageFileType type, NSDictionary *properties) {
         
     /// This implementation comes from the PackagedDocument sample project (https://developer.apple.com/library/archive/samplecode/PackagedDocument/Introduction/Intro.html#//apple_ref/doc/uid/DTS40012955-Intro-DontLinkElementID_2)
     /// Copying this here cause I'm often confused as to what is the right way to serialize an NSImage. [Oct 2025]
@@ -377,4 +266,5 @@ static NSData *imageData(NSImage *image, NSBitmapImageFileType type, NSDictionar
     
     return imageData;
 }
+
 
