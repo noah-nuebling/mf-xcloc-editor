@@ -80,7 +80,7 @@
     indexSetWithIndexArray(_arr, arrcount(_arr)); \
 })
 
-static NSMutableIndexSet *indexSetWithIndexArray(NSInteger arr[], int len) {
+NSMutableIndexSet *indexSetWithIndexArray(NSInteger arr[], int len) {
     auto set = [NSMutableIndexSet new];
     for (int i = 0; i < len; i++)
         if (arr[i] >= 0 && arr[i] != NSNotFound) /// outlineView row-getter methods sometimes return -1 if the row-search failed, but when you pass these to `reloadDataForRowIndexes:` it silently fails, so we filter these 'nil' indexes out. [Oct 2025]
@@ -90,7 +90,7 @@ static NSMutableIndexSet *indexSetWithIndexArray(NSInteger arr[], int len) {
 }
 
 struct _MFRectOverrides { CGFloat x, y, width, height; };
-static NSRect NSRectFromRect(NSRect base, struct _MFRectOverrides overrides) {
+NSRect NSRectFromRect(NSRect base, struct _MFRectOverrides overrides) {
 
     /// Create an NSRect by taking an existing NSRect and adjusting only specific values.
 
@@ -117,7 +117,7 @@ static NSRect NSRectFromRect(NSRect base, struct _MFRectOverrides overrides) {
 
 #define mflog(msg...)  printf("%s: %s\n", [_shorten__func__(__func__) UTF8String], [stringf(@"" msg) UTF8String])
 
-static NSString *_shorten__func__(const char *func) {
+NSString *_shorten__func__(const char *func) {
     
     /// Help make mflogs scannable / filterable
     /// Example
@@ -153,7 +153,7 @@ static NSString *_shorten__func__(const char *func) {
 })
 
 typedef struct { NSXMLNode *fallback; } xml_childnamed_args;
-static NSXMLNode *xml_childnamed(NSXMLElement *_node, NSString *name_, xml_childnamed_args args) {
+NSXMLNode *xml_childnamed(NSXMLElement *_node, NSString *name_, xml_childnamed_args args) {
     #define xml_childnamed(node, name, fallback...) xml_childnamed((node), (name), (xml_childnamed_args){ fallback })
     
     auto result = firstmatch(_node.children, _node.children.count, nil, x, [x.name isEqual: (name_)]);
@@ -166,7 +166,7 @@ static NSXMLNode *xml_childnamed(NSXMLElement *_node, NSString *name_, xml_child
 }
 
 typedef struct { NSXMLNode *fallback; } xml_attr_args;
-static NSXMLNode *xml_attr(NSXMLElement *xmlElement, NSString *name, xml_attr_args args) {
+NSXMLNode *xml_attr(NSXMLElement *xmlElement, NSString *name, xml_attr_args args) {
     #define xml_attr(xmlElement, name, fallback...) xml_attr((xmlElement), (name), (xml_attr_args) { fallback })
     
     auto result = [xmlElement attributeForName: name];
@@ -178,7 +178,7 @@ static NSXMLNode *xml_attr(NSXMLElement *xmlElement, NSString *name, xml_attr_ar
     return result;
 }
 
-static NSMutableDictionary<NSString *, NSXMLNode *> *xml_attrdict(NSXMLElement *_xmlElement) {
+NSMutableDictionary<NSString *, NSXMLNode *> *xml_attrdict(NSXMLElement *_xmlElement) {
     NSMutableDictionary *result = [NSMutableDictionary dictionary];
     for (NSXMLNode *el in [_xmlElement attributes]) result[el.name] = el;
     return result;
@@ -186,7 +186,7 @@ static NSMutableDictionary<NSString *, NSXMLNode *> *xml_attrdict(NSXMLElement *
 
 #pragma mark - Shorthands for horrible NSFileWrapper API
 
-    static void _fw_walk(NSFileWrapper *fileWrapper, void (^callback)(NSFileWrapper *subFileWrapper, NSString *subpath, BOOL *stop), NSMutableArray *currentKeyPath, BOOL *stop) {
+    void _fw_walk(NSFileWrapper *fileWrapper, void (^callback)(NSFileWrapper *subFileWrapper, NSString *subpath, BOOL *stop), NSMutableArray *currentKeyPath, BOOL *stop) {
         
         /// Helper for `fw_walk`
         
@@ -205,7 +205,7 @@ static NSMutableDictionary<NSString *, NSXMLNode *> *xml_attrdict(NSXMLElement *
                 [currentKeyPath removeLastObject];
             }
     }
-    static void fw_walk(NSFileWrapper *fileWrapper, void (^callback)(NSFileWrapper *w, NSString *subpath, BOOL *stop)) {
+    void fw_walk(NSFileWrapper *fileWrapper, void (^callback)(NSFileWrapper *w, NSString *subpath, BOOL *stop)) {
         
         /// Walk all the filesystem nodes inside the `fileWrapper`
     
@@ -213,7 +213,7 @@ static NSMutableDictionary<NSString *, NSXMLNode *> *xml_attrdict(NSXMLElement *
         _fw_walk(fileWrapper, callback, [NSMutableArray new], &stop);
     }
 
-    static NSFileWrapper *fw_readPath(NSFileWrapper *fw, NSString *subpath) {
+    NSFileWrapper *fw_readPath(NSFileWrapper *fw, NSString *subpath) {
         
         /// Get the NSFileWrapper at `subpath` inside `fw`
         ///     May explode if you pass an invalid subpath [Oct 2025]
@@ -226,7 +226,7 @@ static NSMutableDictionary<NSString *, NSXMLNode *> *xml_attrdict(NSXMLElement *
         return fw;
     }
 
-    static void fw_writePath(NSFileWrapper *fw, NSString *subpath, NSData *fileContents) {
+    void fw_writePath(NSFileWrapper *fw, NSString *subpath, NSData *fileContents) {
         
         /// Replace the NSFileWrapper at `subpath` inside `fw` with `fileContents`
         ///     May explode if you pass an invalid subpath [Oct 2025]
@@ -249,7 +249,7 @@ static NSMutableDictionary<NSString *, NSXMLNode *> *xml_attrdict(NSXMLElement *
     }
     
 
-    static NSArray<NSString *> *fw_findPaths(NSFileWrapper *wrapper, BOOL (^condition)(NSFileWrapper *fw, NSString *p, BOOL *stop)) {
+    NSArray<NSString *> *fw_findPaths(NSFileWrapper *wrapper, BOOL (^condition)(NSFileWrapper *fw, NSString *p, BOOL *stop)) {
         
         /// Like `findPaths()` but for NSFileWrapper [Oct 2025]
         
@@ -265,7 +265,7 @@ static NSMutableDictionary<NSString *, NSXMLNode *> *xml_attrdict(NSXMLElement *
     }
 
 
-static NSArray<NSString *> *findPaths(int timeout_ms, NSString *dirPath, BOOL (^condition)(NSString *path)) {
+NSArray<NSString *> *findPaths(int timeout_ms, NSString *dirPath, BOOL (^condition)(NSString *path)) {
     
     /// Like shell globbing but more cumbersome.
     ///     `timeout_ms` arg is for when we're searching outside of our own bundle, where the folder structure could be anything.
@@ -288,7 +288,7 @@ static NSArray<NSString *> *findPaths(int timeout_ms, NSString *dirPath, BOOL (^
     return result;
 }
 
-static NSEvent *makeKeyDown(unichar keyEquivalent, int keyCode) {
+NSEvent *makeKeyDown(unichar keyEquivalent, int keyCode) {
     return [NSEvent
         keyEventWithType: NSEventTypeKeyDown
         location: NSZeroPoint
@@ -303,11 +303,11 @@ static NSEvent *makeKeyDown(unichar keyEquivalent, int keyCode) {
     ];
 }
 
-static BOOL eventIsKey(NSEvent *event, unichar key) {
+BOOL eventIsKey(NSEvent *event, unichar key) {
     return [stringf(@"%C", (unichar)key) isEqual: [event charactersIgnoringModifiers]];
 }
 
-static void runOnMain(double delay, void (^workload)(void)) {
+void runOnMain(double delay, void (^workload)(void)) {
     
     /// Delayed run on main for UI code [Oct 2025]
     ///     If you pass 0.0 as the delay, the workload will be executed during the next iteration of main runLoop (I think) [Oct 2025]
@@ -318,9 +318,15 @@ static void runOnMain(double delay, void (^workload)(void)) {
     [[NSRunLoop mainRunLoop] addTimer: t forMode: NSRunLoopCommonModes];
 }
 
-static void mfdebounce(double delay, NSString *identifier, void (^block)(void)) {
+void mfdebounce(double delay, NSString *identifier, void (^block)(void)) {
     
     /// Only for the main thread! (Which is the only thread we use in mf-xcloc-editor)
+    
+    /// FOOTGUN:
+    ///     When using this from a class-instance, put `self` into `identifier`! otherwise the debounce is shared by all class-instances.
+    ///     -> Alternate API design idea:
+    ///             Return a token object that the caller has to retain. When its released, the callback is canceled. Then the caller can always store the token in the same place to get debounce behavior. They can store the token in a static/threadlocal/associatedobject to get the debounce scoped globally/to current thread/to current instance. -> Easier to audit e.g. by searching for `static` keyword.
+    ///             Example: `self.mfdict[@"regexToggle"] = mfdebounce(0.2, ^{ printf("Regex toggle toggled."); });`
     
     static NSMutableDictionary *storage = nil;
     if (!storage) storage = [NSMutableDictionary new];
@@ -342,7 +348,7 @@ struct mfanimate_args {
 nowarn_pop() \
 
 
-static void mfanimate(struct mfanimate_args args, void (^block)(void), void (^completion)(void)) { /// Not sure this is useful.
+void mfanimate(struct mfanimate_args args, void (^block)(void), void (^completion)(void)) { /// Not sure this is useful.
     
     [NSAnimationContext runAnimationGroup:^(NSAnimationContext * _Nonnull context) {
         
@@ -355,7 +361,7 @@ static void mfanimate(struct mfanimate_args args, void (^block)(void), void (^co
     } completionHandler: completion];
 };
 
-static NSData *imageData(NSImage *image, NSBitmapImageFileType type, NSDictionary *properties) {
+NSData *imageData(NSImage *image, NSBitmapImageFileType type, NSDictionary *properties) {
         
     /// This implementation comes from the PackagedDocument sample project (https://developer.apple.com/library/archive/samplecode/PackagedDocument/Introduction/Intro.html#//apple_ref/doc/uid/DTS40012955-Intro-DontLinkElementID_2)
     /// Copying this here cause I'm often confused as to what is the right way to serialize an NSImage. [Oct 2025]
