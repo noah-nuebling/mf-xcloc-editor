@@ -1,13 +1,21 @@
 //
-//  XclocDocumentController.m
+//  XclocDocumentController.h
 //  Xcloc Editor
 //
 //  Created by Noah Nübling on 10/27/25.
 //
 
-#import "Utility.h"
-#import "XclocDocumentController.h"
-#import "Utility.h"
+@interface XclocDocumentController : NSDocumentController
+    
+@end
+
+
+//
+//  XclocDocumentController.m
+//  Xcloc Editor
+//
+//  Created by Noah Nübling on 10/27/25.
+//
 
 @implementation XclocDocumentController
 

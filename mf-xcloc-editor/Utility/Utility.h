@@ -5,8 +5,6 @@
 //  Created by Noah Nübling on 09.06.25.
 //
 
-#import <AppKit/AppKit.h>
-
 /// Most of these macros are copies / reimplementations from ` mac-mouse-fix` [Nov 2025]
 ///     Look there for documentation.
 
@@ -77,56 +75,260 @@
 
 #define charset(str) [NSCharacterSet characterSetWithCharactersInString: (str)]
 
-NSMutableIndexSet *indexSetWithIndexArray(NSInteger arr[], int len);
 #define indexset(indexes...) ({ \
     NSInteger _arr[] = { indexes }; \
     indexSetWithIndexArray(_arr, arrcount(_arr)); \
 })
 
+static NSMutableIndexSet *indexSetWithIndexArray(NSInteger arr[], int len) {
+    auto set = [NSMutableIndexSet new];
+    for (int i = 0; i < len; i++)
+        if (arr[i] >= 0 && arr[i] != NSNotFound) /// outlineView row-getter methods sometimes return -1 if the row-search failed, but when you pass these to `reloadDataForRowIndexes:` it silently fails, so we filter these 'nil' indexes out. [Oct 2025]
+            [set addIndex: arr[i]];
+    
+    return set;
+}
+
 struct _MFRectOverrides { CGFloat x, y, width, height; };
-NSRect _NSRectFromRect(NSRect base, struct _MFRectOverrides overrides);
-#define NSRectFromRect(base, overrides_...) ({ \
-    [[maybe_unused]] CGFloat x = (base).origin.x; /** Make locali vars so the expressions that the caller passes into `overrides_` can easily reference the current values in the `base` NSRect. This is a bit obscure, not sure if good API, usually it's better when the caller passes in a varname [Nov 2025] */\
-    [[maybe_unused]] CGFloat y = (base).origin.y; \
-    [[maybe_unused]] CGFloat width = (base).size.width; \
-    [[maybe_unused]] CGFloat height = (base).size.height; \
-    _NSRectFromRect((base), (struct _MFRectOverrides) { nowarn_push(-Winitializer-overrides) \
-        .x=NAN, .y=NAN, .width=NAN, .height=NAN, ##overrides_ \
-    nowarn_pop() }); \
-})
+static NSRect NSRectFromRect(NSRect base, struct _MFRectOverrides overrides) {
+
+    /// Create an NSRect by taking an existing NSRect and adjusting only specific values.
+
+    #define NSRectFromRect(base, overrides_...) ({ \
+        [[maybe_unused]] CGFloat x = (base).origin.x; /** Make locali vars so the expressions that the caller passes into `overrides_` can easily reference the current values in the `base` NSRect. This is a bit obscure, not sure if good API, usually it's better when the caller passes in a varname [Nov 2025] */\
+        [[maybe_unused]] CGFloat y = (base).origin.y; \
+        [[maybe_unused]] CGFloat width = (base).size.width; \
+        [[maybe_unused]] CGFloat height = (base).size.height; \
+        NSRectFromRect((base), (struct _MFRectOverrides) { nowarn_push(-Winitializer-overrides) \
+            .x=NAN, .y=NAN, .width=NAN, .height=NAN, ##overrides_ \
+        nowarn_pop() }); \
+    })
+    
+    if (!isnan(overrides.x))       base.origin.x    = overrides.x;
+    if (!isnan(overrides.y))       base.origin.y    = overrides.y;
+    if (!isnan(overrides.width))   base.size.width  = overrides.width;
+    if (!isnan(overrides.height))  base.size.height = overrides.height;
+    return base;
+}
 
 ///
 /// Logging
 ///
 
-NSString *_shorten__func__(const char *func);
-#define mflog(msg...)  printf("%s: %s\n", /*__FILE_NAME__,*/ [_shorten__func__(__func__) UTF8String], [stringf(@"" msg) UTF8String])
+#define mflog(msg...)  printf("%s: %s\n", [_shorten__func__(__func__) UTF8String], [stringf(@"" msg) UTF8String])
+
+static NSString *_shorten__func__(const char *func) {
+    
+    /// Help make mflogs scannable / filterable
+    /// Example
+    ///     Input:      `-[TableView initWithFrame:andSomeOtherStuff:]_block_invoke_2`
+    ///     Output:    `-TableView.initWithFrame`
+    
+    if (!func || !strlen(func)) return @""; /// Can this happen?
+    
+    if (func[0] == '-' || func[0] == '+') { /// Objc method – shorten
+        
+        auto split = [@(func) componentsSeparatedByString: @" "];
+        assert(split.count == 2);
+        auto pref = [split[0] substringFromIndex: 2];               /// Skip the `-[` or `+[`
+        
+        auto suff = [split[1] componentsSeparatedByCharactersInSet: charset(@":]")][0]; /// Cut off everything after the first selector component
+        return stringf(@"%C%@.%@", func[0], pref, suff);
+        
+    }
+    else { /// C function - use directly
+        return @(func);
+    }
+}
 
 ///
-/// XML
+/// NSXML convenience.
 ///
 
-typedef struct { NSXMLNode *fallback; } xml_attr_args;
-NSXMLNode *_xml_attr(NSXMLElement *xmlElement, NSString *name, xml_attr_args args);
-#define xml_attr(xmlElement, name, fallback...) _xml_attr((xmlElement), (name), (xml_attr_args) { fallback })
+#define xml_childat(xmlNode, idx) ({                            \
+    auto _node = (xmlNode);                                     \
+    safeindex(_node.children, _node.children.count, (idx), nil);  \
+})
 
 typedef struct { NSXMLNode *fallback; } xml_childnamed_args;
-NSXMLNode *_xml_childnamed(NSXMLElement *_node, NSString *name_, xml_childnamed_args args);
-#define xml_childnamed(node, name, fallback...) _xml_childnamed((node), (name), (xml_childnamed_args){ fallback })
+static NSXMLNode *xml_childnamed(NSXMLElement *_node, NSString *name_, xml_childnamed_args args) {
+    #define xml_childnamed(node, name, fallback...) xml_childnamed((node), (name), (xml_childnamed_args){ fallback })
+    
+    auto result = firstmatch(_node.children, _node.children.count, nil, x, [x.name isEqual: (name_)]);
+    if (!result && args.fallback) {
+        [args.fallback setName: name_];
+        [_node addChild: args.fallback]; /// NSXMLNode doesn't have `addChild:` for some reason, otherwise this func would work on NSXMLNode, not just NSXMLElement.
+        result = args.fallback;
+    }
+    return result;
+}
 
-NSMutableDictionary<NSString *, NSXMLNode *> *xml_attrdict(NSXMLElement *_xmlElement);
+typedef struct { NSXMLNode *fallback; } xml_attr_args;
+static NSXMLNode *xml_attr(NSXMLElement *xmlElement, NSString *name, xml_attr_args args) {
+    #define xml_attr(xmlElement, name, fallback...) xml_attr((xmlElement), (name), (xml_attr_args) { fallback })
+    
+    auto result = [xmlElement attributeForName: name];
+    if (!result && args.fallback) {
+        args.fallback.name = name;
+        [xmlElement addAttribute: args.fallback];
+        result = args.fallback;
+    }
+    return result;
+}
 
-///
-/// Files
-///
+static NSMutableDictionary<NSString *, NSXMLNode *> *xml_attrdict(NSXMLElement *_xmlElement) {
+    NSMutableDictionary *result = [NSMutableDictionary dictionary];
+    for (NSXMLNode *el in [_xmlElement attributes]) result[el.name] = el;
+    return result;
+}
 
-//void fw_walk(NSFileWrapper *fileWrapper, void (^callback)(NSFileWrapper *w, NSString *subpath, BOOL *stop));
-NSFileWrapper *fw_readPath(NSFileWrapper *fw, NSString *subpath);
-void fw_writePath(NSFileWrapper *fw, NSString *subpath, NSData *fileContents);
-NSArray<NSString *> *fw_findPaths(NSFileWrapper *wrapper, BOOL (^condition)(NSFileWrapper *fw, NSString *p, BOOL *stop));
-NSArray<NSString *> *findPaths(int timeout_ms, NSString *dirPath, BOOL (^condition)(NSString *path));
+#pragma mark - Shorthands for horrible NSFileWrapper API
 
-/// Animate
+    static void _fw_walk(NSFileWrapper *fileWrapper, void (^callback)(NSFileWrapper *subFileWrapper, NSString *subpath, BOOL *stop), NSMutableArray *currentKeyPath, BOOL *stop) {
+        
+        /// Helper for `fw_walk`
+        
+        if (!fileWrapper.isDirectory) { /// { Optimization: We only need this for `fw_findPaths`, and it only needs to see file nodes not directory nodes. [Oct 2025]
+            callback(fileWrapper, [currentKeyPath componentsJoinedByString: @"/"], stop);
+            if (*stop) return;
+        }
+        else
+            for (NSString *key in fileWrapper.fileWrappers) {
+                
+                NSFileWrapper *w = fileWrapper.fileWrappers[key];
+                
+                [currentKeyPath addObject: key];
+                _fw_walk(w, callback, currentKeyPath, stop); /// Recurse
+                if (*stop) return;
+                [currentKeyPath removeLastObject];
+            }
+    }
+    static void fw_walk(NSFileWrapper *fileWrapper, void (^callback)(NSFileWrapper *w, NSString *subpath, BOOL *stop)) {
+        
+        /// Walk all the filesystem nodes inside the `fileWrapper`
+    
+        BOOL stop = NO;
+        _fw_walk(fileWrapper, callback, [NSMutableArray new], &stop);
+    }
+
+    static NSFileWrapper *fw_readPath(NSFileWrapper *fw, NSString *subpath) {
+        
+        /// Get the NSFileWrapper at `subpath` inside `fw`
+        ///     May explode if you pass an invalid subpath [Oct 2025]
+
+        NSArray *kp = [subpath componentsSeparatedByString: @"/"];
+        
+        for (NSInteger i = 0; i < kp.count; i++)
+            fw = fw.fileWrappers[kp[i]];
+        
+        return fw;
+    }
+
+    static void fw_writePath(NSFileWrapper *fw, NSString *subpath, NSData *fileContents) {
+        
+        /// Replace the NSFileWrapper at `subpath` inside `fw` with `fileContents`
+        ///     May explode if you pass an invalid subpath [Oct 2025]
+        
+        NSArray *kp = [subpath componentsSeparatedByString: @"/"];
+        
+        /// Navigate to the parent dir of the file we wanna manipulate
+        for (NSInteger i = 0; i < kp.count-1; i++)
+            fw = fw.fileWrappers[kp[i]];
+        
+        /// Delete the existing child
+        [fw removeFileWrapper: fw.fileWrappers[kp.lastObject]];
+        
+        /// Add the new child
+        {   /// Could use `addRegularFileWithContents:`
+            auto x = [[NSFileWrapper alloc] initRegularFileWithContents: fileContents];
+            [x setPreferredFilename: kp.lastObject];
+            [fw addFileWrapper: x];
+        }
+    }
+    
+
+    static NSArray<NSString *> *fw_findPaths(NSFileWrapper *wrapper, BOOL (^condition)(NSFileWrapper *fw, NSString *p, BOOL *stop)) {
+        
+        /// Like `findPaths()` but for NSFileWrapper [Oct 2025]
+        
+        auto result = [NSMutableArray new];
+        
+        fw_walk(wrapper, ^(NSFileWrapper *fw, NSString *p, BOOL *stop) {
+            if (condition(fw, p, stop)) {
+                [result addObject: p]; /// Unlike `findPaths()`, these paths are relative [Oct 2025]
+            }
+        });
+        
+        return result;
+    }
+
+
+static NSArray<NSString *> *findPaths(int timeout_ms, NSString *dirPath, BOOL (^condition)(NSString *path)) {
+    
+    /// Like shell globbing but more cumbersome.
+    ///     `timeout_ms` arg is for when we're searching outside of our own bundle, where the folder structure could be anything.
+    
+    auto result = [NSMutableArray new];
+    
+    double ts_start = nowtime();
+    
+    for (NSString *p in [[NSFileManager defaultManager] enumeratorAtPath: dirPath]) {
+        if (timeout_ms > 0)
+            if (nowtime() - ts_start > timeout_ms) {
+                mflog(@"Timed out after %d ms", timeout_ms);
+                break;
+            }
+        if (condition(p)) {
+            [result addObject: [dirPath stringByAppendingPathComponent: p]]; /// Make path absolute, (When it's passed into `condition()` it's still relative – hope that's not confusing [Oct 2025])
+        }
+    }
+        
+    return result;
+}
+
+static NSEvent *makeKeyDown(unichar keyEquivalent, int keyCode) {
+    return [NSEvent
+        keyEventWithType: NSEventTypeKeyDown
+        location: NSZeroPoint
+        modifierFlags: 0
+        timestamp: 0
+        windowNumber: 0
+        context: nil
+        characters: stringf(@"%C", (unichar)keyEquivalent)
+        charactersIgnoringModifiers: stringf(@"%C", (unichar)keyEquivalent)
+        isARepeat: NO
+        keyCode: keyCode
+    ];
+}
+
+static BOOL eventIsKey(NSEvent *event, unichar key) {
+    return [stringf(@"%C", (unichar)key) isEqual: [event charactersIgnoringModifiers]];
+}
+
+static void runOnMain(double delay, void (^workload)(void)) {
+    
+    /// Delayed run on main for UI code [Oct 2025]
+    ///     If you pass 0.0 as the delay, the workload will be executed during the next iteration of main runLoop (I think) [Oct 2025]
+    
+    auto t = [NSTimer timerWithTimeInterval: delay repeats: NO block:^(NSTimer * _Nonnull timer) {
+        workload();
+    }];
+    [[NSRunLoop mainRunLoop] addTimer: t forMode: NSRunLoopCommonModes];
+}
+
+static void mfdebounce(double delay, NSString *identifier, void (^block)(void)) {
+    
+    /// Only for the main thread! (Which is the only thread we use in mf-xcloc-editor)
+    
+    static NSMutableDictionary *storage = nil;
+    if (!storage) storage = [NSMutableDictionary new];
+    
+    NSTimer *t = storage[identifier];
+    if (t) [t invalidate];
+    
+    storage[identifier] = [NSTimer timerWithTimeInterval: delay repeats: NO block:^(NSTimer * _Nonnull timer) { block(); }];
+    [[NSRunLoop mainRunLoop] addTimer: storage[identifier] forMode: NSRunLoopCommonModes];
+}
 
 struct mfanimate_args {
     NSTimeInterval duration;
@@ -138,18 +340,39 @@ struct mfanimate_args {
 nowarn_pop() \
 
 
-void mfanimate(struct mfanimate_args args, void (^block)(void), void (^completion)(void));
+static void mfanimate(struct mfanimate_args args, void (^block)(void), void (^completion)(void)) { /// Not sure this is useful.
+    
+    [NSAnimationContext runAnimationGroup:^(NSAnimationContext * _Nonnull context) {
+        
+        if (args.implicitAnimation) context.allowsImplicitAnimation = args.implicitAnimation;
+        if (args.curve)             context.timingFunction          = args.curve;
+        if (!isnan(args.duration))  context.duration                = args.duration; /// 0 is actually a valid duration different from the default, so we're using nan as sentinel
+        
+        block();
+        
+    } completionHandler: completion];
+};
 
-///
-///
-///
-/// Other
-///
-///
-///
+static NSData *imageData(NSImage *image, NSBitmapImageFileType type, NSDictionary *properties) {
+        
+    /// This implementation comes from the PackagedDocument sample project (https://developer.apple.com/library/archive/samplecode/PackagedDocument/Introduction/Intro.html#//apple_ref/doc/uid/DTS40012955-Intro-DontLinkElementID_2)
+    /// Copying this here cause I'm often confused as to what is the right way to serialize an NSImage. [Oct 2025]
+    
+    /// TODO: Maybe copy this into mac-mouse-fix
+    
+    NSData *imageData = [NSBitmapImageRep /// I assume this is done for speed || [Nov 2025] Saw this log weird error under macOS Sonoma, but I think we can ignore: `finalizeDestination:3496: *** ERROR: CGImageDestinationFinalize was called, but there were no images added` 
+        representationOfImageRepsInArray: image.representations
+        usingType: type
+        properties: properties
+    ];
+    if (!imageData.length) { /// I assume this is done for reliability || [Nov 2025] Had to add .length for this to work on macOS 12.0 Monterey. Seems like Apple's PackagedDocument sample forgot that?
+        NSBitmapImageRep *imageRep = nil;
+        @autoreleasepool {
+            imageRep = [[NSBitmapImageRep alloc] initWithData: image.TIFFRepresentation];
+        }
+        imageData = [imageRep representationUsingType: type properties: properties];
+    }
+    
+    return imageData;
+}
 
-NSEvent *makeKeyDown(unichar keyEquivalent, int keyCode);
-BOOL eventIsKey(NSEvent *event, unichar key);
-void runOnMain(double delay, void (^workload)(void));
-void mfdebounce(double delay, NSString *identifier, void (^block)(void));
-NSData *imageData(NSImage *image, NSBitmapImageFileType type, NSDictionary *properties);

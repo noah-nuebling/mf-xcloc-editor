@@ -1,3 +1,5 @@
+
+
 //
 //  XclocDocument.m
 //  mf-xcloc-editor
@@ -10,9 +12,6 @@
 ///     - PackagedDocument sample project (https://developer.apple.com/library/archive/samplecode/PackagedDocument/Introduction/Intro.html#//apple_ref/doc/uid/DTS40012955-Intro-DontLinkElementID_2)
 ///     - 
 ///
-
-#import "XclocDocument.h"
-#import "Utility.h"
 
 #define kMFTypeName_Xcloc @"com.apple.xcode.xcloc"
 

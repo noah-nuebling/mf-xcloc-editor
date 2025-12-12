@@ -1,19 +1,20 @@
 //
-//  AppDelegate.m
+//  AppDelegate.h
 //  mf-xcloc-editor
 //
 //  Created by Noah Nübling on 08.06.25.
 //
 
-#import "AppDelegate.h"
-#import "Utility.h"
-#import "XclocWindowController.h"
-#import "XclocDocumentController.h"
-#import "Constants.h"
-#import "XclocDocument.h"
-#import "RowUtils.h"
-#import "MFUI.h"
+@interface AppDelegate : NSObject <NSApplicationDelegate, NSMenuItemValidation>
 
+@end
+
+//
+//  AppDelegate.m
+//  mf-xcloc-editor
+//
+//  Created by Noah Nübling on 08.06.25.
+//
 
 @implementation AppDelegate
 

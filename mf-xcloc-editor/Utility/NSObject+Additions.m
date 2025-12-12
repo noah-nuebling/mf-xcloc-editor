@@ -1,12 +1,24 @@
 //
-//  NSObject+Additions.m
+//  NSObject+Additions.h
 //  mf-xcloc-editor
 //
 //  Created by Noah Nübling on 10/21/25.
 //
 
-#import "NSObject+Additions.h"
-#import <objc/runtime.h>
+@interface NSObject (Additions)
+
+    - (id) mf_associatedObjectForKey: (NSString *)key;
+    - (void) mf_setAssociatedObject: (id)obj forKey: (NSString *)key;
+
+@end
+
+
+//
+//  NSObject+Additions.m
+//  mf-xcloc-editor
+//
+//  Created by Noah Nübling on 10/21/25.
+//
 
 @implementation NSObject (Additions)
 

@@ -1,15 +1,19 @@
 //
-//  MFTextField.m
+//  MFTextField.h
 //  mf-xcloc-editor
 //
 //  Created by Noah Nübling on 10/23/25.
 //
 
-#import "MFTextField.h"
-#import "Utility.h"
-#import "NSAttributedString+Additions.h"
-#import "NSObject+Additions.h"
-#import "NSNotificationCenter+Additions.h"
+@interface MFInvisiblesTextView : NSTextView @end
+@interface MFTextField : NSTextField @end
+
+//
+//  MFTextField.m
+//  mf-xcloc-editor
+//
+//  Created by Noah Nübling on 10/23/25.
+//
 
 /// Also see:
 ///     https://stackoverflow.com/questions/34504031/control-spacing-around-custom-text-attributes-in-nslayoutmanager

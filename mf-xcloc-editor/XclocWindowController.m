@@ -5,23 +5,6 @@
 //  Created by Noah Nübling on 9/4/25.
 //
 
-#import "Constants.h"
-#import "XclocWindowController.h"
-#import "Utility.h"
-#import "Cocoa/Cocoa.h"
-#import "MFUI.h"
-
-#import "TableView.h"
-#import "AppDelegate.h"
-
-#import <Carbon/Carbon.h>
-
-#import "XclocDocument.h"
-#import "MFTextField.h"
-
-#import "NSNotificationCenter+Additions.h"
-#import <objc/runtime.h>
-
 @interface TitlbarAccessoryViewController : NSTitlebarAccessoryViewController @end
 @implementation TitlbarAccessoryViewController { @public NSView *_theView; }
     - (void)loadView { self.view = _theView; }
