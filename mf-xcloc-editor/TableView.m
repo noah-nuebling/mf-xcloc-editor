@@ -624,11 +624,11 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
     
     - (void) _updateFilterStuff_string: (NSString *)string options: (NSStringCompareOptions)options {
         
-        mflog(@"options: %lu", options);
+        mflog(@"options (immediate) (%p):%lu", self, options);
         
-        mfdebounce(0.2, @"updateFilter", ^{ /// Keep typing in filterField responsive
+        mfdebounce(0.2, stringf(@"updateFilter:%p", self), ^{ /// Keep typing in filterField responsive
             
-            mflog(@"options: %lu", options);
+            mflog(@"options (debounce) (%p): %lu", self, options);
             
             if (
                 [self->_filterString isEqual: string] && /// `-[mouseDown:]` in SourceList.m (which deletes the filter-string) relies on this to not change the scrollPosition randomly. [Nov 2025]
@@ -859,7 +859,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         }
     }
     
-    static void __restorePosition (int iteration, TableView *self, CGFloat previousMidYViewportOffset, NSInteger newIndex, void (^completionCallback)(void)) {
+    void __restorePosition (int iteration, TableView *self, CGFloat previousMidYViewportOffset, NSInteger newIndex, void (^completionCallback)(void)) {
         
         /// Helper for `bigUpdateAndStuff_OnlyUpdateSorting`.
         ///     Define here since recursive blocks are annoying and clang doesn't support local functions. [Nov 2025]
