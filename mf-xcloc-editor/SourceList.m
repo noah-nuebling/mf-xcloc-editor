@@ -8,16 +8,6 @@
 /// See:
 ///     https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/OutlineView/Articles/AboutOutlineViews.html#//apple_ref/doc/uid/20000107-111039
 
-#import "SourceList.h"
-#import "Utility.h"
-#import "AppDelegate.h"
-#import "XclocDocument.h"
-#import "RowUtils.h"
-#import "MFUI.h"
-#import "NSObject+Additions.h"
-#import "Utility/ToString.m"
-#import "Constants.h"
-
 @interface File : NSObject
     {
         @public

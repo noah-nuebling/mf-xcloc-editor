@@ -5,9 +5,6 @@
 //  Created by Noah Nübling on 11/2/25.
 //
 
-#import <AppKit/AppKit.h>
-#import "Utility.h"
-
 @implementation NSObject (UnrelatedCFunctions)
 
 static NSString *NSEventType_ToString(NSEventType type) {

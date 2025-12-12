@@ -5,8 +5,6 @@
 //  Created by Noah Nübling on 09.06.25.
 //
 
-#import <AppKit/AppKit.h>
-
 /// Most of these macros are copies / reimplementations from ` mac-mouse-fix` [Nov 2025]
 ///     Look there for documentation.
 
@@ -117,7 +115,7 @@ static NSRect NSRectFromRect(NSRect base, struct _MFRectOverrides overrides) {
 /// Logging
 ///
 
-#define mflog(msg...)  NSLog(@"%@: %@", /*__FILE_NAME__,*/ _shorten__func__(__func__), stringf(@"" msg))
+#define mflog(msg...)  printf("%s: %s\n", [_shorten__func__(__func__) UTF8String], [stringf(@"" msg) UTF8String])
 
 static NSString *_shorten__func__(const char *func) {
     

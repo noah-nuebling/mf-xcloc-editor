@@ -1,13 +1,24 @@
 //
-//  NSNotificationCenter+Additions.m
+//  NSNotificationCenter+Additions.h
 //  Xcloc Editor
 //
 //  Created by Noah Nübling on 11/1/25.
 //
 
-#import "NSNotificationCenter+Additions.h"
-#import "NSObject+Additions.h"
-#import "Utility.h"
+/// TODO: This is nice - Maybe move this into mac-mouse-fix
+
+@interface NSNotificationCenter (Additions)
+
+    - (id _Nullable) mf_addObserverForName: (nullable NSNotificationName)name object: (nullable id)obj observee: (nullable id)observee block: (void (^_Nonnull )(NSNotification *_Nonnull notification, id _Nullable observee))block;
+
+@end
+
+//
+//  NSNotificationCenter+Additions.m
+//  Xcloc Editor
+//
+//  Created by Noah Nübling on 11/1/25.
+//
 
 @interface MFNotificationObserver : NSObject @end
 @implementation MFNotificationObserver

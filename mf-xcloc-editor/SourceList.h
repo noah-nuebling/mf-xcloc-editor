@@ -5,23 +5,21 @@
 //  Created by Noah Nübling on 09.06.25.
 //
 
-#import <Cocoa/Cocoa.h>
+    @interface SourceList : NSOutlineView <NSOutlineViewDataSource, NSOutlineViewDelegate>
 
-@interface SourceList : NSOutlineView <NSOutlineViewDataSource, NSOutlineViewDelegate>
-
-    {
-        @public
-        NSString *sourceLanguage;
-        NSString *targetLanguage;
-    }
+        {
+            @public
+            NSString *sourceLanguage;
+            NSString *targetLanguage;
+        }
 
 
-    - (void) setXliffDoc: (NSXMLDocument *)xliffDoc;
+        - (void) setXliffDoc: (NSXMLDocument *)xliffDoc;
 
-    - (void) progressHasChanged;
-    - (void) showAllTransUnits;
-    - (BOOL) allTransUnitsShown;
-    - (NSString *) filenameForTransUnit: (NSXMLElement *)transUnit;
-    - (void) showFileOfTransUnit: (NSXMLNode *)transUnit;
+        - (void) progressHasChanged;
+        - (void) showAllTransUnits;
+        - (BOOL) allTransUnitsShown;
+        - (NSString *) filenameForTransUnit: (NSXMLElement *)transUnit;
+        - (void) showFileOfTransUnit: (NSXMLNode *)transUnit;
 
-@end
+    @end

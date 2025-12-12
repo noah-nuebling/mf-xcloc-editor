@@ -7,10 +7,6 @@
 
 /// Created to share rowModel parsing logic from `TableView.m` with `SourceList.m` (To implement localization-progress indicators)[Oct 2025]
 
-#import <Foundation/Foundation.h>
-#import <AppKit/AppKit.h>
-#import "Utility.h"
-
 
 #pragma mark - RowModelUtils
 

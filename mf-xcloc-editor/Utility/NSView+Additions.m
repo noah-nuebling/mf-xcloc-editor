@@ -1,11 +1,22 @@
 //
-//  NSView+Additions.m
+//  NSView+Additions.h
 //  Xcloc Editor
 //
 //  Created by Noah Nübling on 11/2/25.
 //
 
-#import "NSView+Additions.h"
+@interface NSView (Additions)
+
+    - (NSView *) searchSubviewWithIdentifier: (NSUserInterfaceItemIdentifier) identifier;
+
+@end
+
+//
+//  NSView+Additions.m
+//  Xcloc Editor
+//
+//  Created by Noah Nübling on 11/2/25.
+//
 
 @implementation NSView (Additions)
 
