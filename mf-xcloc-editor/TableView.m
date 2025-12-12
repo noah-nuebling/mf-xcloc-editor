@@ -199,7 +199,9 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                     }
 
                     textView.hidden = NO;
-                    textView.string = cell.textField.stringValue;
+                    [textView.textStorage
+                        setAttributedString: [cell.textField.attributedStringValue attributedStringByAddingAttributesAsBase: textView.typingAttributes]
+                    ];
                     
                     mflog(@"MFInvisiblesTextView_Overlay Showing for row %ld (views: %p|%p)", row, textField__, textView);
                 }
@@ -255,6 +257,10 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                             isTranslated:           self->didJustEndEditingWithReturnKey
                             onRowModel:             [self selectedItem]
                         ];
+                    
+                    /// Reload target cell
+                    ///     This is only necessary to restore the `filter-highlights`, which the editing seems to remove.[Dec 2025]
+                    [self reloadDataForRowIndexes: indexset([self rowForView: textField]) columnIndexes: indexset([self columnWithIdentifier: @"target"])];
                 }
             }
         ];
@@ -1225,7 +1231,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
             }
         }
         
-        /// Add search-highlights
+        /// Add `filter-highlights` (aka search-highlights)
         
         if (self->_filterString.length && !iscol(@"state")) { /// @"state" col is excluded from searching. See [updateFilter:], also see `#define combinedRowString`[Dec 2025]
             

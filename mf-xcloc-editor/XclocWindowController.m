@@ -79,10 +79,10 @@
     
         - (NSText *) fieldEditor: (BOOL)createFlag forObject: (id)object {
 
-                /// Install custom fieldEditor
-                    ///  References:
-                    ///     - https://stackoverflow.com/questions/12712288/making-invisible-characters-visible-in-nstextfield
-                    ///     - https://stackoverflow.com/questions/300086/display-hidden-characters-in-nstextview
+            /// Install custom fieldEditor
+                ///  References:
+                ///     - https://stackoverflow.com/questions/12712288/making-invisible-characters-visible-in-nstextfield
+                ///     - https://stackoverflow.com/questions/300086/display-hidden-characters-in-nstextview
 
             if (isclass(object, MFTextField)) {
                 
