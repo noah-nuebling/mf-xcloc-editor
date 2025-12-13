@@ -786,7 +786,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                 mflog(@"Updating _rowToSortedRow with sortDescriptors: (only using the first one): %@", self.sortDescriptors);
             
                 NSSortDescriptor *desc = self.sortDescriptors.firstObject;
-                if (!desc) { return; }
+                if (!desc) { goto endof_sorting; }
                 
                 #if 0
                     NSInteger rowCount = [self numberOfRowsInTableView: self]; /// -[numberOfRows] gives wrong results while swtiching files not sure what's going on [Oct 2025]
@@ -794,21 +794,20 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                 
                 [_displayedTopLevelTransUnits sortUsingComparator: ^NSComparisonResult(NSXMLElement *i, NSXMLElement *j) {
                     NSComparisonResult comp;
-                    if ([desc.key isEqual: @"state"]) {
+                    if ([desc.key isEqual: @"state"])
                         comp = (
                             [_stateOrder indexOfObject: [self stateOfRowModel: i]] -
                             [_stateOrder indexOfObject: [self stateOfRowModel: j]]
                         );
-                    }
-                    else {
+                    else
                         comp = [
                             rowModel_getUIString(self, i, desc.key) compare:
                             rowModel_getUIString(self, j, desc.key)
                         ];
-                    }
                     return desc.ascending ? comp : -comp;
                 }];
             }
+            endof_sorting: {}
             
             /// Do the reaload!!
             [self reloadData];
@@ -1740,9 +1739,16 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                 NSRect frame = NSRectFromString(screenshotEntry[@"frame"]);
                 NSString *name = screenshotEntry[@"name"];
                 
-                NSString *imagePath = findPaths(0, [stringf(@"%@%@", [getdoc(self).fileURL path], @"/Notes/Screenshots/") stringByStandardizingPath], ^BOOL(NSString *path) {
-                    return [[path lastPathComponent] isEqual: name];
-                })[0];
+                NSString *imagePath = findPaths(
+                    0,
+                    [stringf(@"%@%@",
+                        [getdoc(self).fileURL path],
+                        @"/Notes/Screenshots/"
+                    ) stringByStandardizingPath],
+                    ^BOOL(NSString *path) {
+                        return [[path lastPathComponent] isEqual: name];
+                    }
+                )[0];
                 
                 auto imageFileData = [[NSData alloc] initWithContentsOfFile: imagePath];
                 

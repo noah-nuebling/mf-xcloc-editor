@@ -326,7 +326,7 @@ void mfdebounce(double delay, NSString *identifier, void (^block)(void)) {
     ///     When using this from a class-instance, put `self` into `identifier`! otherwise the debounce is shared by all class-instances.
     ///     -> Alternate API design idea:
     ///             Return a token object that the caller has to retain. When its released, the callback is canceled. Then the caller can always store the token in the same place to get debounce behavior. They can store the token in a static/threadlocal/associatedobject to get the debounce scoped globally/to current thread/to current instance. -> Easier to audit e.g. by searching for `static` keyword.
-    ///             Example: `self.mf_associatedObjects[@"regexToggle"] = mfdebounce(0.2, ^{ printf("Regex toggle toggled."); });`
+    ///             Example: `self.mf_associatedObjects[@"regexToggleDebounce"] = mfdebounce(0.2, ^{ printf("Regex toggle toggled."); });`
     
     static NSMutableDictionary *storage = nil;
     if (!storage) storage = [NSMutableDictionary new];
