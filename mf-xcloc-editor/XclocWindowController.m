@@ -83,6 +83,8 @@
                 ///  References:
                 ///     - https://stackoverflow.com/questions/12712288/making-invisible-characters-visible-in-nstextfield
                 ///     - https://stackoverflow.com/questions/300086/display-hidden-characters-in-nstextview
+            
+            if ((createFlag)) mflog(@"createFlag: YES"); /// `createFlag: NO` is called a TON [Dec 2025]
 
             if (isclass(object, MFTextField)) {
                 
@@ -104,6 +106,10 @@
         - (BOOL)makeFirstResponder:(NSResponder *)responder {
         
             mflog("%@ with self->isRestoringState: %d", responder, self->isRestoringState);
+            
+            if (isclass(responder, NSTextView)) {
+                mflog(@"field editorrr");
+            }
             
             if (self->isRestoringState) /// See `restoreStateWithCoder:` [Oct 2025]
                 return NO;
