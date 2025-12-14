@@ -48,7 +48,11 @@ See how this is used for the Mac Mouse Fix project [here](https://redirect.macmo
 - Don't have to download Xcode (large)
 - Doesn't have Xcode sidebar which is useless to localizers and may be intimidating.
 - All project files are layed out flat in the sidebar, so localizers don't have to search through the folder hierarchy in your project.
-- Easy and powerful filtering / searching in strings from *all* project files, which could e.g. help localizers easily reference how a term is localized in other parts of the app. (There's no glossary support, but this may be good enough)
+- Easy and powerful filtering / searching in strings from *all* project files, which helps localizers easily reference how a term is localized in other parts of the app. (There's no glossary support, but this may be good enough)
+    - Matches are highlighted for easy-scanning
+    - You can use Regular Expressions for searching (Command-Option-R)
+        - This is implemented using NSRegularExpression and supports all its features, which are listed here: https://developer.apple.com/documentation/foundation/nsregularexpression?language=objc
+        - I assume most localizers won't know Regular Expressions, but I've found `Xcloc Editor.app` to be the best way to inspect and review translations for me as the developer, and Regular Expressions are useful for that.  
 - QuickLook of localization screenshots via Space or Command-Y 
     (Xcode has quicklook but it always has to be triggered by clicking a tiny button with the mouse which is annoying – this may be a bug, but it's been there for a long time)
 - Doesn't have Xcode bug where red rectangles that highlight strings in localization screenshots are never updated. [FB20608107]
