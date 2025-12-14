@@ -11,7 +11,7 @@
 ///     - Kinda did this out of curiosity.
 ///     - Cost-benfit analysis: (Right after adding this, so don't have much experience, yet.)
 ///         - Pro:
-///             - It's nice for quickly adding shared utility functions.
+///             - No header/implementation split is nice for quickly adding / editing shared utilities, or taking local utilities and making them shared.
 ///                 - You could achieve the same with a normal build by using a header with static functions and importing that everywhere, but that starts slowing down builds – even in this tiny app it 3x'd the build-time from ~1s to ~3s  (See 0039deeef2c57d6523b7c245d161a102dc24eef4)
 ///                 - Counter: For stuff aside from utility functions, we still need headers for the most part.
 ///         - Con:
