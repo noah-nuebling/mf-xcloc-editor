@@ -109,7 +109,6 @@
 				4F51603F2EB76462009B0BC5 /* ToString.m */,
 				4F5160352EB6A7CA009B0BC5 /* NSNotificationCenter+Additions.m */,
 				4F5160422EB77FA7009B0BC5 /* NSView+Additions.m */,
-				4FF08EEB2EAB685600BBE492 /* RowUtils.h */,
 				4F3D914A2EEDA0E100063528 /* MFSetMethod.m */,
 			);
 			path = Utility;
@@ -131,6 +130,7 @@
 				4FF08E2E2EAAA7D000BBE492 /* Copied from MMF */,
 				4F9BA2BD2EAE7B64001C8B9B /* Utility */,
 				4FF08E342EAAC57E00BBE492 /* MFTextField.m */,
+				4FF08EEB2EAB685600BBE492 /* RowUtils.h */,
 				4F726A7B2EEC288B00735253 /* SourceList.h */,
 				4FF447A92DF701EE008F2D74 /* SourceList.m */,
 				4F726A7A2EEC27DB00735253 /* TableView.h */,

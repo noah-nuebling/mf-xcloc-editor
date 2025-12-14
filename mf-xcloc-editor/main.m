@@ -49,7 +49,6 @@ int main(int argc, const char * argv[]) {
 #include "Utility/ToString.m"
 #include "Utility/NSNotificationCenter+Additions.m"
 #include "Utility/NSView+Additions.m"
-#include "Utility/RowUtils.h"
 
 /// Forward declares
 #include "SourceList.h"            /// XclocWindowController.h depends on @class SourceList [Dec 2025]
@@ -59,6 +58,7 @@ int main(int argc, const char * argv[]) {
 
 /// More imports of local files.
 #include "MFTextField.m"
+#include "RowUtils.h"
 #include "SourceList.m"
 #include "TableView.m"
 
