@@ -27,6 +27,7 @@
 #include <Cocoa/Cocoa.h>
 #include <Carbon/Carbon.h>
 #include <objc/runtime.h>
+#include <objc/message.h>
 #include <QuickLookUI/QuickLookUI.h>
 
 /// Main
@@ -44,6 +45,7 @@ int main(int argc, const char * argv[]) {
 #include "Utility/Utility.h"
 #include "Utility/MFUI.m"
 #include "Utility/NSObject+Additions.m"
+#include "Utility/MFImplementMethod.m"
 #include "Utility/ToString.m"
 #include "Utility/NSNotificationCenter+Additions.m"
 #include "Utility/NSView+Additions.m"
