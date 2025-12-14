@@ -1445,8 +1445,10 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
             ///             IIRC I only did this as an optimization, because I thought the scrolling was more stuttery or something when having everything be an NSTextView all the time.
             ///                 ... But I don't remember how strong the effect was. Might have been placebo.
             
-            if (!cell.textField.editable) cell.textField.allowsEditingTextAttributes = YES;
-            else                          assert(iscol(@"target"));
+            {
+                cell.textField.allowsEditingTextAttributes = !iscol(@"target");
+                assert(iscol(@"target") == cell.textField.editable);
+            }
         }
         
         /// Validate
