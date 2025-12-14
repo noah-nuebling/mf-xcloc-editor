@@ -161,23 +161,26 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                     ///     Alternative: Just make everything NSTextViews all the time and take the performance hit. Or just give up on invisibles.
                     
                     MFTextField *textField__ = note.object;
-                    
                     if (textField__.window != self.window) return; /// Since `object: nil` we receive this notification from *all* NSTextFields including ones in other windows.
+                    
+                    assert(textField__.isEditable);
+                    assert([self columnForView: textField__] == [self columnWithIdentifier: @"target"]);
+                    assert(isclass(textField__, MFTextField));
                     
                     NSInteger row = [self rowForView: textField__];
                     if (row == -1) { /// Randomly returns -1 sometimes. Can't reproduce. In lldb it consistently returns -1 IIRC, so there is some weird state causing this, not just sporadic. [Oct 2025] Update: This may be fixed by the `textField__.window != self.window` check above.
                         assert(false);
                         textField__.hidden = NO;
-                        return;
+                        goto endof_becomeFirstResponderCallback;
                     }
-                    
+                    {
                     NSTableCellView *cell = [self viewAtColumn: [self columnWithIdentifier: @"source"] row: row makeIfNecessary: NO];
                     textField__.mf_associatedObjects[@"MFSourceCellSister"] = cell.textField; /// Do this every time cause cells get swapped out by the tableView[Nov 2025]
                     
-                    /// Show MFInvisiblesTextView with newline glyphs
+                    /// HIde textField
                     cell.textField.hidden = YES /*NO*/; /// Set to YES overlays the MFTextField and MFInvisiblesTextView, making text darker – useful as debugging tool (or to keep usable if there are bugs)
                     
-                    
+                    /// Show MFInvisiblesTextView with newline glyphs
                     NSTextView *textView = cell.textField.mf_associatedObjects[@"MFInvisiblesTextView_Overlay"];
                     if (!textView) {
                         textView = [MFInvisiblesTextView new];
@@ -203,6 +206,8 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                     ];
                     
                     mflog(@"MFInvisiblesTextView_Overlay Showing for row %ld (views: %p|%p)", row, textField__, textView);
+                    }
+                    endof_becomeFirstResponderCallback: {}
                 }
             }
         ];
@@ -213,14 +218,17 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
             observee: self
             block: ^(NSNotification *note, TableView *self) {
     
-    
+            MFTextField *textField__ = note.object;
+            if (textField__.window != self.window) return;
+
+                assert(textField__.isEditable);
+                assert([self columnForView: textField__] == [self columnWithIdentifier: @"target"]);
+                assert(isclass(textField__, MFTextField));
+                
                 /// Cleanup `MFInvisiblesTextView_Overlay`
                 /// Note:
                 ///     Using "MFSourceCellSister" associatedObject because `[self rowForView: textField__]` always returns zero in the `MFTextField_ResignFirstResponder` callback, when the firstResponder state was produced by `[XclocWindow -restoreStateWithCoder:]` [Oct 2025]
                 {
-                    
-                    MFTextField *textField__ = note.object;
-                    if (textField__.window != self.window) return;
                     
                     MFTextField *sisterTextField = textField__.mf_associatedObjects[@"MFSourceCellSister"];
                     NSTextView *textView = sisterTextField.mf_associatedObjects[@"MFInvisiblesTextView_Overlay"];
@@ -237,30 +245,24 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                     mflog(@"controlTextDidEndEditing: %@, self->didJustEndEditingWithReturnKey: %d",
                         [[note object] stringValue], self->didJustEndEditingWithReturnKey);
                     
-                    NSTextField *textField = note.object;
-                    
-                    {
-                        if (!textField.editable) return;  /// This is also called for selectable textFields.
-                        assert(isclass(textField, MFTextField));
-                    }
-                    
                     if (![self selectedItem]) { /// This happens when macOS restores the user interface after a crash while a row was being edited. [reloadData] to make sure the user is editing up-to-date data. Update: [Nov 2025] This might not apply anymore after fixing bug where XclocWindow wasn't released after being closed.
                         [self reloadData];
-                        return;
+                        goto endof_handleEditing;
                     }
                     
-                    if (![self->_lastTargetCellString isEqual: textField.stringValue]) /// `_lastTargetCellString` is never set [Nov 2025]
-                        [self                                               /// We also save if the user cancels editing by pressing escape – but they can always Command-Z to undo. [Oct 2025]
-                            setTranslation:         textField.stringValue   /// Saving can reload tableCells so we wanna cleanup the `MFInvisiblesTextView_Overlay` before this [Nov 2025]
-                            alsoModifyIsTranslated: self->didJustEndEditingWithReturnKey
-                            isTranslated:           self->didJustEndEditingWithReturnKey
-                            onRowModel:             [self selectedItem]
-                        ];
-                    
+                    if (![self->_lastTargetCellString isEqual: textField__.stringValue]) /// `_lastTargetCellString` is never set [Nov 2025]
+                    [self                                               /// We also save if the user cancels editing by pressing escape – but they can always Command-Z to undo. [Oct 2025]
+                        setTranslation:         textField__.stringValue   /// Saving can reload tableCells so we wanna cleanup the `MFInvisiblesTextView_Overlay` before this [Nov 2025]
+                        alsoModifyIsTranslated: self->didJustEndEditingWithReturnKey
+                        isTranslated:           self->didJustEndEditingWithReturnKey
+                        onRowModel:             [self selectedItem]
+                    ];
                     /// Reload target cell
-                    ///     This is only necessary to restore the `filter-highlights`, which the editing seems to remove.[Dec 2025]
-                    [self reloadDataForRowIndexes: indexset([self rowForView: textField]) columnIndexes: indexset([self columnWithIdentifier: @"target"])];
+                    ///     This is only necessary to restore the `filter-highlights`, which the editing (Swapping in the field-editor) seems to remove.[Dec 2025]
+                    ///     For the other (non-editable) columns we solve this by setting `.allowsEditingTextAttributes = YES` [Dec 2025]
+                    [self reloadDataForRowIndexes: indexset([self rowForView: textField__]) columnIndexes: indexset([self columnForView: textField__])];
                 }
+                endof_handleEditing: {};
             }
         ];
         
@@ -1428,6 +1430,23 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
             
             /// SEt da string!!
             [cell.textField setAttributedStringValue: uiStringAttributed];
+            
+            /// HACK:
+            ///     Set `allowsEditingTextAttributes = YES` to prevent the `filter-highlights` from being deleted when the text is selected. (Selecting swaps in a field-editor, which then deletes the attributes. Setting `allowsEditingTextAttributes` prevents this. --- I think this happens inside `syncTextWithTextView`. Observed on macOS 26 Tahoe, [Dec 2025])
+            ///     However, we *don't* do this if `self.textField.editable`  because we don't *actually* want the `filter-highlights` to be present while editing.
+            ///         Instead, we reload inside `@"MFTextField_ResignFirstResponder"` to re-apply the `filter-highlights`. [Dec 2025]
+            ///     Alternative solutions:
+            ///         - Get a callback when the field-editor is swapped in/out.
+            ///             - `@"MFTextField_BecomeFirstResponder"` is basically that, but our implementation only works for *editable*, not for *selectable* textFields (macOS 26 Tahoe, [Dec 2025])
+            ///             - Claude suggests `editWithFrame:inView:editor:delegate:event:` and `setUpFieldEditorAttributes:` – I haven't tested these. [Dec 2025]
+            ///
+            ///     Meta discussion - why is this so complicated?: [Dec 2025]
+            ///         This took a bit to debug. This would all be much simpler if we used NSTextView everywhere instead of having NSTextField with field-editors.
+            ///             IIRC I only did this as an optimization, because I thought the scrolling was more stuttery or something when having everything be an NSTextView all the time.
+            ///                 ... But I don't remember how strong the effect was. Might have been placebo.
+            
+            if (!cell.textField.editable) cell.textField.allowsEditingTextAttributes = YES;
+            else                          assert(iscol(@"target"));
         }
         
         /// Validate
