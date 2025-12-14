@@ -39,7 +39,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
 @interface TableRowView : NSTableRowView @end
 @implementation TableRowView
 
-    /// Give selected rows a light-blue background like Xcode, this is mostly so that selecting text in rows doesn't look weird (selected rows have *dark* blue background, which flips the text to white, but the selection is *light* blue)
+    /// Give selected rows a light-blue background like Xcode, this is mostly so that selecting text in rows doesn't look weird (By default, selected rows have *dark* blue background, which flips the text to white, but the selection is *light* blue)
     
     - (void) drawSelectionInRect: (NSRect)dirtyRect { /// Src: https://stackoverflow.com/a/9594543
         
