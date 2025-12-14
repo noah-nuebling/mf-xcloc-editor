@@ -45,7 +45,7 @@ int main(int argc, const char * argv[]) {
 #include "Utility/Utility.h"
 #include "Utility/MFUI.m"
 #include "Utility/NSObject+Additions.m"
-#include "Utility/MFImplementMethod.m"
+//#include "Utility/MFSetMethod.m"
 #include "Utility/ToString.m"
 #include "Utility/NSNotificationCenter+Additions.m"
 #include "Utility/NSView+Additions.m"

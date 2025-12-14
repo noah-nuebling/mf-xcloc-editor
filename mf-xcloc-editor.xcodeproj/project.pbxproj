@@ -33,7 +33,7 @@
 		4F2AD0F22EB0518C00C8E930 /* AppIcon_Include.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon_Include.icon; sourceTree = "<group>"; };
 		4F2AD0F42EB052B300C8E930 /* AppIcon_Include.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = AppIcon_Include.md; sourceTree = "<group>"; };
 		4F33326B2EACC15000055FFC /* FileProvider.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = FileProvider.framework; path = System/Library/PrivateFrameworks/FileProvider.framework; sourceTree = SDKROOT; };
-		4F3D914A2EEDA0E100063528 /* MFImplementMethod.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MFImplementMethod.m; sourceTree = "<group>"; };
+		4F3D914A2EEDA0E100063528 /* MFSetMethod.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MFSetMethod.m; sourceTree = "<group>"; };
 		4F5160352EB6A7CA009B0BC5 /* NSNotificationCenter+Additions.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSNotificationCenter+Additions.m"; sourceTree = "<group>"; };
 		4F51603F2EB76462009B0BC5 /* ToString.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ToString.m; sourceTree = "<group>"; };
 		4F5160422EB77FA7009B0BC5 /* NSView+Additions.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSView+Additions.m"; sourceTree = "<group>"; };
@@ -106,11 +106,11 @@
 				4FF447A72DF6CB3A008F2D74 /* Utility.h */,
 				4F0C64A12EAD4C00008B3506 /* MFUI.m */,
 				4F7E02D02EA7758700C2F693 /* NSObject+Additions.m */,
-				4F3D914A2EEDA0E100063528 /* MFImplementMethod.m */,
 				4F51603F2EB76462009B0BC5 /* ToString.m */,
 				4F5160352EB6A7CA009B0BC5 /* NSNotificationCenter+Additions.m */,
 				4F5160422EB77FA7009B0BC5 /* NSView+Additions.m */,
 				4FF08EEB2EAB685600BBE492 /* RowUtils.h */,
+				4F3D914A2EEDA0E100063528 /* MFSetMethod.m */,
 			);
 			path = Utility;
 			sourceTree = "<group>";
