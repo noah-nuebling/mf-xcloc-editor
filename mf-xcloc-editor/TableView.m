@@ -163,7 +163,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                     MFTextField *textField__ = note.object;
                     if (textField__.window != self.window) return; /// Since `object: nil` we receive this notification from *all* NSTextFields including ones in other windows.
                     
-                    assert(textField__.isEditable);
+                    assert(textField__.editable);
                     assert([self columnForView: textField__] == [self columnWithIdentifier: @"target"]);
                     assert(isclass(textField__, MFTextField));
                     
@@ -221,7 +221,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
             MFTextField *textField__ = note.object;
             if (textField__.window != self.window) return;
 
-                assert(textField__.isEditable);
+                assert(textField__.editable);
                 assert([self columnForView: textField__] == [self columnWithIdentifier: @"target"]);
                 assert(isclass(textField__, MFTextField));
                 
@@ -1315,6 +1315,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         {
             
             bool makeSelectable = YES;
+            bool makeEditable = NO;
             NSLineBreakMode lineBreakMode = NSLineBreakByWordWrapping;
             
             if (iscol(@"id")) {
@@ -1376,7 +1377,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                 assert([reusableViewIDs containsObject: @"theReusableCell_TableTarget"]);
                 cell = [self makeViewWithIdentifier: @"theReusableCell_TableTarget" owner: self]; /// This contains an `MFTextField`
             
-                [cell.textField setEditable: !rowModel_isPluralParent(transUnit)];
+                makeEditable = !rowModel_isPluralParent(transUnit);
             }
             else if (iscol(@"state")) {
                 
@@ -1427,6 +1428,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
             cell.textField.delegate      = (id)self;
             cell.textField.lineBreakMode = lineBreakMode;
             cell.textField.selectable    = makeSelectable;
+            cell.textField.editable      = makeEditable;
             
             /// SEt da string!!
             [cell.textField setAttributedStringValue: uiStringAttributed];
@@ -1445,10 +1447,8 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
             ///             IIRC I only did this as an optimization, because I thought the scrolling was more stuttery or something when having everything be an NSTextView all the time.
             ///                 ... But I don't remember how strong the effect was. Might have been placebo.
             
-            {
-                cell.textField.allowsEditingTextAttributes = !iscol(@"target");
-                assert(iscol(@"target") == cell.textField.editable);
-            }
+            cell.textField.allowsEditingTextAttributes = makeSelectable && !makeEditable;
+            if (makeEditable) assert(iscol(@"target"));
         }
         
         /// Validate
