@@ -203,7 +203,7 @@
                     menuItem.title = kMFStr_RevealInFile(doc, [tableView selectedItem]);
                     menuItem.image = [NSImage imageWithSystemSymbolName: kMFStr_RevealInFile_Symbol accessibilityDescription: kMFStr_RevealInFile(doc, [tableView selectedItem])];
                 }
-                
+                if (!doc)                                                                                             ret (NO);
                 if (![doc->ctrl->out_sourceList allTransUnitsShown] && [menuItem.identifier isEqual: @"show_in_all"]) ret (YES);
                 if (![tableView selectedItem])                                                                        ret (NO);
                 if ([doc->ctrl->out_sourceList allTransUnitsShown] && [menuItem.identifier isEqual: @"show_in_file"]) ret (YES);
