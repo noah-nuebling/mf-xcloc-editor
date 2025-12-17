@@ -191,6 +191,7 @@
             window = [XclocWindow new];
             window.styleMask = 0
                 | NSWindowStyleMaskClosable
+                | NSWindowStyleMaskMiniaturizable
                 | NSWindowStyleMaskResizable
                 | NSWindowStyleMaskTitled
                 | NSWindowStyleMaskFullSizeContentView

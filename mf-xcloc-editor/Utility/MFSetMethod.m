@@ -15,7 +15,7 @@
         ```
         NSTextField *field = [NSTextField new];
 
-        [field mf_setMethod: @selector(hitTest:) to: mfimp_begin(NSView * (NSPoint point))
+        [field mf_setMethod: @selector(hitTest:) to: mfimp_begin(NSView *, (NSPoint point))
             
             mflog(@"intercepted method with: self: %@, _cmd: %@", self, NSStringFromSelector(_cmd));
                             
