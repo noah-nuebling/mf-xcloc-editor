@@ -10,21 +10,23 @@
     - (void)loadView { self.view = _theView; }
 @end
 
+#if 0
 @interface FilterFieldCell : NSSearchFieldCell @end
 @implementation FilterFieldCell
 
-    - (NSRect) searchTextRectForBounds: (NSRect)rect {
-        NSRect result = [super searchTextRectForBounds: rect];
-        
-        result.size.width -= 50; /// Make space for the custom regex toggle – is called but seems to do absolutely nothing on macOS 26 Tahoe [Dec 2025]. Suspect it's because they rewrote everything in SwiftUI. (But not sure.)
-        result.origin.x += 50;
-        
-        mflog(@"%@ -> %@", NSStringFromRect(rect), NSStringFromRect(result));
-        
-        return result;
-    }
-
+        - (NSRect) searchTextRectForBounds: (NSRect)rect {
+            
+            NSRect result = [super searchTextRectForBounds: rect];
+            
+            result.size.width -= 50; /// Make space for the custom regex toggle – is called but seems to do absolutely nothing on macOS 26 Tahoe [Dec 2025]. Suspect it's because they rewrote everything in SwiftUI. (But not sure.)
+            result.origin.x += 50;
+            
+            mflog(@"%@ -> %@", NSStringFromRect(rect), NSStringFromRect(result));
+            
+            return result;
+        }
 @end
+#endif
 
 @interface FilterField : NSSearchField <NSSearchFieldDelegate, NSControlTextEditingDelegate> @end
 @implementation FilterField
@@ -33,7 +35,9 @@
 
         self = [super initWithFrame: frame];
         if (self) {
-            object_setClass(self.cell, [FilterFieldCell class]);
+            #if 0
+                object_setClass(self.cell, [FilterFieldCell class]);
+            #endif
             self.delegate = self;
             self.cell.scrollable = YES;
         }
