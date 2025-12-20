@@ -183,9 +183,11 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
         [self selectRowIndexes: indexset(2) byExtendingSelection: NO];
     }
     
+    #define kAllTransUnitsIndex 0
+    
     - (void) showAllTransUnits {
     
-        NSInteger row = 0; /// Hardcode to first row. [Oct 2025]
+        NSInteger row = kAllTransUnitsIndex;
         
         [self selectRowIndexes: indexset(row) byExtendingSelection: NO];
     }
@@ -196,8 +198,10 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
     }
     
     - (BOOL) allTransUnitsShown {
-        return [self selectedRow] == 0; /// Hardcode to first row [Oct 2025]
+        return [self selectedRow] == kAllTransUnitsIndex;
     }
+    
+    
     
     - (File *) fileForTransUnit: (NSXMLElement *)transUnit {
         
@@ -355,6 +359,15 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
 
     #pragma mark - NSOutlineViewDelegate
     
+    - (NSString *)toolTipForFile: (File *)file {
+        
+        if (!file) return nil;
+        if ([file isEqual: @"separator"]) return nil;
+        if ([file isEqual: [self itemAtRow: kAllTransUnitsIndex]]) return nil;
+        
+        return file->path;
+    }
+    
     - (NSString *) uiStringForFile: (File *)file {
         
         if (!file) return nil;
@@ -436,6 +449,7 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
                 cell = [self makeViewWithIdentifier: @"theReusableCell_Outline" owner: self]; /// Not sure if owner=self is right. Also see TableView.m
                 assert(cell);
                 cell.textField.stringValue = [self uiStringForFile: file];
+                cell.textField.toolTip = [self toolTipForFile: file];
                 
                 id progressField = firstmatch(cell.subviews, cell.subviews.count, nil, sv, [[sv identifier] isEqual: @"progess-field"]);
                 cell.mf_associatedObjects[@"progress-field"] = progressField;
