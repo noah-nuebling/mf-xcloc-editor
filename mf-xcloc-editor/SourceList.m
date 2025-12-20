@@ -221,7 +221,7 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
     }
     
     - (NSString *) filenameForTransUnit: (NSXMLElement *)transUnit {
-        return [self uiStringForFile: [self fileForTransUnit: transUnit]];
+        return [self uiStringForFile: [self fileForTransUnit: transUnit]].string;
     }
     
     
@@ -368,18 +368,24 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
         return file->path;
     }
     
-    - (NSString *) uiStringForFile: (File *)file {
+    - (NSAttributedString *) uiStringForFile: (File *)file {
         
         if (!file) return nil;
         if ([file isEqual: @"separator"]) return nil;
         
-        NSMutableArray *allUIStrings = [NSMutableArray new];
+        NSMutableArray <NSString *> *allUIStrings = [NSMutableArray new];
         for (File *f in self->files) {
-            if ([f isEqual: @"separator"]) { [allUIStrings addObject: @""]; continue; }
-            NSString *uiString =
-                [[f->path lastPathComponent] stringByDeletingPathExtension]
-                //[f->path lastPathComponent] /// This is too cluttered and less scannable, although it makes it more understandable that you're looking at file-names. Solution idea: Gray-out the file-extensions. [Dec 2025]
-            ;
+        
+            /// Skip separator
+            if ([f isEqual: @"separator"]) {
+                [allUIStrings addObject: @""];
+                continue;
+            }
+            
+            /// get base ui string
+            auto uiString = [f->path lastPathComponent]; /// This is too cluttered and less scannable, although it makes it more understandable that you're looking at file-names. Solution idea: Gray-out the file-extensions. [Dec 2025]
+            
+            /// Add appendix (to make unique)
             for (int i = 1;; i++) {
                 NSString *appendix = (i == 1) ? @"" : stringf(@" (%d)", i);
                 NSString *uiStringgg = stringf(@"%@%@", uiString, appendix);
@@ -390,7 +396,38 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
             }
         }
     
-        return allUIStrings[[self->files indexOfObject: file]];
+        NSString *result = allUIStrings[[self->files indexOfObject: file]];
+        
+        NSMutableAttributedString *resultAttributed = attributed(result);
+        {
+            
+            /// Fix truncation
+            ///    (Using an NSAttributedString seems to override the settings somehow.) [Dec 2025]
+
+            [resultAttributed addAttributes: @{
+                NSParagraphStyleAttributeName : ({
+                    auto p = [NSMutableParagraphStyle new];
+                    p.lineBreakMode = NSLineBreakByTruncatingTail;
+                    p.allowsDefaultTighteningForTruncation = NO;
+                    p;
+                })
+            } range: NSMakeRange(0, resultAttributed.length)];
+        
+            /// Use secondaryLabelColor as base
+            [resultAttributed addAttributes: @{ NSForegroundColorAttributeName : NSColor.tertiaryLabelColor } range: NSMakeRange(0, resultAttributed.length)];
+            
+            /// Emphasise everything before the fileExtension
+            NSRange emphasisRange = {};
+            {
+                NSUInteger dotIndex = [result rangeOfString: @"." options: NSBackwardsSearch].location;
+                if (dotIndex == NSNotFound) emphasisRange = NSMakeRange(0, result.length);
+                else                        emphasisRange = NSMakeRange(0, dotIndex);
+            }
+            [resultAttributed addAttributes: @{ NSForegroundColorAttributeName : NSColor.labelColor } range: emphasisRange];
+        }
+        
+        /// Return
+        return resultAttributed;
     }
     
     - (NSView *) outlineView: (NSOutlineView *)outlineView viewForTableColumn: (NSTableColumn *)tableColumn item: (File *)file {
@@ -448,7 +485,7 @@ File *File_Make(NSArray<NSXMLElement *> *transUnits, NSString *path) {
                 /// There's only one column so we can ignore it.
                 cell = [self makeViewWithIdentifier: @"theReusableCell_Outline" owner: self]; /// Not sure if owner=self is right. Also see TableView.m
                 assert(cell);
-                cell.textField.stringValue = [self uiStringForFile: file];
+                cell.textField.attributedStringValue = [self uiStringForFile: file];
                 cell.textField.toolTip = [self toolTipForFile: file];
                 
                 id progressField = firstmatch(cell.subviews, cell.subviews.count, nil, sv, [[sv identifier] isEqual: @"progess-field"]);
