@@ -803,7 +803,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
                         );
                     else
                         comp = [
-                            rowModel_getUIString(self, i, desc.key) compare:
+                            rowModel_getUIString(self, i, desc.key) localizedStandardCompare:
                             rowModel_getUIString(self, j, desc.key)
                         ];
                     return desc.ascending ? comp : -comp;
