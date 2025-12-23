@@ -858,6 +858,47 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
             [self scrollToBeginningOfDocument: nil]; /// Is this really good? Not native macOS behavior
             restoreAlpha(); /// This this is necessary here I think, not sure why [Nov 2025]
         }
+        
+        /// DEBUG
+        ///     Investigate the exact changes that the switch from  compare: to localizedStandardCompare: (see above) has produced in Mac Mouse Fix.xcloc / Mac Mouse Fix Website.xcloc (May have to change where we place our comments.)
+        if ((0))
+        {
+            NSMutableArray<NSXMLElement *> *_displayedTopLevelTransUnits_OldSorting = [_displayedTopLevelTransUnits mutableCopy];
+            {
+                [_displayedTopLevelTransUnits_OldSorting sortUsingComparator: ^NSComparisonResult(NSXMLElement *i, NSXMLElement *j) {
+                    NSComparisonResult comp;
+                        comp = [
+                            rowModel_getUIString(self, i, @"id") compare: /// Use the old compare: instead of the new localizedStandardCompare:
+                            rowModel_getUIString(self, j, @"id")
+                        ];
+                    return comp;
+                }];
+            }
+            auto diffdesc = [NSMutableString new];
+            {
+                auto diff = [self->_displayedTopLevelTransUnits differenceFromArray: _displayedTopLevelTransUnits_OldSorting];
+                
+                for (NSOrderedCollectionChange *insertion in diff.insertions) {
+                    
+                    NSOrderedCollectionChange *matchingRemoval = nil;
+                    for (NSOrderedCollectionChange *removal in diff.removals) {
+                        if (rowModel_getUIString(self, insertion.object, @"id") ==
+                            rowModel_getUIString(self, removal.object, @"id"))
+                        {
+                            matchingRemoval = removal;
+                            break;
+                        }
+                    }
+                    
+                    [diffdesc appendFormat: @"    %@: %@ -> %@\n",
+                        rowModel_getUIString(self, insertion.object, @"id"),
+                        @(matchingRemoval.index),
+                        @(insertion.index)
+                    ];
+                }
+            }
+            mflog(@"diffdesc:\n{\n%@}", diffdesc);
+        }   
     }
     
     void __restorePosition (int iteration, TableView *self, CGFloat previousMidYViewportOffset, NSInteger newIndex, void (^completionCallback)(void)) {
