@@ -1351,6 +1351,13 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
             }
         }
         
+        /// Add `NSForegroundColorAttributeName` explicitly – otherwise the text turns black when selected in darkmode. [Dec 2025, macOS 26 Tahoe]
+        ///     Note: This problem only occurs when using `cell.textField.attributedStringValue = ...` instead of `cell.textField.stringValue = ...` (See below) [Dec 2025]
+        ///     Alternative solution: Use `attributedStringByAddingAttributesAsBase:` somehow, instead of hardcoding to `[NSColor labelColor]`. [Dec 2025]
+        if (!iscol(@"state")) /// Don't turn the green checkmark (and other state badges) black / white
+            [uiStringAttributed addAttributes: @{ NSForegroundColorAttributeName : [NSColor labelColor] } range: NSMakeRange(0, uiStringAttributed.length)];
+        
+        
         /// Create cell
         NSTableCellView *cell = nil;
         {
@@ -1472,7 +1479,7 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
             cell.textField.editable      = makeEditable;
             
             /// SEt da string!!
-            [cell.textField setAttributedStringValue: uiStringAttributed];
+            cell.textField.attributedStringValue = uiStringAttributed;
             
             /// HACK:
             ///     Set `allowsEditingTextAttributes = YES` to prevent the `filter-highlights` from being deleted when the text is selected. (Selecting swaps in a field-editor, which then deletes the attributes. Setting `allowsEditingTextAttributes` prevents this. --- I think this happens inside `syncTextWithTextView`. Observed on macOS 26 Tahoe, [Dec 2025])
