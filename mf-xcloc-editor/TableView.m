@@ -350,6 +350,45 @@ auto reusableViewIDs = @[ /// Include any IDs that we call `makeViewWithIdentifi
         ///     This is really hacky. Would be cleaner to use KVO here to observe the global `_filterOptions_CaseSensitive/_filterOptions_Regex` state. [Dec 2025]
         [NSApp.delegate performSelector: @selector(updateFilterStuff:) withObject: self];
         
+        
+        /// BUGHUNT
+        ///     For the bug where the scroll position jumps during the bounce animation (after quickly scrolling into the bottom edge with the trackpad.) [Jan 2026, macOS 26 Tahoe]
+        ///     -> Giving up on this (not worth it – looks like a framework bug (although I haven't seen it elsewhere))
+        #if 0
+        runOnMain(0.0, ^{
+            assert(self.enclosingScrollView.contentView);
+            
+            static __thread double lastScrollY = 0;
+            
+            self.mf_associatedObjects[@"doSwizzle"] = @YES;
+            self.enclosingScrollView.contentView.mf_associatedObjects[@"doSwizzle"] = @YES;
+            
+            static dispatch_once_t onceToken; dispatch_once(&onceToken, ^{
+                
+                [[self.enclosingScrollView.contentView class] mf_setMethod: @selector(scrollToPoint:) to: mfimp_begin(void, (NSPoint x))
+                    if (![self mf_associatedObjects][@"doSwizzle"]) { mfimp_super(x); return; }
+                    
+                    double d = x.y - lastScrollY;
+                    mflog(@"BUGHUNT self.enclosingScrollView (%p): %f", self, d);
+                    lastScrollY = x.y;
+                    
+                    if (d < - 100) {
+                        mflog(@"breakkk");
+                    }
+                    mfimp_super(x);
+                    
+                mfimp_end()];
+                        
+                [[self class] mf_setMethod: @selector(setNeedsLayout:) to: mfimp_begin(void, (BOOL x))
+                    if (![self mf_associatedObjects][@"doSwizzle"]) { mfimp_super(x); return; }
+                    mflog(@"BUGHUNT: setNeedsLayout: %d", x);
+                    return mfimp_super(x);
+                mfimp_end()];
+            });
+            
+        });
+        #endif
+        
         /// Return
         return self;
     }

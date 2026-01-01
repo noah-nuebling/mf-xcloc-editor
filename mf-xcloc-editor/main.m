@@ -45,10 +45,10 @@ int main(int argc, const char * argv[]) {
 #include "Utility/Utility.h"
 #include "Utility/MFUI.m"
 #include "Utility/NSObject+Additions.m"
-//#include "Utility/MFSetMethod.m"
 #include "Utility/ToString.m"
 #include "Utility/NSNotificationCenter+Additions.m"
 #include "Utility/NSView+Additions.m"
+#include "Utility/MFSetMethod.m"
 
 /// Forward declares
 #include "SourceList.h"            /// XclocWindowController.h depends on @class SourceList [Dec 2025]
